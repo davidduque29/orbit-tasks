@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import type { Project, Task, TaskStatus } from '../domain/models';
+import { ReminderOverride } from './ReminderOverride';
 
 type DisplayStatus = 'Activa' | 'En progreso' | 'Impedimento' | 'Finalizado';
 type TimeFilter = 'all' | 'overdue' | 'today' | 'week' | 'closed';
@@ -46,6 +47,7 @@ interface BoardProps {
   onDelete(taskId: string): Promise<void>;
   onNewTask(): void;
   saving: boolean;
+  userId: string;
 }
 
 function StatusDot({ status }: { status: DisplayStatus }) {
@@ -55,12 +57,13 @@ function StatusDot({ status }: { status: DisplayStatus }) {
   )}><span className="status-dot" aria-hidden="true" />{status}</span>;
 }
 
-function TaskDetails({ task, projects, onSave, onDelete, saving }: {
+function TaskDetails({ task, projects, onSave, onDelete, saving, userId }: {
   task: Task;
   projects: Project[];
   onSave: BoardProps['onSave'];
   onDelete: BoardProps['onDelete'];
   saving: boolean;
+  userId: string;
 }) {
   const [status, setStatus] = useState<DisplayStatus>(displayStatus(task.status));
   const [resolution, setResolution] = useState(task.resolution ?? '');
@@ -102,6 +105,8 @@ function TaskDetails({ task, projects, onSave, onDelete, saving }: {
         onChange={(event) => setResolution(event.target.value)}
         placeholder="Describe qué se realizó o qué impide avanzar..." />
       {error && <p className="error" role="alert">{error}</p>}
+      <ReminderOverride type="tasks" userId={userId} itemId={task.id}
+        initial={task.reminder_override_minutes ?? null} />
       <div className="task-actions">
         <button disabled={saving || (needsResolution && !resolution.trim())} type="submit">Guardar cambios</button>
         <button type="button" disabled={saving} className="danger"
@@ -111,7 +116,7 @@ function TaskDetails({ task, projects, onSave, onDelete, saving }: {
   );
 }
 
-export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, onSave, onDelete, onNewTask, saving }: BoardProps) {
+export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, onSave, onDelete, onNewTask, saving, userId }: BoardProps) {
   const [view, setView] = useState<BoardView>('list');
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -149,7 +154,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
           <StatusDot status={displayStatus(task.status)} />
         </button>
         {isOpen && <TaskDetails key={task.id + ':' + task.status + ':' + task.resolution}
-          task={task} projects={projects} onSave={onSave} onDelete={onDelete} saving={saving} />}
+          task={task} projects={projects} onSave={onSave} onDelete={onDelete} saving={saving} userId={userId} />}
       </article>
     );
   }
