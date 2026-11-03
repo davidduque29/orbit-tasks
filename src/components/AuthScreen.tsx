@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { supabase } from '../infrastructure/supabaseClient';
+import { assessPassword, MIN_PASSWORD_LENGTH } from '../domain/passwordPolicy';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
@@ -29,6 +30,8 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
   const isResetting = resetMode;
   const isRecovering = mode === 'forgot' && !isResetting;
   const isRegistering = mode === 'register' && !isResetting;
+  const isCreatingPassword = isRegistering || isResetting;
+  const passwordAssessment = assessPassword(password, email);
 
   function changeMode(nextMode: AuthMode) {
     setMode(nextMode);
@@ -46,6 +49,9 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
     setNotice(false);
 
     try {
+      if (isCreatingPassword && !passwordAssessment.valid) {
+        throw new Error(passwordAssessment.message);
+      }
       if (isResetting) {
         if (password !== confirmPassword) {
           throw new Error('Las contraseñas no coinciden.');
@@ -68,6 +74,9 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
         setFeedback('Si existe una cuenta con ese correo, recibirás un enlace para cambiar la contraseña. Revisa también correo no deseado.');
         setNotice(true);
       } else if (isRegistering) {
+        if (password !== confirmPassword) {
+          throw new Error('Las contraseñas no coinciden.');
+        }
         const { error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -111,7 +120,7 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
             <>
               <label htmlFor="password">{isResetting ? 'Nueva contraseña' : 'Contraseña'}</label>
               <div style={{ position: 'relative' }}>
-                <input id="password" type={showPassword ? 'text' : 'password'} minLength={8}
+                <input id="password" type={showPassword ? 'text' : 'password'} minLength={isCreatingPassword ? MIN_PASSWORD_LENGTH : undefined}
                   autoComplete={isResetting || isRegistering ? 'new-password' : 'current-password'}
                   value={password} onChange={(event) => setPassword(event.target.value)}
                   style={{ paddingRight: '3.6rem', width: '100%' }} required />
@@ -127,16 +136,26 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
             </>
           )}
 
-          {isResetting && (
+          {isCreatingPassword && (
+            <p className="muted" role="status" style={{ marginTop: '0.4rem', marginBottom: '0.8rem' }}>
+              {passwordAssessment.length} caracteres · {passwordAssessment.message}
+              {' '}No reutilices contraseñas de otros servicios.
+            </p>
+          )}
+
+          {isCreatingPassword && (
             <>
-              <label htmlFor="confirm-password">Confirmar nueva contraseña</label>
+              <label htmlFor="confirm-password">Confirmar contraseña</label>
               <input id="confirm-password" type={showPassword ? 'text' : 'password'}
-                autoComplete="new-password" minLength={8} value={confirmPassword}
+                autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)} required />
+              {confirmPassword && password !== confirmPassword && (
+                <p className="error" role="alert">Las contraseñas no coinciden.</p>
+              )}
             </>
           )}
 
-          <button type="submit" disabled={busy}>
+          <button type="submit" disabled={busy || (isCreatingPassword && (!passwordAssessment.valid || password !== confirmPassword))}>
             {busy ? 'Procesando…' : isResetting ? 'Guardar nueva contraseña'
               : isRecovering ? 'Enviar enlace de recuperación'
                 : isRegistering ? 'Crear cuenta' : 'Iniciar sesión'}
