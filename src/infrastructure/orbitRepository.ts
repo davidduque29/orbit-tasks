@@ -29,7 +29,7 @@ export interface OrbitRepository {
   deleteProject(projectId: string): Promise<void>;
   listTasks(): Promise<Task[]>;
   createTask(userId: string, input: NewTask): Promise<Task>;
-  updateTaskStatus(taskId: string, status: TaskStatus): Promise<void>;
+  updateTaskStatus(taskId: string, status: TaskStatus, resolution: string): Promise<void>;
   deleteTask(taskId: string): Promise<void>;
   listEvents(): Promise<OrbitEvent[]>;
   createEvent(userId: string, input: NewEvent): Promise<OrbitEvent>;
@@ -78,8 +78,15 @@ export const orbitRepository: OrbitRepository = {
     return data as Task;
   },
 
-  async updateTaskStatus(taskId, status) {
-    const { error } = await supabase.from('tasks').update({ status }).eq('id', taskId);
+  async updateTaskStatus(taskId, status, resolution) {
+    if ((status === 'Finalizado' || status === 'En revisión') && !resolution.trim()) {
+      throw new Error('Debes registrar una resolución o motivo del impedimento.');
+    }
+    const { error } = await supabase.from('tasks').update({
+      status,
+      resolution: resolution.trim(),
+      completed_at: status === 'Finalizado' ? new Date().toISOString() : null,
+    }).eq('id', taskId);
     throwOnError(error);
   },
 
