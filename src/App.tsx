@@ -27,6 +27,7 @@ function getErrorMessage(cause: unknown): string {
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -36,7 +37,10 @@ export function App() {
         setAuthLoading(false);
       }
     });
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecovery(true);
+      }
       setSession(nextSession);
       setAuthLoading(false);
     });
@@ -47,7 +51,13 @@ export function App() {
     };
   }, []);
 
+  async function finishPasswordRecovery() {
+    await supabase.auth.signOut();
+    setPasswordRecovery(false);
+  }
+
   if (authLoading) return <main className="loading">Conectando Orbit Tasks…</main>;
+  if (passwordRecovery) return <AuthScreen resetMode onPasswordReset={finishPasswordRecovery} />;
   if (!session) return <AuthScreen />;
   return <Workspace userId={session.user.id} email={session.user.email ?? ''} />;
 }
