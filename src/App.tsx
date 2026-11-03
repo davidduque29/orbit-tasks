@@ -210,10 +210,18 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <div className="project-grid">
               {projects.map((project) => {
                 const projectTasks = tasks.filter((task) => task.project_id === project.id);
+                const totalTasks = projectTasks.length;
+                const completedTasks = projectTasks.filter((task) => task.status === 'Finalizado').length;
+                const pendingTasks = totalTasks - completedTasks;
                 return <article className="card" key={project.id}>
                   <h2>{project.name}</h2><p>{project.description || 'Sin descripción'}</p>
                   <div className="progress"><div style={{ width: calculateCompletionRate(projectTasks) + '%' }} /></div>
-                  <small>{projectTasks.filter((task) => task.status === 'Finalizado').length} de {projectTasks.length} tareas cerradas</small>
+                  <small>Progreso: {completedTasks} de {totalTasks} finalizadas</small>
+                  <div className="project-task-summary" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', marginTop: '0.7rem', marginBottom: '0.8rem' }}>
+                    <span><strong>Total:</strong> {totalTasks}</span>
+                    <span><strong>Pendientes:</strong> {pendingTasks}</span>
+                    <span><strong>Finalizadas:</strong> {completedTasks}</span>
+                  </div>
                   <div className="card-actions">
                     <button className="outline" onClick={() => { setSelectedProject(project.id); setView('board'); }}>Ver tablero</button>
                     <button className="danger" onClick={() => {
