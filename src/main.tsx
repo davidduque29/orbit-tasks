@@ -8,3 +8,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>,
 );
+
+// Register the PWA worker only in production; development remains network-first.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/orbit-tasks/service-worker.js', {
+      scope: '/orbit-tasks/',
+    }).catch((error: unknown) => {
+      console.warn('No se pudo registrar el Service Worker de Orbit Tasks.', error);
+    });
+  });
+}
