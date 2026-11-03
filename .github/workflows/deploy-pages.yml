@@ -1,0 +1,49 @@
+name: Deploy Orbit Tasks Web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: orbit-tasks-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run tests
+        run: npm test
+      - name: Check TypeScript
+        run: npm run typecheck
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://bwoqjsuohquqkpgssxcd.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_nNlSGxYkm7zITD4_dcPkFw_kdCJBzIa
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static build
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4
