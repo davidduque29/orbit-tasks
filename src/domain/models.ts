@@ -34,6 +34,7 @@ export interface Task {
   completed_at: string | null;
   effort_points: number | null;
   resolution: string;
+  reminder_override_minutes: number[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +47,7 @@ export interface OrbitEvent {
   description: string;
   starts_at: string;
   ends_at: string | null;
+  reminder_override_minutes: number[] | null;
   status: 'Programado' | 'Completado' | 'Cancelado';
   created_at: string;
   updated_at: string;
