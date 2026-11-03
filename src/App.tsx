@@ -259,7 +259,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           <>
             <div className="heading"><div><h1>Eventos y agenda</h1><p>Registra citas y compromisos importantes.</p></div>
               <button onClick={() => openEditor('event')}>＋ Nuevo evento</button></div>
-            <div className="notice">🔔 Los eventos ya se almacenan en la nube. Las alarmas push con la app cerrada todavía requieren configurar el proveedor de notificaciones y las suscripciones de los dispositivos.</div>
+            <div className="notice">🔔 Los eventos se guardan en Supabase y el servicio de recordatorios está programado. La entrega de avisos push al dispositivo sigue en validación.</div>
             <section className="card">
               {events.map((item) => <div className="list-row" key={item.id}>
                 <div><strong>{item.title}</strong><p>{item.description}</p><small>{formatDate(item.starts_at)}</small>
