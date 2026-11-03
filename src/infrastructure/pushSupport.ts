@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 
-export const PUBLIC_VAPID_KEY = 'BCgI8Nb5qNwidNIXz1ySLTsmQPWtwyPF0iYkPOT_fi3jEt9x4RBRI36MgHks7Hjn9rlmyGuLfCN7g84hLuLojwA';
+export const PUBLIC_VAPID_KEY = 'BFJnD-lFqMBfGGzhJMoYuE2MIkX_OhTrsdHJpNFSvQqC_Bw5d4VD3C5KDfsOeVMWuRqFWeG2Prd4Hy1mJPLkDr4';
 
 export type PushState = 'unsupported' | 'install-required' | 'denied' | 'ready' | 'enabled';
 
