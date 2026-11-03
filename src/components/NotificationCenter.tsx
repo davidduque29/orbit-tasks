@@ -84,7 +84,7 @@ export function NotificationCenter({ userId }: Props) {
       else await registerDevice(userId);
       const next = await getPushState();
       setPushState(next);
-      setPushMessage(next === 'enabled' ? 'Dispositivo registrado. El envío automático aún está pendiente de activación en el servidor.' : 'Notificaciones desactivadas en este dispositivo.');
+      setPushMessage(next === 'enabled' ? 'Dispositivo registrado. El programador está activo; falta verificar la entrega de una notificación de prueba.' : 'Notificaciones desactivadas en este dispositivo.');
     } catch (cause) {
       setPushMessage(cause instanceof Error ? cause.message : 'No se pudo cambiar la suscripción.');
     } finally { setPushBusy(false); }
@@ -132,8 +132,7 @@ export function NotificationCenter({ userId }: Props) {
           <p>Personaliza los avisos de tareas y eventos.</p></div>
         <span className="notification-bell" aria-hidden="true">🔔</span>
       </div>
-      <p className="notice">Las preferencias se guardan desde ahora. La entrega push en segundo plano
-        todavía requiere configurar el servicio de envío y las claves VAPID.</p>
+      <p className="notice">Tus preferencias se guardan en Supabase. El programador de avisos está configurado; estamos comprobando la entrega push real en los dispositivos.</p>
       <section className="card" style={{ marginBottom: 16 }}>
         <h2>Notificaciones en este dispositivo</h2>
         <p>Permite que Orbit Tasks reciba avisos cuando esté cerrada.</p>
