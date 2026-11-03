@@ -3,13 +3,15 @@ import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
+import { NotificationCenter } from './components/NotificationCenter';
+import { ReminderOverride } from './components/ReminderOverride';
 import { calculateAverageCycleDays, calculateCompletionRate, countClosuresByDay } from './domain/metrics';
 import { TASK_PRIORITIES, type TaskStatus } from './domain/models';
 import { useOrbitData } from './hooks/useOrbitData';
 import { orbitRepository } from './infrastructure/orbitRepository';
 import { supabase } from './infrastructure/supabaseClient';
 
-type View = 'dashboard' | 'projects' | 'board' | 'events' | 'reports';
+type View = 'dashboard' | 'projects' | 'board' | 'events' | 'reports' | 'notifications';
 type Editor = 'project' | 'task' | 'event';
 
 function toLocalInput(date: Date): string {
@@ -171,7 +173,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       <nav className="tabs" aria-label="Secciones">
         {([
           ['dashboard', 'Inicio'], ['projects', 'Proyectos'], ['board', 'Tablero'],
-          ['events', 'Eventos'], ['reports', 'Reportes'],
+          ['events', 'Eventos'], ['reports', 'Reportes'], ['notifications', 'Avisos'],
         ] as const).map(([key, title]) => (
           <button className={view === key ? 'active' : ''} key={key} onClick={() => setView(key)}>
             {title}
@@ -249,6 +251,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             onSave={changeStatus}
             onDelete={async (taskId) => { await execute(() => orbitRepository.deleteTask(taskId)); }}
             saving={saving}
+            userId={userId}
           />
         )}
 
@@ -259,7 +262,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <div className="notice">🔔 Los eventos ya se almacenan en la nube. Las alarmas push con la app cerrada todavía requieren configurar el proveedor de notificaciones y las suscripciones de los dispositivos.</div>
             <section className="card">
               {events.map((item) => <div className="list-row" key={item.id}>
-                <div><strong>{item.title}</strong><p>{item.description}</p><small>{formatDate(item.starts_at)}</small></div>
+                <div><strong>{item.title}</strong><p>{item.description}</p><small>{formatDate(item.starts_at)}</small>
+                  <ReminderOverride userId={userId} itemId={item.id} type="events" initial={item.reminder_override_minutes ?? null} />
+                </div>
                 <button className="danger" onClick={() => {
                   if (window.confirm('¿Eliminar este evento?')) void execute(() => orbitRepository.deleteEvent(item.id));
                 }}>Eliminar</button>
@@ -268,6 +273,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             </section>
           </>
         )}
+
+        {view === 'notifications' && <NotificationCenter userId={userId} />}
 
         {view === 'reports' && (
           <>
