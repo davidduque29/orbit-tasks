@@ -159,3 +159,23 @@ label input, label textarea, label select { margin-top: 6px; }
  .notification-custom { grid-template-columns: 1fr 1fr; }
  .notification-custom button { grid-column: 1 / -1; }
 }
+
+/* Mobile navigation: all six tabs visible without horizontal scrolling. */
+@media (max-width: 700px) {
+  html, body, #root, .shell { max-width: 100%; overflow-x: clip; }
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 9px 12px;
+    overflow: visible;
+  }
+  .tabs button {
+    min-width: 0;
+    white-space: normal;
+    padding: 11px 5px;
+    font-size: 12px;
+    text-align: center;
+  }
+  .workspace, .task-board, .notification-center { min-width: 0; max-width: 100%; }
+}
