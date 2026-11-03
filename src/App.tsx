@@ -4,7 +4,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { calculateAverageCycleDays, calculateCompletionRate, countClosuresByDay } from './domain/metrics';
-import { TASK_PRIORITIES, TASK_STATUSES, type TaskStatus } from './domain/models';
+import { TASK_PRIORITIES, type TaskStatus } from './domain/models';
 import { useOrbitData } from './hooks/useOrbitData';
 import { orbitRepository } from './infrastructure/orbitRepository';
 import { supabase } from './infrastructure/supabaseClient';
