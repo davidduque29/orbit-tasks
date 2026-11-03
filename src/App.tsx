@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
+import { TaskBoard } from './components/TaskBoard';
+import { UserProfile } from './components/UserProfile';
 import { calculateAverageCycleDays, calculateCompletionRate, countClosuresByDay } from './domain/metrics';
 import { TASK_PRIORITIES, TASK_STATUSES, type TaskStatus } from './domain/models';
 import { useOrbitData } from './hooks/useOrbitData';
@@ -146,8 +148,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEventDescription('');
   }
 
-  async function changeStatus(taskId: string, status: TaskStatus) {
-    await execute(() => orbitRepository.updateTaskStatus(taskId, status));
+  async function changeStatus(taskId: string, status: TaskStatus, resolution: string) {
+    await execute(() => orbitRepository.updateTaskStatus(taskId, status, resolution));
   }
 
   function openEditor(type: Editor) {
@@ -164,7 +166,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     <div className="shell">
       <header className="header">
         <div className="wordmark"><span className="logo">✦</span><span>Orbit <b>Tasks</b></span></div>
-        <div className="user-menu"><span>{email}</span><button className="outline" onClick={() => void supabase.auth.signOut()}>Salir</button></div>
+        <UserProfile userId={userId} email={email} />
       </header>
       <nav className="tabs" aria-label="Secciones">
         {([
@@ -238,37 +240,16 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         )}
 
         {view === 'board' && (
-          <>
-            <div className="heading"><div><h1>Tablero Kanban</h1><p>Gestiona el flujo de tus tareas.</p></div>
-              <button onClick={() => openEditor('task')}>＋ Nueva tarea</button></div>
-            <select aria-label="Filtrar proyecto" className="filter" value={selectedProject}
-              onChange={(event) => setSelectedProject(event.target.value)}>
-              <option value="">Todos los proyectos</option>
-              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-            </select>
-            <div className="kanban">
-              {TASK_STATUSES.map((status) => (
-                <section className="lane" key={status}>
-                  <h2>{status} <span>{visibleTasks.filter((task) => task.status === status).length}</span></h2>
-                  {visibleTasks.filter((task) => task.status === status).map((task) => (
-                    <article className="ticket" key={task.id}>
-                      <span className="pill">{task.priority}</span>
-                      <h3>{task.title}</h3>
-                      <p>{projects.find((project) => project.id === task.project_id)?.name}</p>
-                      <small>Entrega: {formatDate(task.estimated_due_at)}</small>
-                      <select aria-label={'Estado de ' + task.title} value={task.status}
-                        onChange={(event) => void changeStatus(task.id, event.target.value as TaskStatus)}>
-                        {TASK_STATUSES.map((nextStatus) => <option key={nextStatus}>{nextStatus}</option>)}
-                      </select>
-                      <button className="danger" onClick={() => {
-                        if (window.confirm('¿Eliminar esta tarea?')) void execute(() => orbitRepository.deleteTask(task.id));
-                      }}>Eliminar</button>
-                    </article>
-                  ))}
-                </section>
-              ))}
-            </div>
-          </>
+          <TaskBoard
+            projects={projects}
+            tasks={tasks}
+            selectedProject={selectedProject}
+            onProjectChange={setSelectedProject}
+            onNewTask={() => openEditor('task')}
+            onSave={changeStatus}
+            onDelete={async (taskId) => { await execute(() => orbitRepository.deleteTask(taskId)); }}
+            saving={saving}
+          />
         )}
 
         {view === 'events' && (
