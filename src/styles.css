@@ -77,3 +77,60 @@ label input, label textarea, label select { margin-top: 6px; }
   .stats, .project-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .kanban { grid-template-columns: repeat(4,220px); }
 }
+
+/* Personalized profile: readable on compact mobile screens */
+.profile-root { position: relative; flex-shrink: 0; }
+.profile-trigger { display: flex; align-items: center; gap: 9px; background: #f7f5ff; border: 1px solid #dedaf6; color: #29324b; max-width: 220px; padding: 5px 9px 5px 5px; border-radius: 30px; }
+.profile-trigger-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.profile-avatar { display: inline-grid; place-items: center; width: 33px; height: 33px; flex-shrink: 0; border-radius: 50%; background: linear-gradient(125deg,#7055e8,#aa86fd); color: #fff; font-weight: 800; font-size: 11px; }
+.profile-avatar.large { width: 43px; height: 43px; font-size: 15px; }
+.profile-dropdown { position: absolute; z-index: 40; top: calc(100% + 9px); right: 0; background: #fff; width: min(320px,calc(100vw - 22px)); border: 1px solid #e3e3f1; border-radius: 15px; box-shadow: 0 18px 42px #1f284126; padding: 15px; }
+.profile-heading { display: flex; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+.profile-heading small { display: block; font-size: 11px; margin-top: 4px; }
+.profile-actions { display: flex; gap: 8px; }
+.profile-action { width: 100%; margin-top: 16px; }
+.profile-feedback { font-size: 12px; margin: 10px 0; }
+.profile-logout { background: #fff3f5; color: #ad2d47; margin-top: 14px; width: 100%; }
+
+/* Azure-inspired compact task list with accessible state labels */
+.board-toolbar { display: grid; grid-template-columns: minmax(180px,2fr) repeat(4,minmax(120px,1fr)); gap: 10px; background: white; border: 1px solid #e5e9f1; border-radius: 14px; padding: 12px; }
+.board-toolbar label { margin: 0; }
+.board-toolbar input, .board-toolbar select { margin-top: 6px; }
+.board-switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 16px 0 10px; color: #71809b; font-size: 12px; }
+.board-view-controls, .board-expand-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.board-expand-controls { margin: 10px 0; }
+.board-expand-controls button { padding: 7px 11px; font-size: 12px; }
+.task-list { border: 1px solid #e3e8f1; border-radius: 12px; overflow: hidden; }
+.task-list-item { border-bottom: 1px solid #e6e9f1; background: white; }
+.task-list-item:last-child { border-bottom: 0; }
+.task-summary { width: 100%; display: flex; text-align: left; align-items: center; gap: 12px; background: #fff; color: #24334c; border-radius: 0; padding: 15px; font-weight: 400; }
+.task-summary:hover { background: #f8f7ff; }
+.task-summary-main { display: grid; gap: 5px; flex: 1; min-width: 0; }
+.task-summary-main strong { overflow-wrap: anywhere; }
+.task-summary-main small { font-size: 11px; }
+.status-indicator { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font-size: 11px; font-weight: 750; color: #28334a; }
+.status-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.status-active .status-dot { background: #eab308; }
+.status-progress .status-dot { background: #f97316; }
+.status-blocked .status-dot { background: #dc2626; }
+.status-completed .status-dot { background: #16a34a; }
+.task-detail-form { border-top: 1px solid #e8e9f1; padding: 15px; background: #fcfcff; }
+.task-detail-form p { color: #39485b; overflow-wrap: anywhere; }
+.task-detail-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.task-detail-grid > div { display: grid; gap: 5px; font-size: 12px; }
+.task-detail-grid small { font-size: 11px; }
+.task-detail-grid strong { overflow-wrap: anywhere; }
+.task-actions { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.task-board .lane .task-list-item { border-radius: 10px; margin-top: 10px; overflow: hidden; }
+.task-board .lane .task-summary { flex-wrap: wrap; }
+@media (max-width: 850px) {
+  .board-toolbar { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .board-toolbar label:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+  .profile-trigger { max-width: 140px; }
+  .profile-trigger-name { max-width: 70px; }
+  .wordmark { font-size: 17px; gap: 7px; }
+  .status-indicator { font-size: 10px; }
+  .task-summary { gap: 7px; padding: 12px; }
+}
