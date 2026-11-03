@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { getPushState, registerDevice, unregisterDevice, type PushState } from '../infrastructure/pushSupport';
 import {
   DEFAULT_NOTIFICATION_SETTINGS, REMINDER_OPTIONS,
   loadNotificationSettings, normalizeIntervals, saveNotificationSettings,
@@ -67,6 +68,27 @@ export function NotificationCenter({ userId }: Props) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
+  const [pushState, setPushState] = useState<PushState>('ready');
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMessage, setPushMessage] = useState('');
+
+  useEffect(() => {
+    void getPushState().then(setPushState).catch(() => setPushState('unsupported'));
+  }, []);
+
+  async function togglePush() {
+    setPushBusy(true);
+    setPushMessage('');
+    try {
+      if (pushState === 'enabled') await unregisterDevice(userId);
+      else await registerDevice(userId);
+      const next = await getPushState();
+      setPushState(next);
+      setPushMessage(next === 'enabled' ? 'Dispositivo registrado. El envío automático aún está pendiente de activación en el servidor.' : 'Notificaciones desactivadas en este dispositivo.');
+    } catch (cause) {
+      setPushMessage(cause instanceof Error ? cause.message : 'No se pudo cambiar la suscripción.');
+    } finally { setPushBusy(false); }
+  }
 
   useEffect(() => {
     let active = true;
@@ -112,6 +134,19 @@ export function NotificationCenter({ userId }: Props) {
       </div>
       <p className="notice">Las preferencias se guardan desde ahora. La entrega push en segundo plano
         todavía requiere configurar el servicio de envío y las claves VAPID.</p>
+      <section className="card" style={{ marginBottom: 16 }}>
+        <h2>Notificaciones en este dispositivo</h2>
+        <p>Permite que Orbit Tasks reciba avisos cuando esté cerrada.</p>
+        {pushState === 'install-required' && <p>En iPhone debes abrir Orbit Tasks desde el icono de la pantalla de inicio, no desde Safari.</p>}
+        {pushState === 'unsupported' && <p>Este navegador no admite notificaciones push.</p>}
+        {pushState === 'denied' && <p>Los avisos están bloqueados. Debes habilitarlos desde la configuración del dispositivo.</p>}
+        {(pushState === 'ready' || pushState === 'enabled') && (
+          <button type="button" disabled={pushBusy} onClick={() => void togglePush()}>
+            {pushBusy ? 'Procesando…' : pushState === 'enabled' ? 'Desactivar en este dispositivo' : 'Activar notificaciones'}
+          </button>
+        )}
+        {pushMessage && <p role="status">{pushMessage}</p>}
+      </section>
       {loading ? <p>Consultando preferencias…</p> : (
         <form onSubmit={(event) => void submit(event)} className="notification-settings-form">
           <section className="card">
