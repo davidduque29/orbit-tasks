@@ -96,27 +96,101 @@ Deno.serve(async (request) => {
   const byOwner = new Map<string,Device[]>();
   for (const d of deviceResult.data as Device[]) byOwner.set(d.owner_id,[...(byOwner.get(d.owner_id) ?? []),d]);
   webpush.setVapidDetails('https://davidduque29.github.io/orbit-tasks/',PUBLIC_KEY,PRIVATE_KEY);
-  let sent = 0, failed = 0;
-  for (const notice of candidates) for (const device of byOwner.get(notice.ownerId) ?? []) {
-    const { error: reservationError } = await db.from('push_delivery_log').insert({
-      owner_id: notice.ownerId, device_id: device.id, notification_key: notice.key,
-    });
-    if (reservationError) continue; // unique constraint: avoid duplicate sends
-    try {
-      await webpush.sendNotification(device.subscription_data, JSON.stringify({
-        title: notice.title, body: notice.body, tag: notice.key,
-      }), { TTL: 3600 });
-      await db.from('push_delivery_log').update({ state: 'sent' })
-        .eq('owner_id',notice.ownerId).eq('device_id',device.id).eq('notification_key',notice.key);
-      sent++;
-    } catch (cause) {
-      failed++;
-      if ((cause as { statusCode?: number }).statusCode === 404 || (cause as { statusCode?: number }).statusCode === 410) {
-        await db.from('device_subscriptions').update({ enabled: false }).eq('id',device.id);
+  let sent = 0, failed = 0, skipped = 0;
+  for (const notice of candidates) {
+    for (const device of byOwner.get(notice.ownerId) ?? []) {
+      const match = {
+        owner_id: notice.ownerId,
+        device_id: device.id,
+        notification_key: notice.key,
+      };
+      const attemptTime = new Date().toISOString();
+      const reservation = await db.from('push_delivery_log')
+        .insert({ ...match, state: 'reserved', attempts: 1, last_attempt_at: attemptTime })
+        .select('id').single();
+
+      if (reservation.error) {
+        // An existing unique key is expected when a previous cron invocation
+        // already processed this reminder for the same device.
+        if (reservation.error.code !== '23505') {
+          console.error('push_log_reservation_failed', { code: reservation.error.code });
+          failed++;
+          continue;
+        }
+        const { data: existing, error: existingError } = await db.from('push_delivery_log')
+          .select('id,state,attempts,next_retry_at').match(match).maybeSingle();
+        if (existingError || !existing || existing.state !== 'failed'
+            || existing.attempts >= 3
+            || (existing.next_retry_at && Date.parse(existing.next_retry_at) > Date.now())) {
+          skipped++;
+          continue;
+        }
+        // Guarded update prevents concurrent cron invocations from retrying
+        // the same failed delivery twice.
+        const { data: retryRow, error: retryError } = await db.from('push_delivery_log')
+          .update({
+            state: 'reserved',
+            attempts: existing.attempts + 1,
+            last_attempt_at: attemptTime,
+            next_retry_at: null,
+            error_message: null,
+            http_status: null,
+          })
+          .eq('id', existing.id)
+          .eq('state', 'failed')
+          .eq('attempts', existing.attempts)
+          .select('id').maybeSingle();
+        if (retryError || !retryRow) {
+          skipped++;
+          continue;
+        }
       }
-      await db.from('push_delivery_log').delete().eq('owner_id',notice.ownerId)
-        .eq('device_id',device.id).eq('notification_key',notice.key);
+
+      try {
+        await webpush.sendNotification(device.subscription_data, JSON.stringify({
+          title: notice.title, body: notice.body, tag: notice.key,
+        }), { TTL: 3600 });
+        const { error: markSentError } = await db.from('push_delivery_log')
+          .update({
+            state: 'sent',
+            sent_at: new Date().toISOString(),
+            error_message: null,
+            http_status: null,
+            next_retry_at: null,
+          }).match(match);
+        if (markSentError) console.error('push_log_sent_update_failed', { code: markSentError.code });
+        sent++;
+      } catch (cause) {
+        failed++;
+        const info = cause as { statusCode?: number; code?: string; message?: string };
+        const statusCode = typeof info.statusCode === 'number' ? info.statusCode : null;
+        const errorType = typeof info.code === 'string' ? info.code.slice(0, 80) : 'WEB_PUSH_ERROR';
+        // Do not persist endpoint, auth key, p256dh, private key, or server response body.
+        const message = typeof info.message === 'string'
+          ? info.message.replace(/https?:\/\/\S+/g, '[url]').slice(0, 350)
+          : 'Error no identificado al enviar Web Push';
+        const { data: attemptRow } = await db.from('push_delivery_log')
+          .select('attempts').match(match).maybeSingle();
+        const currentAttempts = attemptRow?.attempts ?? 3;
+        const permanentlyRejected = statusCode === 404 || statusCode === 410;
+        const nextRetry = permanentlyRejected || currentAttempts >= 3
+          ? null
+          : new Date(Date.now() + Math.min(currentAttempts * 60_000, 180_000)).toISOString();
+        const { error: saveFailureError } = await db.from('push_delivery_log')
+          .update({
+            state: 'failed',
+            error_message: `${errorType}: ${message}`,
+            http_status: statusCode,
+            next_retry_at: nextRetry,
+            last_attempt_at: new Date().toISOString(),
+          }).match(match);
+        if (saveFailureError) console.error('push_log_failure_update_failed', { code: saveFailureError.code });
+        console.error('web_push_delivery_failed', { code: errorType, status: statusCode, attempts: currentAttempts });
+        if (permanentlyRejected) {
+          await db.from('device_subscriptions').update({ enabled: false }).eq('id', device.id);
+        }
+      }
     }
   }
-  return new Response(JSON.stringify({ checked: candidates.length, sent, failed }), { headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify({ checked: candidates.length, sent, failed, skipped }), { headers: { 'Content-Type': 'application/json' } });
 });
