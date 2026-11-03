@@ -134,3 +134,28 @@ label input, label textarea, label select { margin-top: 6px; }
   .status-indicator { font-size: 10px; }
   .task-summary { gap: 7px; padding: 12px; }
 }
+
+/* Configurable task and calendar reminders */
+.notification-center { max-width: 920px; margin: 0 auto; }
+.notification-bell { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; background: #f0ebff; font-size: 24px; }
+.notification-settings-form { display: grid; gap: 14px; }
+.notification-settings-form .card { padding: 18px; }
+.notification-settings-form .card h2 { margin-bottom: 8px; }
+.notification-intervals { border: 0; margin: 15px 0 0; padding: 0; min-width: 0; }
+.notification-intervals legend { color: #334055; font-size: 12px; font-weight: 750; padding: 0 0 8px; }
+.notification-choice-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.notification-check { display: flex; align-items: center; gap: 9px; font-size: 12px; color: #28344b; line-height: 1.5; margin: 0; font-weight: 500; }
+.notification-check input[type="checkbox"] { width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #7055e8; }
+.notification-custom { display: grid; grid-template-columns: 1fr 1.1fr auto; gap: 8px; margin: 14px 0 9px; align-items: center; }
+.notification-custom input, .notification-custom select { width: 100%; min-width: 0; }
+.notification-time-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.reminder-override { margin: 14px 0; border: 1px solid #dedaf6; background: #fbfaff; border-radius: 12px; padding: 12px; }
+.reminder-override summary { cursor: pointer; font-size: 12px; font-weight: 700; color: #6651c8; }
+.reminder-override form { display: grid; gap: 12px; margin-top: 15px; }
+.reminder-override form > button { justify-self: start; }
+.reminder-override p { margin: 0; }
+@media(max-width: 550px) {
+ .notification-choice-grid { grid-template-columns: 1fr; }
+ .notification-custom { grid-template-columns: 1fr 1fr; }
+ .notification-custom button { grid-column: 1 / -1; }
+}
