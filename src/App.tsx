@@ -77,7 +77,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   );
 
   const completed = tasks.filter((task) => task.status === 'Finalizado');
-  const cycle = calculateAverageCycleDays(completed);
+  const cycle = calculateAverageCycleDays(visibleTasks.filter((task) => task.status === 'Finalizado'));
   const weekStart = new Date();
   weekStart.setUTCHours(0, 0, 0, 0);
   weekStart.setUTCDate(weekStart.getUTCDate() - 6);
@@ -282,7 +282,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <Stat label="Tareas" value={String(visibleTasks.length)} />
               <Stat label="Completadas" value={String(visibleTasks.filter((task) => task.status === 'Finalizado').length)} />
               <Stat label="Avance" value={calculateCompletionRate(visibleTasks).toFixed(0) + '%'} />
-              <Stat label="Ciclo promedio global" value={cycle === null ? '—' : cycle.toFixed(1) + ' días'} />
+              <Stat label="Ciclo promedio" value={cycle === null ? '—' : cycle.toFixed(1) + ' días'} />
             </div>
             <section className="card"><h2>Velocidad de cierre · 7 días</h2>
               <div className="chart">
