@@ -95,7 +95,7 @@ Deno.serve(async (request) => {
   const candidates = dueNotifications(now, tasksResult.data as Task[], eventsResult.data as Event[],settings);
   const byOwner = new Map<string,Device[]>();
   for (const d of deviceResult.data as Device[]) byOwner.set(d.owner_id,[...(byOwner.get(d.owner_id) ?? []),d]);
-  webpush.setVapidDetails('mailto:notifications@orbit-tasks.invalid',PUBLIC_KEY,PRIVATE_KEY);
+  webpush.setVapidDetails('https://davidduque29.github.io/orbit-tasks/',PUBLIC_KEY,PRIVATE_KEY);
   let sent = 0, failed = 0;
   for (const notice of candidates) for (const device of byOwner.get(notice.ownerId) ?? []) {
     const { error: reservationError } = await db.from('push_delivery_log').insert({
