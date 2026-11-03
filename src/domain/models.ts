@@ -33,6 +33,7 @@ export interface Task {
   started_at: string | null;
   completed_at: string | null;
   effort_points: number | null;
+  resolution: string;
   created_at: string;
   updated_at: string;
 }
