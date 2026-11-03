@@ -57,3 +57,37 @@ self.addEventListener('fetch', (event) => {
     }),
   );
 });
+
+/* Incoming Web Push notifications (activated after VAPID is configured). */
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = {};
+  }
+  const title = typeof payload.title === 'string' ? payload.title.slice(0, 100) : 'Orbit Tasks';
+  const body = typeof payload.body === 'string' ? payload.body.slice(0, 240) : 'Tienes un recordatorio pendiente.';
+  const tag = typeof payload.tag === 'string' ? payload.tag.slice(0, 100) : 'orbit-task-alert';
+  event.waitUntil(self.registration.showNotification(title, {
+    body,
+    tag,
+    icon: '/orbit-tasks/icons/icon-192.png',
+    badge: '/orbit-tasks/icons/icon-192.png',
+    data: { url: '/orbit-tasks/' },
+  }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil((async () => {
+    const target = new URL('/orbit-tasks/', self.location.origin);
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const current = windows.find((client) => {
+      const location = new URL(client.url);
+      return location.origin === target.origin && location.pathname.startsWith('/orbit-tasks/');
+    });
+    if (current) await current.focus();
+    else await self.clients.openWindow(target.href);
+  })());
+});
