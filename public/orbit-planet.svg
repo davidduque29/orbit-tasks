@@ -1,47 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Orbit Tasks, planeta violeta">
-  <defs>
-    <radialGradient id="sphere" cx=".32" cy=".18" r=".89">
-      <stop offset="0" stop-color="#b29aff"/>
-      <stop offset=".26" stop-color="#8258ea"/>
-      <stop offset=".66" stop-color="#5d38bf"/>
-      <stop offset="1" stop-color="#28135d"/>
-    </radialGradient>
-    <linearGradient id="saturn-ring" x1=".09" y1=".88" x2=".94" y2=".16">
-      <stop stop-color="#392078"/>
-      <stop offset=".29" stop-color="#7149d0"/>
-      <stop offset=".6" stop-color="#b69cff"/>
-      <stop offset="1" stop-color="#7044d3"/>
-    </linearGradient>
-    <linearGradient id="ring-edge" x1="0" y1="1" x2="1" y2="0">
-      <stop stop-color="#3b1d84"/>
-      <stop offset=".55" stop-color="#a187f4"/>
-      <stop offset="1" stop-color="#7e55e2"/>
-    </linearGradient>
-    <radialGradient id="soft-highlight" cx=".18" cy=".18" r=".8">
-      <stop stop-color="#fff" stop-opacity=".25"/>
-      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="shadow" x="-.35" y="-.35" width="1.7" height="1.8">
-      <feGaussianBlur stdDeviation="8"/>
-    </filter>
-  </defs>
-  <ellipse cx="126" cy="216" rx="80" ry="11" fill="#5432bb" opacity=".18" filter="url(#shadow)"/>
-  <!-- Far side of the Saturn ring runs behind the planet. -->
-  <ellipse cx="128" cy="128" rx="122" ry="49" transform="rotate(-33 128 128)"
-    fill="none" stroke="url(#ring-edge)" stroke-width="18" stroke-linecap="round"/>
-  <circle cx="127" cy="127" r="83" fill="url(#sphere)"/>
-  <circle cx="127" cy="127" r="81" fill="url(#soft-highlight)" opacity=".38"/>
-  <path d="M79 75C60 95 58 143 78 169" stroke="#c3a8ff" stroke-opacity=".17"
-    stroke-width="10" fill="none" stroke-linecap="round"/>
-  <path d="M168 68C197 103 194 160 166 184" stroke="#260f65" stroke-opacity=".25"
-    stroke-width="7" fill="none" stroke-linecap="round"/>
-  <!-- Foreground arc masks the bottom edge of the sphere. -->
-  <path d="M30 158C32 195 97 179 158 141C197 117 222 89 227 75"
-    fill="none" stroke="#2c165e" stroke-width="22" stroke-linecap="round"/>
-  <path d="M29 154C33 186 98 175 158 138C197 115 219 92 225 77"
-    fill="none" stroke="url(#saturn-ring)" stroke-width="15" stroke-linecap="round"/>
-  <path d="M53 166C100 159 167 119 205 91" fill="none" stroke="#ddd0ff"
-    stroke-opacity=".36" stroke-width="3" stroke-linecap="round"/>
-  <path d="M153 83C157 94 160 97 171 101C160 105 157 108 153 119C149 108 146 105 135 101C146 97 149 94 153 83Z"
-    fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Orbit Tasks, planeta con anillo violeta">
+<defs>
+  <radialGradient id="sphere" cx=".32" cy=".17" r=".87">
+    <stop offset="0" stop-color="#a487ff"/><stop offset=".32" stop-color="#7853df"/>
+    <stop offset=".7" stop-color="#5130aa"/><stop offset="1" stop-color="#29125f"/>
+  </radialGradient>
+  <linearGradient id="ring" x1="0" y1="1" x2="1" y2="0">
+    <stop stop-color="#40218e"/><stop offset=".35" stop-color="#6e43cf"/>
+    <stop offset=".7" stop-color="#c3afff"/><stop offset="1" stop-color="#794bdc"/>
+  </linearGradient>
+  <linearGradient id="ringLight" x1=".1" y1="1" x2=".9" y2="0">
+    <stop stop-color="#8c65ed"/><stop offset=".5" stop-color="#dfd2ff"/>
+    <stop offset="1" stop-color="#936be6"/>
+  </linearGradient>
+</defs>
+<!-- Behind the planet, the distant part of the tilted orbit. -->
+<path d="M163 62 C201 48 225 49 231 63 C239 83 218 109 199 127"
+  fill="none" stroke="#6a43c9" stroke-width="17" stroke-linecap="round"/>
+<path d="M169 64 C203 51 224 52 228 65"
+  fill="none" stroke="#b19aff" stroke-width="5" stroke-linecap="round" opacity=".48"/>
+<!-- The globe, kept smooth with a subtle three-dimensional gradient. -->
+<circle cx="126" cy="128" r="80" fill="url(#sphere)"/>
+<path d="M79 79 C62 105 62 146 81 174" fill="none"
+  stroke="#e1d2ff" stroke-opacity=".14" stroke-width="10" stroke-linecap="round"/>
+<path d="M174 90 C191 127 175 164 154 184" fill="none"
+  stroke="#220a54" stroke-opacity=".14" stroke-width="12" stroke-linecap="round"/>
+<!-- Foreground orbit is a continuous crescent crossing the lower globe. -->
+<path d="M46 134 C19 165 20 186 45 192 C79 201 144 171 192 135 C219 114 233 90 232 73"
+  fill="none" stroke="#311569" stroke-width="21" stroke-linecap="round"/>
+<path d="M45 132 C26 160 26 180 47 185 C83 191 142 163 190 128 C217 108 229 88 230 73"
+  fill="none" stroke="url(#ring)" stroke-width="15" stroke-linecap="round"/>
+<path d="M52 160 C88 181 171 131 216 91" fill="none"
+  stroke="url(#ringLight)" stroke-width="4.3" stroke-linecap="round" opacity=".88"/>
+<!-- White four-point star, gently softened at its edges. -->
+<path d="M151 89 C155 99 158 102 169 106 C158 110 155 113 151 124 C147 113 144 110 133 106 C144 102 147 99 151 89Z"
+ fill="#fff"/>
 </svg>
