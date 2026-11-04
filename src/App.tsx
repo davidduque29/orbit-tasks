@@ -3,8 +3,9 @@ import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
+import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, ProgressRing, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
@@ -15,7 +16,8 @@ import { useOrbitData } from './hooks/useOrbitData';
 import { orbitRepository } from './infrastructure/orbitRepository';
 import { supabase } from './infrastructure/supabaseClient';
 
-type View = 'dashboard' | 'projects' | 'board' | 'events' | 'reports' | 'notifications';
+type View = 'dashboard' | 'projects' | 'board' | 'events' | 'reports' | 'account';
+type AccountSection = 'profile' | 'devices' | 'notifications';
 type Editor = 'project' | 'task' | 'event';
 
 function toLocalInput(date: Date): string {
@@ -73,6 +75,7 @@ export function App() {
 function Workspace({ userId, email }: { userId: string; email: string }) {
   const { projects, tasks, events, loading, error, refresh } = useOrbitData(userId);
   const [view, setView] = useState<View>('dashboard');
+  const [accountSection, setAccountSection] = useState<AccountSection>('profile');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const selectedEvent = events.find((item) => item.id === selectedEventId);
@@ -174,12 +177,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     <div className="shell">
       <header className="header">
         <div className="wordmark"><img className="brand-logo" src="/orbit-tasks/orbit-planet.svg" alt="" /><span>Orbit <b>Tasks</b></span></div>
-        <UserProfile userId={userId} email={email} />
+        <UserProfile userId={userId} email={email} onAccountClick={() => { setView('account'); setAccountSection('profile'); }} />
       </header>
       <nav className="tabs" aria-label="Secciones">
         {([
           ['dashboard', 'Inicio', House], ['projects', 'Proyectos', FolderKanban], ['board', 'Tablero', LayoutDashboard],
-          ['events', 'Eventos', CalendarDays], ['reports', 'Reportes', ChartNoAxesCombined], ['notifications', 'Avisos', Bell],
+          ['events', 'Eventos', CalendarDays], ['reports', 'Reportes', ChartNoAxesCombined], ['account', 'Cuenta', Settings],
         ] as const).map(([key, title, Icon]) => (
           <button type="button" aria-current={view === key ? 'page' : undefined} className={view === key ? 'active' : ''} key={key} onClick={() => setView(key)}>
             <Icon size={15} aria-hidden="true" />{title}
@@ -279,7 +282,35 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           </>
         )}
 
-        {view === 'notifications' && <NotificationCenter userId={userId} />}
+        {view === 'account' && (
+          <section className="account-page">
+            <div className="heading"><div><h1>Mi cuenta</h1><p>Personaliza tu perfil y administra los avisos de tus dispositivos.</p></div>
+              <Settings size={27} aria-hidden="true" className="account-page-icon" /></div>
+            <div className="account-navigation" role="group" aria-label="Configuración de cuenta">
+              {([
+                ['profile', 'Mi perfil', UserRound],
+                ['devices', 'Dispositivos', Smartphone],
+                ['notifications', 'Avisos', Bell],
+              ] as const).map(([section, title, Icon]) =>
+                <button type="button" key={section} aria-pressed={accountSection === section}
+                  className={accountSection === section ? 'account-nav-active' : ''}
+                  onClick={() => setAccountSection(section)}><Icon size={16} aria-hidden="true" />{title}</button>)}
+            </div>
+            {accountSection === 'profile' && (
+              <div className="card account-profile-card">
+                <UserProfile userId={userId} email={email} embedded />
+              </div>
+            )}
+            {accountSection === 'devices' && (
+              <div className="card account-devices-card">
+                <h2>Mis dispositivos</h2>
+                <p>Administra los equipos registrados para recibir notificaciones de Orbit Tasks.</p>
+                <DeviceAccountSection userId={userId} />
+              </div>
+            )}
+            {accountSection === 'notifications' && <NotificationCenter userId={userId} />}
+          </section>
+        )}
 
         {view === 'reports' && (
           <>
