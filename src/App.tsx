@@ -8,7 +8,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
