@@ -529,3 +529,15 @@ button:disabled { cursor:not-allowed; }
 .orbit-validated-form :is(input,textarea)::placeholder,.auth-field input::placeholder { color:#929aaa; font-weight:400; opacity:1; }
 .orbit-validated-form input:focus-visible,.orbit-validated-form textarea:focus-visible,.auth-field input:focus-visible { border-color:#7558df; outline-offset:2px; }
 @media(max-width:600px){ .orbit-validated-form input,.orbit-validated-form textarea,.orbit-validated-form select { font-size:16px; } .auth-field input { font-size:16px; } }
+
+/* Real-time limits: clear maximum, remaining count, and stop feedback. */
+.field-count-feedback {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-top:7px; padding:7px 10px; border-radius:8px;
+  background:#f6f4fd; color:#62577f; font-size:12px; font-weight:600;
+}
+.field-count-feedback .field-counter { color:inherit; margin:0; white-space:nowrap; font-size:12px; font-weight:800; }
+.field-count-feedback.field-count-warning { background:#fff7e9; color:#975f18; }
+.field-count-feedback.field-count-limit { background:#fff0f2; color:#b52d4d; border:1px solid #f5cdd6; }
+.orbit-validated-form input:focus,
+.orbit-validated-form textarea:focus { background-color:#fff; }
