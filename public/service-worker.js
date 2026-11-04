@@ -1,8 +1,8 @@
 /* Orbit Tasks PWA: cache only public shell assets, never Supabase API or user data. */
-const CACHE_NAME = 'orbit-tasks-static-v1';
+const CACHE_NAME = 'orbit-tasks-static-v2';
 const SCOPE = '/orbit-tasks/';
 const APP_SHELL = SCOPE;
-const STATIC_ASSET = /\.(?:js|css|png|svg|ico|webmanifest)$/i;
+const STATIC_ASSET = /\.(?:js|css|png|webp|svg|ico|webmanifest)$/i;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -72,8 +72,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(title, {
     body,
     tag,
-    icon: '/orbit-tasks/icons/icon-192.png',
-    badge: '/orbit-tasks/icons/icon-192.png',
+    icon: '/orbit-tasks/orbit-approved.webp',
+    badge: '/orbit-tasks/orbit-approved.webp',
     vibrate: [160, 80, 160], // Applied only when supported; iOS ignores this option.
     data: { url: '/orbit-tasks/' },
   }));
