@@ -13,6 +13,16 @@ type Settings = { user_id: string; task_lead_minutes: number[]; event_lead_minut
 type Device = { id: string; owner_id: string; subscription_data: { endpoint: string; keys?: { p256dh: string; auth: string } } };
 type Notification = { ownerId: string; key: string; title: string; body: string };
 
+function extractProviderReason(cause: unknown): string | null {
+  try {
+    const body = (cause as { body?: unknown }).body;
+    if (typeof body !== 'string' || body.length > 1500) return null;
+    const parsed = JSON.parse(body) as { reason?: unknown };
+    return typeof parsed.reason === 'string' && /^[A-Za-z][A-Za-z0-9_-]{0,79}$/.test(parsed.reason)
+      ? parsed.reason : null;
+  } catch { return null; }
+}
+
 function clockInTimezone(now: Date, timezone: string): string {
   return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: timezone }).format(now);
 }
@@ -165,6 +175,7 @@ Deno.serve(async (request) => {
         const info = cause as { statusCode?: number; code?: string; message?: string };
         const statusCode = typeof info.statusCode === 'number' ? info.statusCode : null;
         const errorType = typeof info.code === 'string' ? info.code.slice(0, 80) : 'WEB_PUSH_ERROR';
+        const providerReason = extractProviderReason(cause);
         // Do not persist endpoint, auth key, p256dh, private key, or server response body.
         const message = typeof info.message === 'string'
           ? info.message.replace(/https?:\/\/\S+/g, '[url]').slice(0, 350)
@@ -179,8 +190,9 @@ Deno.serve(async (request) => {
         const { error: saveFailureError } = await db.from('push_delivery_log')
           .update({
             state: 'failed',
-            error_message: `${errorType}: ${message}`,
+            error_message: `${providerReason ?? errorType}: ${message}`,
             http_status: statusCode,
+            error_code: providerReason ?? (statusCode ? `HTTP_${statusCode}` : 'NETWORK_ERROR'),
             next_retry_at: nextRetry,
             last_attempt_at: new Date().toISOString(),
           }).match(match);
