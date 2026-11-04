@@ -118,10 +118,10 @@ export function UserProfile({ userId, email, embedded = false, onAccountClick }:
 
   return (
     <div className={embedded ? "profile-root profile-embedded" : "profile-root"}>
-      {!embedded && <button type="button" className="profile-trigger" aria-haspopup="true" aria-expanded={menuOpen}
+      {!embedded && <button type="button" className="profile-trigger" aria-label={`Perfil de ${displayName}`} aria-haspopup="true" aria-expanded={menuOpen}
         onClick={() => setMenuOpen((current) => !current)}>
         {avatar(false)}
-        <span className="profile-trigger-name">{displayName}</span>
+        <span className="profile-trigger-name" title={displayName}>{displayName}</span>
         <span aria-hidden="true">⌄</span>
       </button>}
       {(embedded || menuOpen) && (
