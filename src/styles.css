@@ -349,3 +349,43 @@ button { background: var(--orbit-primary); }
  .report-trend-heading { flex-wrap:nowrap; }
  .trend-sparkline { width:100px; min-width:90px; }
 }
+
+/* Compact work items and dialog-first details for mobile Kanban */
+.task-compact-card { overflow:hidden; border-radius:12px; margin:8px 0; box-shadow:0 3px 12px rgba(27,25,77,.055); }
+.task-compact-button { min-height:78px; padding:12px; border-left:3px solid #b1a6f4; align-items:start; flex-wrap:wrap; gap:8px; }
+.task-compact-button .task-summary-main { gap:9px; flex:1 1 135px; min-width:0; }
+.task-compact-button .task-summary-main strong { font-size:13px; line-height:1.35; }
+.task-compact-meta { display:flex; flex-wrap:wrap; align-items:center; gap:5px; color:#708099; font-size:10px; }
+.task-compact-meta svg { color:#7360d6; }
+.task-compact-button .status-indicator { margin-left:auto; font-size:10px; }
+.task-board .lane .task-compact-button { flex-direction:column; align-items:stretch; }
+.task-board .lane .task-compact-button .status-indicator { align-self:flex-start; margin:0; }
+.task-board .lane .task-compact-card { min-width:0; }
+.orbit-detail-modal { position:relative; isolation:isolate; width:min(100%,610px); max-height:min(86dvh,780px); overflow-y:auto; overflow-x:hidden; padding:20px; }
+.orbit-modal-watermark { position:absolute; z-index:-1; right:-32px; top:42px; color:#6c5ce7; opacity:.045; pointer-events:none; transform:rotate(-17deg); }
+.orbit-modal-header { display:flex; align-items:center; gap:12px; margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid #eeebf6; }
+.orbit-modal-icon { display:grid; place-items:center; width:43px; height:43px; flex:0 0 43px; background:#eeeaff; color:#6650cf; border-radius:12px; }
+.orbit-modal-heading { flex:1; min-width:0; }
+.orbit-modal-heading small { font-weight:650; font-size:11px; color:#806db9; }
+.orbit-modal-heading h2 { margin:4px 0 0; font-size:19px; line-height:1.3; overflow-wrap:anywhere; }
+.orbit-modal-close { display:grid; place-items:center; padding:7px; width:37px; height:37px; flex-shrink:0; }
+.orbit-detail-modal .task-detail-form { padding:2px; background:transparent; border-top:0; }
+.orbit-detail-modal .task-detail-grid { background:#faf9ff; border:1px solid #eae6fa; border-radius:12px; padding:12px; }
+.orbit-detail-modal .task-detail-grid > div { gap:7px; }
+.orbit-event-details { display:grid; gap:12px; }
+.orbit-event-details p { margin:0; color:#40516b; line-height:1.5; }
+.orbit-event-details .danger { display:inline-flex; justify-content:center; align-items:center; gap:7px; justify-self:start; }
+.event-compact-card { display:flex; align-items:center; gap:12px; background:white; color:#24334c; width:100%; padding:13px 4px; border-radius:9px; border-bottom:1px solid #eeeaf4; text-align:left; }
+.event-compact-card:last-of-type { border-bottom:0; }
+.event-compact-card:hover { background:#faf9ff; }
+.event-compact-icon { display:grid; place-items:center; width:38px; height:38px; flex-shrink:0; background:#f0ebff; color:#6c5ce7; border-radius:11px; }
+.event-compact-copy { display:grid; flex:1; min-width:0; gap:5px; }
+.event-compact-copy strong { overflow-wrap:anywhere; font-size:13px; }
+.event-compact-copy small { display:inline-flex; align-items:center; gap:6px; font-size:11px; }
+.orbit-create-modal form { position:relative; z-index:1; }
+@media(max-width:600px) {
+ .orbit-detail-modal { width:100%; max-height:88dvh; padding:16px; }
+ .orbit-modal-heading h2 { font-size:17px; }
+ .orbit-detail-modal .task-detail-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .task-compact-button { min-height:73px; }
+}
