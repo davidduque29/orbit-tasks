@@ -1,6 +1,6 @@
 /** Business limits for the Orbit Tasks forms (client-side UX validation). */
 export const FIELD_LIMITS = {
-  email: 100,
+  email: 50,
   password: 256,
   eventTitle: 50,
   eventDescription: 200,
