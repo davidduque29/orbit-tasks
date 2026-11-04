@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
+import { CharacterCounter } from './components/CharacterCounter';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
@@ -205,7 +206,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       <nav className="tabs" aria-label="Secciones">
         {([
           ['dashboard', 'Inicio', House], ['projects', 'Proyectos', FolderKanban], ['board', 'Tablero', LayoutDashboard],
-          ['events', 'Eventos', CalendarDays], ['reports', 'Reportes', ChartNoAxesCombined], ['account', 'Cuenta', Settings],
+          ['events', 'Eventos', CalendarDays], ['reports', 'Reportes', ChartNoAxesCombined],
         ] as const).map(([key, title, Icon]) => (
           <button type="button" aria-current={view === key ? 'page' : undefined} className={view === key ? 'active' : ''} key={key} onClick={() => setView(key)}>
             <Icon size={15} aria-hidden="true" />{title}
@@ -439,24 +440,24 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             {formError && <p className="field-error form-validation-alert" role="alert">{formError}</p>}
             {editor === 'project' && <form onSubmit={(event) => void saveProject(event)} className="orbit-validated-form">
               <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Nombre del proyecto <small>*</small></span>
-                <input required minLength={2} maxLength={FIELD_LIMITS.projectName} placeholder="Ej.: Mejoras de Orbit Tasks" value={projectName}
-                  onChange={(event) => setProjectName(event.target.value)} />
-                <span className="field-counter">{projectName.length}/{FIELD_LIMITS.projectName}</span></label>
+                <input required minLength={2} spellCheck={true} lang="es" autoCorrect="on" maxLength={FIELD_LIMITS.projectName} placeholder="Ej.: Mejoras de Orbit Tasks" value={projectName}
+                  onChange={(event) => setProjectName(event.target.value.slice(0, FIELD_LIMITS.projectName))} />
+                <CharacterCounter value={projectName} max={FIELD_LIMITS.projectName} /></label>
               <label><span className="form-label-icon"><AlignLeft size={16} aria-hidden="true"/>Descripción (opcional)</span>
-                <textarea maxLength={FIELD_LIMITS.projectDescription} placeholder="Describe brevemente el objetivo del proyecto..." value={projectDescription}
-                  onChange={(event) => setProjectDescription(event.target.value)} />
-                <span className="field-counter">{projectDescription.length}/{FIELD_LIMITS.projectDescription}</span></label>
+                <textarea spellCheck={true} lang="es" autoCorrect="on" autoCapitalize="sentences" maxLength={FIELD_LIMITS.projectDescription} placeholder="Describe brevemente el objetivo del proyecto..." value={projectDescription}
+                  onChange={(event) => setProjectDescription(event.target.value.slice(0, FIELD_LIMITS.projectDescription))} />
+                <CharacterCounter value={projectDescription} max={FIELD_LIMITS.projectDescription} /></label>
               <button disabled={saving}>Guardar proyecto</button>
             </form>}
             {editor === 'task' && <form onSubmit={(event) => void saveTask(event)} className="orbit-validated-form">
               <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título de la tarea <small>*</small></span>
-                <input required minLength={2} maxLength={FIELD_LIMITS.taskTitle} placeholder="Ej.: Validar el tablero Kanban" value={taskTitle}
-                  onChange={(event) => setTaskTitle(event.target.value)} />
-                <span className="field-counter">{taskTitle.length}/{FIELD_LIMITS.taskTitle}</span></label>
+                <input required minLength={2} spellCheck={true} lang="es" autoCorrect="on" maxLength={FIELD_LIMITS.taskTitle} placeholder="Ej.: Validar el tablero Kanban" value={taskTitle}
+                  onChange={(event) => setTaskTitle(event.target.value.slice(0, FIELD_LIMITS.taskTitle))} />
+                <CharacterCounter value={taskTitle} max={FIELD_LIMITS.taskTitle} /></label>
               <label><span className="form-label-icon"><AlignLeft size={16} aria-hidden="true"/>Descripción (opcional)</span>
-                <textarea maxLength={FIELD_LIMITS.taskDescription} placeholder="¿Qué se debe realizar?" value={taskDescription}
-                  onChange={(event) => setTaskDescription(event.target.value)} />
-                <span className="field-counter">{taskDescription.length}/{FIELD_LIMITS.taskDescription}</span></label>
+                <textarea spellCheck={true} lang="es" autoCorrect="on" autoCapitalize="sentences" maxLength={FIELD_LIMITS.taskDescription} placeholder="¿Qué se debe realizar?" value={taskDescription}
+                  onChange={(event) => setTaskDescription(event.target.value.slice(0, FIELD_LIMITS.taskDescription))} />
+                <CharacterCounter value={taskDescription} max={FIELD_LIMITS.taskDescription} /></label>
               <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto <small>*</small></span>
                 <select required value={taskProjectId} onChange={(event) => setTaskProjectId(event.target.value)}>
                   {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
@@ -471,13 +472,13 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             </form>}
             {editor === 'event' && <form onSubmit={(event) => void saveEvent(event)} className="orbit-validated-form">
               <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título del evento <small>*</small></span>
-                <input required minLength={2} maxLength={FIELD_LIMITS.eventTitle} placeholder="Ej.: Reunión de seguimiento" value={eventTitle}
-                  onChange={(event) => setEventTitle(event.target.value)} />
-                <span className="field-counter">{eventTitle.length}/{FIELD_LIMITS.eventTitle}</span></label>
+                <input required minLength={2} spellCheck={true} lang="es" autoCorrect="on" maxLength={FIELD_LIMITS.eventTitle} placeholder="Ej.: Reunión de seguimiento" value={eventTitle}
+                  onChange={(event) => setEventTitle(event.target.value.slice(0, FIELD_LIMITS.eventTitle))} />
+                <CharacterCounter value={eventTitle} max={FIELD_LIMITS.eventTitle} /></label>
               <label><span className="form-label-icon"><AlignLeft size={16} aria-hidden="true"/>Descripción (opcional)</span>
-                <textarea maxLength={FIELD_LIMITS.eventDescription} placeholder="Agrega el lugar, propósito o detalles del evento..." value={eventDescription}
-                  onChange={(event) => setEventDescription(event.target.value)} />
-                <span className="field-counter">{eventDescription.length}/{FIELD_LIMITS.eventDescription}</span></label>
+                <textarea spellCheck={true} lang="es" autoCorrect="on" autoCapitalize="sentences" maxLength={FIELD_LIMITS.eventDescription} placeholder="Agrega el lugar, propósito o detalles del evento..." value={eventDescription}
+                  onChange={(event) => setEventDescription(event.target.value.slice(0, FIELD_LIMITS.eventDescription))} />
+                <CharacterCounter value={eventDescription} max={FIELD_LIMITS.eventDescription} /></label>
               <label><span className="form-label-icon"><CalendarClock size={16} aria-hidden="true"/>Fecha y hora <small>*</small></span>
                 <input required type="datetime-local" value={eventStart}
                   onChange={(event) => setEventStart(event.target.value)} /></label>
