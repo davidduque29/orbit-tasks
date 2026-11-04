@@ -512,3 +512,20 @@ button:disabled { cursor:not-allowed; }
 /* Approved brand artwork: white-backed original illustration, no stretching. */
 .brand-logo { object-fit: contain; border-radius: 10px; }
 .auth-brand-logo { object-fit: contain; width: 160px; height: 160px; }
+
+/* Orbit form validation and guidance: consistent across auth and editors. */
+.orbit-validated-form label { display:block; margin:14px 0; }
+.form-label-icon { display:flex; align-items:center; gap:8px; margin-bottom:7px; font-size:12px; }
+.form-label-icon svg { flex:0 0 16px; color:#6c5ce7; }
+.form-label-icon small { color:#ba3956; font-size:13px; }
+.field-counter { display:block; text-align:right; color:#748197; font-size:11px; font-weight:500; margin-top:5px; }
+.orbit-validated-form input,.orbit-validated-form textarea,.orbit-validated-form select { margin-top:0; }
+.orbit-validated-form textarea { min-height:92px; line-height:1.55; }
+.field-help { text-align:left; color:#778398; font-size:11px; font-weight:500; line-height:1.5; margin:5px 0 10px; }
+.field-error { text-align:left; color:#b32d50; background:#fff3f6; padding:8px 10px; border-radius:8px; font-size:12px; line-height:1.4; margin:6px 0 12px; }
+.form-validation-alert { margin:8px 0; }
+.auth-field input[aria-invalid="true"] { border-color:#d24c68; box-shadow:0 0 0 2px #d24c6822; }
+.auth-card .field-help,.auth-card .field-error { text-align:left; }
+.orbit-validated-form :is(input,textarea)::placeholder,.auth-field input::placeholder { color:#929aaa; font-weight:400; opacity:1; }
+.orbit-validated-form input:focus-visible,.orbit-validated-form textarea:focus-visible,.auth-field input:focus-visible { border-color:#7558df; outline-offset:2px; }
+@media(max-width:600px){ .orbit-validated-form input,.orbit-validated-form textarea,.orbit-validated-form select { font-size:16px; } .auth-field input { font-size:16px; } }
