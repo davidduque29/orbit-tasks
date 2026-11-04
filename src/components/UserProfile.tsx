@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { supabase } from '../infrastructure/supabaseClient';
+import { DeviceManager } from './DeviceManager';
 
 interface UserProfileProps {
   userId: string;
@@ -16,6 +17,7 @@ export function UserProfile({ userId, email }: UserProfileProps) {
   const [displayName, setDisplayName] = useState(fallback);
   const [draftName, setDraftName] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [devicesOpen, setDevicesOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -91,12 +93,14 @@ export function UserProfile({ userId, email }: UserProfileProps) {
               setFeedback('');
             }}>✎ Editar nombre</button>
           )}
+          <button type="button" className="outline profile-action" onClick={() => { setMenuOpen(false); setDevicesOpen(true); }}>📱 Mis dispositivos</button>
           {feedback && <p className="profile-feedback" role="status">{feedback}</p>}
           <button type="button" className="profile-logout" onClick={() => void supabase.auth.signOut()}>
             Cerrar sesión
           </button>
         </div>
       )}
+      {devicesOpen && <DeviceManager userId={userId} onClose={() => setDevicesOpen(false)} />}
     </div>
   );
 }
