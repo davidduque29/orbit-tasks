@@ -8,6 +8,7 @@ import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
+import { TrendSparkline } from './components/TrendSparkline';
 import { calculateAverageCycleDays, calculateCompletionRate, countClosuresByDay } from './domain/metrics';
 import { TASK_PRIORITIES, type TaskStatus } from './domain/models';
 import { useOrbitData } from './hooks/useOrbitData';
@@ -293,8 +294,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <Stat label="Avance" value={calculateCompletionRate(visibleTasks).toFixed(0) + '%'} kind="progress" />
               <Stat label="Ciclo promedio" value={cycle === null ? '—' : cycle.toFixed(1) + ' días'} kind="cycle" />
             </div>
-            <section className="card"><h2>Velocidad de cierre · 7 días</h2>
-              <div className="chart">
+            <section className="card report-trend-card">
+              <div className="report-trend-heading">
+                <div><h2>Velocidad de cierre · 7 días</h2><p>Tendencia de tareas finalizadas en el período.</p></div>
+                <TrendSparkline points={closureHistory} label="Tendencia de cierres" />
+              </div>
+              <div className="chart" aria-label="Cantidad de tareas completadas por día">
                 {closureHistory.map((item) => (
                   <div className="chart-column" key={item.date}>
                     <b>{item.count}</b><div className="chart-bar" style={{ height: 10 + item.count * 28 }} />
