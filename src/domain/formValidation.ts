@@ -40,8 +40,10 @@ export function validateOptionalText(value: string, label: string, max: number):
   return null;
 }
 
-export function validateEventFields(title: string, description: string, date: string): string | null {
-  return validateRequiredText(title, 'título', FIELD_LIMITS.eventTitle)
+export function validateEventFields(title: string, description: string, date: string, now: Date = new Date(), allowWeekend = true): string | null {
+  return validateRequiredText(title, 'título', FIELD_LIMITS.eventTitle, 4)
     ?? validateOptionalText(description, 'descripción', FIELD_LIMITS.eventDescription)
-    ?? (!date || !Number.isFinite(new Date(date).getTime()) ? 'Selecciona una fecha y hora válidas.' : null);
+    ?? (!date || !Number.isFinite(new Date(date).getTime()) ? 'Selecciona una fecha y hora válidas.' : null)
+    ?? (new Date(date).getTime() <= now.getTime() ? 'El evento debe programarse para una fecha y hora futuras.' : null)
+    ?? (!allowWeekend && [0, 6].includes(new Date(date).getDay()) ? 'El día seleccionado es sábado o domingo. Confirma que quieres programarlo en fin de semana.' : null);
 }
