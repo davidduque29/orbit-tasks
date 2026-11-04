@@ -103,6 +103,22 @@ Deno.serve(async (request) => {
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   const settings = new Map((settingsResult.data as Settings[]).map((s) => [s.user_id,s]));
   const candidates = dueNotifications(now, tasksResult.data as Task[], eventsResult.data as Event[],settings);
+  // Diagnostic requests use the same protected scheduler endpoint.
+  // Only an explicitly specified account receives a test notification.
+  let diagnosticOwnerId: string | null = null;
+  try {
+    const input = await request.json() as { diagnostic?: boolean; ownerId?: string };
+    if (input.diagnostic === true && typeof input.ownerId === 'string'
+      && /^[a-f0-9-]{36}$/i.test(input.ownerId)) {
+      diagnosticOwnerId = input.ownerId;
+    }
+  } catch { /* The standard scheduler request is an empty JSON object. */ }
+  if (diagnosticOwnerId) candidates.push({
+    ownerId: diagnosticOwnerId,
+    key: `diagnostic:${diagnosticOwnerId}:${now.getTime()}`,
+    title: 'Orbit Tasks · Prueba de notificaciones',
+    body: 'Verificando el servicio de avisos en tu dispositivo.',
+  });
   const byOwner = new Map<string,Device[]>();
   for (const d of deviceResult.data as Device[]) byOwner.set(d.owner_id,[...(byOwner.get(d.owner_id) ?? []),d]);
   webpush.setVapidDetails('https://davidduque29.github.io/orbit-tasks/',PUBLIC_KEY,PRIVATE_KEY);
