@@ -5,6 +5,12 @@ import {
 } from './formValidation';
 
 describe('Orbit Tasks form validation', () => {
+  it('uses the same compact limits for task and event text', () => {
+    expect(FIELD_LIMITS.taskTitle).toBe(50);
+    expect(FIELD_LIMITS.eventTitle).toBe(50);
+    expect(FIELD_LIMITS.taskDescription).toBe(200);
+    expect(FIELD_LIMITS.eventDescription).toBe(200);
+  });
   it('accepts a normal email and rejects malformed and overlong input', () => {
     expect(validateEmail('  persona@correo.com  ')).toBeNull();
     expect(validateEmail('sin-arroba')).toMatch(/correo válido/);
