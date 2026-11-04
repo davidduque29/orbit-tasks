@@ -7,19 +7,13 @@
   "scope": "/orbit-tasks/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#7558df",
+  "theme_color": "#6c5ce7",
   "lang": "es-CO",
   "icons": [
     {
       "src": "/orbit-tasks/orbit-approved.webp",
       "sizes": "260x260",
       "type": "image/webp",
-      "purpose": "any"
-    },
-    {
-      "src": "/orbit-tasks/orbit-planet.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
       "purpose": "any"
     }
   ]
