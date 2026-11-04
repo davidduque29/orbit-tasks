@@ -541,3 +541,51 @@ button:disabled { cursor:not-allowed; }
 .field-count-feedback.field-count-limit { background:#fff0f2; color:#b52d4d; border:1px solid #f5cdd6; }
 .orbit-validated-form input:focus,
 .orbit-validated-form textarea:focus { background-color:#fff; }
+
+/* Reports: project completion evolution and scoped comparisons. */
+.report-section-tabs { display:flex; gap:9px; margin:5px 0 18px; }
+.report-section-tabs button { display:inline-flex; align-items:center; justify-content:center; gap:9px; min-height:44px; flex:1; max-width:205px; border:1px solid #e3dff3; color:#665a89; background:#fff; border-radius:12px; font-weight:700; }
+.report-section-tabs button.active { color:#5c42c2; background:#eee9ff; border-color:#c7bafd; box-shadow:inset 0 -3px #6c5ce7; }
+.project-progress-filters { display:grid; grid-template-columns:minmax(0,2fr) minmax(140px,1fr); gap:12px; margin-bottom:16px; }
+.project-progress-filters label { display:grid; gap:7px; font-size:12px; font-weight:650; color:#3d4560; }
+.project-progress-filters select { min-width:0; margin:0; background:#fff; font-size:14px; }
+.project-progress-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:15px; }
+.project-progress-kpis > div { min-width:0; border:1px solid #e8e6f2; background:#fff; border-radius:14px; padding:14px; display:grid; gap:8px; box-shadow:0 3px 11px #332c710c; }
+.project-progress-kpis svg { color:#6c5ce7; }
+.project-progress-kpis small { font-size:11px; color:#72809a; line-height:1.4; }
+.project-progress-kpis strong { font-size:clamp(20px,2.7vw,30px); color:#1c2844; }
+.project-progress-visual { margin-bottom:15px; }
+.project-progress-title { display:flex; align-items:start; justify-content:space-between; gap:12px; }
+.project-progress-title h2 { display:flex; align-items:center; gap:8px; font-size:17px; }
+.project-progress-title h2 svg { color:#6750d0; }
+.project-progress-title p { font-size:12px; margin:8px 0 0; line-height:1.5; }
+.project-progress-title > strong { font-size:26px; color:#5d42c9; }
+.project-progress-chart { width:100%; margin:15px 0 8px; background:linear-gradient(180deg,#fff,#fcfbff); border-radius:10px; }
+.project-progress-chart svg { width:100%; max-height:285px; display:block; }
+.project-progress-note { display:flex; align-items:start; gap:9px; padding:12px; border:1px solid #e6e3f2; background:#f8f7ff; border-radius:10px; }
+.project-progress-note svg { flex:0 0 16px; color:#6c5ce7; }
+.project-progress-note p { font-size:11px; color:#636e87; line-height:1.55; margin:0; }
+.progress-project-list h2 { margin-bottom:10px; }
+.project-progress-row { background:transparent; border-bottom:1px solid #ece9f3; display:flex; gap:14px; align-items:center; width:100%; color:#202b45; text-align:left; padding:13px 0; }
+.project-progress-row:last-child { border-bottom:0; }
+.project-progress-row:hover { background:#f8f6ff; }
+.project-progress-row > div:first-child { min-width:0; flex:1 1 180px; display:grid; gap:5px; overflow-wrap:anywhere; }
+.project-progress-row strong { font-size:13px; }
+.project-progress-row small { font-size:11px; color:#72809a; }
+.project-progress-row-track { height:8px; flex:0 1 170px; background:#e9e4f5; border-radius:8px; overflow:hidden; }
+.project-progress-row-track span { display:block; background:linear-gradient(90deg,#886cf0,#6143cc); height:100%; border-radius:8px; }
+.project-progress-row b { width:42px; text-align:right; font-size:13px; }
+@media(max-width:600px) {
+ .project-progress-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .project-progress-filters { grid-template-columns:minmax(0,1fr) minmax(115px,.65fr); gap:8px; }
+ .project-progress-row-track { flex-basis:75px; }
+ .project-progress-row { gap:9px; }
+ .project-progress-title h2 { font-size:15px; }
+ .project-progress-chart { margin-top:10px; }
+}
+@media(max-width:370px) { .project-progress-filters { grid-template-columns:1fr; } }
+
+/* Approved artwork has its own white canvas. Blending removes the visible square
+   and removing filter avoids the unwanted rectangular drop shadow. */
+.auth-brand-logo { filter:none !important; box-shadow:none !important; mix-blend-mode:multiply; }
+.brand-logo { filter:none !important; box-shadow:none !important; mix-blend-mode:multiply; }
