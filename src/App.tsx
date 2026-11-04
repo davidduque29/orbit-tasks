@@ -3,6 +3,8 @@ import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
+import { MetricCard, ProgressRing, type StatKind } from './components/DashboardVisuals';
+import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { calculateAverageCycleDays, calculateCompletionRate, countClosuresByDay } from './domain/metrics';
@@ -172,11 +174,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       </header>
       <nav className="tabs" aria-label="Secciones">
         {([
-          ['dashboard', 'Inicio'], ['projects', 'Proyectos'], ['board', 'Tablero'],
-          ['events', 'Eventos'], ['reports', 'Reportes'], ['notifications', 'Avisos'],
-        ] as const).map(([key, title]) => (
-          <button className={view === key ? 'active' : ''} key={key} onClick={() => setView(key)}>
-            {title}
+          ['dashboard', 'Inicio', House], ['projects', 'Proyectos', FolderKanban], ['board', 'Tablero', LayoutDashboard],
+          ['events', 'Eventos', CalendarDays], ['reports', 'Reportes', ChartNoAxesCombined], ['notifications', 'Avisos', Bell],
+        ] as const).map(([key, title, Icon]) => (
+          <button type="button" aria-current={view === key ? 'page' : undefined} className={view === key ? 'active' : ''} key={key} onClick={() => setView(key)}>
+            <Icon size={15} aria-hidden="true" />{title}
           </button>
         ))}
       </nav>
@@ -190,17 +192,17 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <div className="heading"><div><h1>Tu productividad</h1><p>Proyectos, tareas y eventos sincronizados en Supabase.</p></div>
               <button onClick={() => openEditor('task')}>＋ Nueva tarea</button></div>
             <div className="stats">
-              <Stat label="Proyectos" value={String(projects.length)} />
-              <Stat label="Pendientes" value={String(tasks.length - completed.length)} />
-              <Stat label="Finalizadas" value={String(completed.length)} />
-              <Stat label="Próximos eventos" value={String(events.filter((item) => new Date(item.starts_at) >= new Date()).length)} />
+              <Stat label="Proyectos" value={String(projects.length)} kind="projects" />
+              <Stat label="Pendientes" value={String(tasks.length - completed.length)} kind="pending" />
+              <Stat label="Finalizadas" value={String(completed.length)} kind="finished" />
+              <Stat label="Próximos eventos" value={String(events.filter((item) => new Date(item.starts_at) >= new Date()).length)} kind="events" />
             </div>
             <section className="card"><h2>Próximas entregas</h2>
               {tasks.filter((task) => task.status !== 'Finalizado').sort((a, b) =>
                 (a.estimated_due_at ?? '9999').localeCompare(b.estimated_due_at ?? '9999'))
                 .slice(0, 6).map((task) => (
                   <div className="list-row" key={task.id}><strong>{task.title}</strong>
-                    <span>{formatDate(task.estimated_due_at)}</span></div>
+                    <span className={task.estimated_due_at ? (new Date(task.estimated_due_at).getTime() < Date.now() ? 'date-badge overdue' : 'date-badge') : 'date-badge neutral'}>{task.estimated_due_at ? <CalendarDays size={13} aria-hidden="true"/> : null}{formatDate(task.estimated_due_at)}</span></div>
                 ))}
               {tasks.length === 0 && <Empty message="Crea tu primer proyecto y comienza a registrar tareas." />}
             </section>
@@ -218,8 +220,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 const completedTasks = projectTasks.filter((task) => task.status === 'Finalizado').length;
                 const pendingTasks = totalTasks - completedTasks;
                 return <article className="card" key={project.id}>
-                  <h2>{project.name}</h2><p>{project.description || 'Sin descripción'}</p>
-                  <div className="progress"><div style={{ width: calculateCompletionRate(projectTasks) + '%' }} /></div>
+                  <div className="project-overview"><div className="project-text"><h2>{project.name}</h2><p>{project.description || 'Sin descripción'}</p></div><ProgressRing percent={calculateCompletionRate(projectTasks)} label={project.name} /></div>
                   <small>Progreso: {completedTasks} de {totalTasks} finalizadas</small>
                   <div className="project-task-summary" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', marginTop: '0.7rem', marginBottom: '0.8rem' }}>
                     <span><strong>Total:</strong> {totalTasks}</span>
@@ -227,12 +228,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                     <span><strong>Finalizadas:</strong> {completedTasks}</span>
                   </div>
                   <div className="card-actions">
-                    <button className="outline" onClick={() => { setSelectedProject(project.id); setView('board'); }}>Ver tablero</button>
+                    <button className="outline" onClick={() => { setSelectedProject(project.id); setView('board'); }}><ArrowRight size={14} aria-hidden="true"/> Ver tablero</button>
                     <button className="danger" onClick={() => {
                       if (window.confirm('¿Eliminar el proyecto y todas sus tareas?')) {
                         void execute(() => orbitRepository.deleteProject(project.id));
                       }
-                    }}>Eliminar</button>
+                    }}><Trash2 size={14} aria-hidden="true"/> Eliminar</button>
                   </div>
                 </article>;
               })}
@@ -259,10 +260,10 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           <>
             <div className="heading"><div><h1>Eventos y agenda</h1><p>Registra citas y compromisos importantes.</p></div>
               <button onClick={() => openEditor('event')}>＋ Nuevo evento</button></div>
-            <div className="notice">🔔 Los eventos se guardan en Supabase y el servicio de recordatorios está programado. La entrega de avisos push al dispositivo sigue en validación.</div>
+            <div className="notice">🔔 Tus eventos se sincronizan en Supabase. Los recordatorios se procesan automáticamente; verifica el estado del dispositivo en Avisos.</div>
             <section className="card">
               {events.map((item) => <div className="list-row" key={item.id}>
-                <div><strong>{item.title}</strong><p>{item.description}</p><small>{formatDate(item.starts_at)}</small>
+                <div><strong>{item.title}</strong><p>{item.description}</p><small className="event-time"><CalendarClock size={14} aria-hidden="true" />{formatDate(item.starts_at)}</small>
                   <ReminderOverride userId={userId} itemId={item.id} type="events" initial={item.reminder_override_minutes ?? null} />
                 </div>
                 <button className="danger" onClick={() => {
@@ -285,10 +286,10 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
             </select>
             <div className="stats">
-              <Stat label="Tareas" value={String(visibleTasks.length)} />
-              <Stat label="Completadas" value={String(visibleTasks.filter((task) => task.status === 'Finalizado').length)} />
-              <Stat label="Avance" value={calculateCompletionRate(visibleTasks).toFixed(0) + '%'} />
-              <Stat label="Ciclo promedio" value={cycle === null ? '—' : cycle.toFixed(1) + ' días'} />
+              <Stat label="Tareas" value={String(visibleTasks.length)} kind="tasks" />
+              <Stat label="Completadas" value={String(visibleTasks.filter((task) => task.status === 'Finalizado').length)} kind="finished" />
+              <Stat label="Avance" value={calculateCompletionRate(visibleTasks).toFixed(0) + '%'} kind="progress" />
+              <Stat label="Ciclo promedio" value={cycle === null ? '—' : cycle.toFixed(1) + ' días'} kind="cycle" />
             </div>
             <section className="card"><h2>Velocidad de cierre · 7 días</h2>
               <div className="chart">
@@ -345,8 +346,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return <div className="card stat"><small>{label}</small><strong>{value}</strong></div>;
+function Stat({ label, value, kind }: { label: string; value: string; kind: StatKind }) {
+  return <MetricCard label={label} value={value} kind={kind} />;
 }
 
 function Empty({ message }: { message: string }) {
