@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { assessPassword, MIN_PASSWORD_LENGTH } from '../domain/passwordPolicy';
 import { CalendarDays, ClipboardCheck, Eye, EyeOff, FolderKanban, LockKeyhole, Mail } from 'lucide-react';
+import { FIELD_LIMITS, validateEmail } from '../domain/formValidation';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
@@ -27,12 +28,17 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [notice, setNotice] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
 
   const isResetting = resetMode;
   const isRecovering = mode === 'forgot' && !isResetting;
   const isRegistering = mode === 'register' && !isResetting;
   const isCreatingPassword = isRegistering || isResetting;
   const passwordAssessment = assessPassword(password, email);
+  const emailError = emailTouched ? validateEmail(email) : null;
+  const confirmError = confirmPassword.length > 0 && password !== confirmPassword;
+  const passwordError = passwordTouched && isCreatingPassword && password.length > 0 && !passwordAssessment.valid;
   const passwordProgress = passwordAssessment.valid ? 100 : Math.min(80, Math.round((password.length / MIN_PASSWORD_LENGTH) * 65));
 
   function changeMode(nextMode: AuthMode) {
@@ -42,6 +48,8 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
     setFeedback('');
     setNotice(false);
     setShowPassword(false);
+    setEmailTouched(false);
+    setPasswordTouched(false);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -49,8 +57,17 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
     setBusy(true);
     setFeedback('');
     setNotice(false);
+    setEmailTouched(true);
+    setPasswordTouched(true);
 
     try {
+      if (!isResetting) {
+        const emailValidationError = validateEmail(email);
+        if (emailValidationError) throw new Error(emailValidationError);
+      }
+      if (!isRecovering && password.length > FIELD_LIMITS.password) {
+        throw new Error(`La contraseña supera el límite de ${FIELD_LIMITS.password} caracteres.`);
+      }
       if (isCreatingPassword && !passwordAssessment.valid) {
         throw new Error(passwordAssessment.message);
       }
@@ -114,8 +131,13 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
           {!isResetting && (
             <>
               <label htmlFor="email">Correo electrónico</label>
-              <div className="auth-field"><Mail size={18} aria-hidden="true"/><input id="email" type="email" autoComplete="email" value={email}
-                onChange={(event) => setEmail(event.target.value)} required /></div>
+              <div className="auth-field"><Mail size={18} aria-hidden="true"/><input id="email" type="email" inputMode="email" autoCapitalize="none" spellCheck={false}
+                placeholder="nombre@correo.com" autoComplete="email" maxLength={FIELD_LIMITS.email}
+                aria-invalid={!!emailError} aria-describedby="email-help" value={email}
+                onBlur={() => setEmailTouched(true)} onChange={(event) => {setEmail(event.target.value);setFeedback('');}} required /></div>
+              <p id="email-help" className={emailError ? 'field-error' : 'field-help'} role={emailError ? 'alert' : undefined}>
+                {emailError || 'Utiliza una dirección de correo válida.'}
+              </p>
             </>
           )}
 
@@ -124,8 +146,11 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
               <label htmlFor="password">{isResetting ? 'Nueva contraseña' : 'Contraseña'}</label>
               <div className="auth-field auth-password-field">
                 <LockKeyhole size={18} aria-hidden="true"/><input id="password" type={showPassword ? 'text' : 'password'} minLength={isCreatingPassword ? MIN_PASSWORD_LENGTH : undefined}
+                  maxLength={FIELD_LIMITS.password} placeholder={isCreatingPassword ? 'Mínimo 15 caracteres' : 'Ingresa tu contraseña'}
                   autoComplete={isResetting || isRegistering ? 'new-password' : 'current-password'}
-                  value={password} onChange={(event) => setPassword(event.target.value)}
+                  aria-invalid={!!passwordError} aria-describedby={isCreatingPassword ? 'password-requirements' : undefined}
+                  value={password} onBlur={() => setPasswordTouched(true)}
+                  onChange={(event) => {setPassword(event.target.value);setFeedback('');}}
                   style={{ paddingRight: '3.6rem', width: '100%' }} required />
                 <button type="button" className="auth-password-toggle"
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
@@ -137,7 +162,7 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
           )}
 
           {isCreatingPassword && (
-            <div className="password-strength" aria-label="Progreso de requisitos de contraseña">
+            <div id="password-requirements" className="password-strength" aria-label="Progreso de requisitos de contraseña">
               <div className="password-strength-track"><div className={passwordAssessment.valid ? 'password-strength-value valid' : 'password-strength-value'} style={{width: `${passwordProgress}%`}} /></div>
               <small>{passwordAssessment.valid ? 'Requisitos de contraseña cumplidos' : 'Completa los requisitos de contraseña'}</small>
             </div>
@@ -153,12 +178,13 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
           {isCreatingPassword && (
             <>
               <label htmlFor="confirm-password">Confirmar contraseña</label>
-              <input id="confirm-password" type={showPassword ? 'text' : 'password'}
+              <input id="confirm-password" placeholder="Repite tu contraseña" type={showPassword ? 'text' : 'password'} maxLength={FIELD_LIMITS.password}
+                aria-invalid={confirmError} aria-describedby="confirm-password-help"
                 autoComplete="new-password" minLength={MIN_PASSWORD_LENGTH} value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)} required />
-              {confirmPassword && password !== confirmPassword && (
-                <p className="error" role="alert">Las contraseñas no coinciden.</p>
-              )}
+              <p id="confirm-password-help" className={confirmError ? 'field-error' : 'field-help'} role={confirmError ? 'alert' : undefined}>
+                {confirmError ? 'Las contraseñas no coinciden.' : 'Confirma la misma contraseña para continuar.'}
+              </p>
             </>
           )}
 
