@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
 import { CharacterCounter } from './components/CharacterCounter';
+import { NotesBoard } from './components/NotesBoard';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, SwitchCamera, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
@@ -20,6 +21,7 @@ import { orbitRepository } from './infrastructure/orbitRepository';
 import { supabase } from './infrastructure/supabaseClient';
 
 type View = 'dashboard' | 'projects' | 'board' | 'events' | 'reports' | 'account';
+type Space = 'pick' | 'notes' | 'projects';
 type AccountSection = 'profile' | 'devices' | 'notifications';
 type Editor = 'project' | 'task' | 'event';
 
@@ -78,6 +80,17 @@ export function App() {
 function Workspace({ userId, email }: { userId: string; email: string }) {
   const { projects, tasks, events, loading, error, refresh } = useOrbitData(userId);
   const [view, setView] = useState<View>('dashboard');
+  const [space, setSpace] = useState<Space>(() => {
+    const previous = window.localStorage.getItem(`orbit-space:${userId}`);
+    return previous === 'notes' || previous === 'projects' ? previous : 'pick';
+  });
+  function chooseSpace(target: Exclude<Space, 'pick'>) {
+    window.localStorage.setItem(`orbit-space:${userId}`, target);
+    setSpace(target);
+    setView('dashboard');
+    setFeedback('');
+  }
+
   const [accountSection, setAccountSection] = useState<AccountSection>('profile');
   const [reportTab, setReportTab] = useState<'indicators' | 'progress'>('indicators');
   const [editor, setEditor] = useState<Editor | null>(null);
@@ -203,9 +216,19 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     <div className="shell">
       <header className="header">
         <div className="wordmark"><img className="brand-logo" src="/orbit-tasks/orbit-approved.webp" alt="" /><span>Orbit <b>Tasks</b></span></div>
-        <UserProfile userId={userId} email={email} onAccountClick={() => { setView('account'); setAccountSection('profile'); }} />
+        <div className="orbit-header-actions">
+          {space !== 'pick' && <div className="space-switch">
+            <label htmlFor="space-selector" className="sr-only">Espacio de trabajo</label>
+            <select id="space-selector" aria-label="Cambiar espacio de trabajo" value={space}
+              onChange={(event) => chooseSpace(event.target.value as Exclude<Space, 'pick'>)}>
+              <option value="notes">✓ Pendientes</option>
+              <option value="projects">▣ Proyectos</option>
+            </select>
+          </div>}
+          <UserProfile userId={userId} email={email} onAccountClick={() => { setView('account'); setAccountSection('profile'); }} />
+        </div>
       </header>
-      <nav className="tabs" aria-label="Secciones">
+      {space === 'projects' && <nav className="tabs" aria-label="Secciones">
         {([
           ['dashboard', 'Inicio', House], ['projects', 'Proyectos', FolderKanban], ['board', 'Tablero', LayoutDashboard],
           ['events', 'Eventos', CalendarDays], ['reports', 'Reportes', ChartNoAxesCombined],
@@ -214,13 +237,34 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <Icon size={15} aria-hidden="true" />{title}
           </button>
         ))}
-      </nav>
+      </nav>}
       <main className="workspace">
         {feedback && <p role="status" className="feedback">{feedback}</p>}
         {error && <p role="alert" className="error">{error}</p>}
         {loading && <p className="muted">Sincronizando datos…</p>}
 
-        {view === 'dashboard' && (
+        {space === 'pick' && <section className="space-welcome">
+          <img src="/orbit-tasks/orbit-approved.webp" alt="" className="space-welcome-logo" />
+          <h1>¿Qué quieres organizar hoy?</h1>
+          <p>Dos espacios independientes para organizar tus pendientes y tus proyectos.</p>
+          <div className="space-choice-grid">
+            <button type="button" onClick={() => chooseSpace('notes')} className="space-choice space-choice-notes">
+              <span className="space-choice-icon"><ListChecks size={29} aria-hidden="true" /></span>
+              <span><strong>Pendientes</strong><small>Notas rápidas, categorías, recordatorios y check para completar.</small></span>
+              <ArrowRight size={21} aria-hidden="true"/>
+            </button>
+            <button type="button" onClick={() => chooseSpace('projects')} className="space-choice space-choice-projects">
+              <span className="space-choice-icon"><FolderKanban size={29} aria-hidden="true" /></span>
+              <span><strong>Proyectos</strong><small>Tablero Kanban, eventos, tareas y reportes de evolución.</small></span>
+              <ArrowRight size={21} aria-hidden="true"/>
+            </button>
+          </div>
+        </section>}
+        {space === 'notes' && view !== 'account' && <NotesBoard userId={userId} />}
+        {space === 'notes' && view === 'account' && <button type="button" className="outline space-return" onClick={() => setView('dashboard')}>
+          <NotebookPen size={17} aria-hidden="true"/> Volver a Pendientes
+        </button>}
+        {space === 'projects' && view === 'dashboard' && (
           <>
             <div className="heading"><div><h1>Tu productividad</h1><p>Proyectos, tareas y eventos sincronizados en Supabase.</p></div>
               <button onClick={() => openEditor('task')}>＋ Nueva tarea</button></div>
@@ -242,7 +286,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           </>
         )}
 
-        {view === 'projects' && (
+        {space === 'projects' && view === 'projects' && (
           <>
             <div className="heading"><div><h1>Proyectos</h1><p>Tu trabajo organizado por iniciativas.</p></div>
               <button onClick={() => openEditor('project')}>＋ Nuevo proyecto</button></div>
@@ -307,7 +351,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           </>
         )}
 
-        {view === 'board' && (
+        {space === 'projects' && view === 'board' && (
           <TaskBoard
             projects={projects}
             tasks={tasks}
@@ -321,7 +365,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           />
         )}
 
-        {view === 'events' && (
+        {space === 'projects' && view === 'events' && (
           <>
             <div className="heading"><div><h1>Eventos y agenda</h1><p>Registra citas y compromisos importantes.</p></div>
               <button onClick={() => openEditor('event')}>＋ Nuevo evento</button></div>
@@ -370,7 +414,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           </section>
         )}
 
-        {view === 'reports' && (
+        {space === 'projects' && view === 'reports' && (
           <>
             <div className="heading"><div><h1>Reportes</h1><p>Consulta indicadores y la evolución de tus proyectos.</p></div></div>
             <div className="report-section-tabs" role="group" aria-label="Tipo de reporte">
