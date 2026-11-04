@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import type { Project, Task, TaskStatus } from '../domain/models';
 import { ReminderOverride } from './ReminderOverride';
+import { Search, List, Columns3, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 
 type DisplayStatus = 'Activa' | 'En progreso' | 'Impedimento' | 'Finalizado';
 type TimeFilter = 'all' | 'overdue' | 'today' | 'week' | 'closed';
@@ -147,7 +148,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
         <button type="button" className="task-summary" aria-expanded={isOpen}
           onClick={() => setExpanded((current) => current.includes(task.id)
             ? current.filter((id) => id !== task.id) : [...current, task.id])}>
-          <span aria-hidden="true">{isOpen ? '▾' : '▸'}</span>
+          <span aria-hidden="true">{isOpen ? <ChevronDown size={17} /> : <ChevronRight size={17} />}</span>
           <span className="task-summary-main"><strong>{task.title}</strong>
             <small>{projects.find((p) => p.id === task.project_id)?.name ?? 'Proyecto'} · {dateLabel(task.estimated_due_at)}</small>
           </span>
@@ -163,12 +164,12 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
     <section className="task-board">
       <div className="heading">
         <div><h1>Tablero de tareas</h1><p>Busca, filtra y consulta las resoluciones.</p></div>
-        <button type="button" onClick={onNewTask}>＋ Nueva tarea</button>
+        <button type="button" onClick={onNewTask}><Plus size={16} aria-hidden="true" /> Nueva tarea</button>
       </div>
       <div className="board-toolbar">
         <label htmlFor="task-keyword">Buscar por palabra clave
-          <input id="task-keyword" type="search" placeholder="Filtrar tareas..." value={keyword}
-            onChange={(event) => setKeyword(event.target.value)} />
+          <div className="board-search"><Search size={17} aria-hidden="true" /><input id="task-keyword" type="search" placeholder="Buscar tareas, proyectos y resoluciones..." value={keyword}
+            onChange={(event) => setKeyword(event.target.value)} /></div>
         </label>
         <label htmlFor="board-project">Proyecto
           <select id="board-project" value={selectedProject} onChange={(event) => onProjectChange(event.target.value)}>
@@ -200,8 +201,8 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
       </div>
       <div className="board-switch">
         <div className="board-view-controls">
-          <button type="button" className={view === 'list' ? '' : 'outline'} onClick={() => setView('list')}>☷ Lista</button>
-          <button type="button" className={view === 'kanban' ? '' : 'outline'} onClick={() => setView('kanban')}>▥ Kanban</button>
+          <button type="button" className={view === 'list' ? '' : 'outline'} onClick={() => setView('list')}><List size={16} aria-hidden="true" /> Lista</button>
+          <button type="button" className={view === 'kanban' ? '' : 'outline'} onClick={() => setView('kanban')}><Columns3 size={16} aria-hidden="true" /> Kanban</button>
         </div>
         <span>{filtered.length} tareas · {overdue} vencidas</span>
       </div>
