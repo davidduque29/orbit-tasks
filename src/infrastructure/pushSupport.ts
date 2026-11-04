@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { detectDeviceEnvironment } from '../domain/deviceCatalog';
 
 export const PUBLIC_VAPID_KEY = 'BFJnD-lFqMBfGGzhJMoYuE2MIkX_OhTrsdHJpNFSvQqC_Bw5d4VD3C5KDfsOeVMWuRqFWeG2Prd4Hy1mJPLkDr4';
 
@@ -14,13 +15,22 @@ export function compatible(): boolean {
     && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 }
 
-export async function getPushState(): Promise<PushState> {
+export async function getPushState(userId?: string): Promise<PushState> {
   if (!compatible()) return 'unsupported';
   if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !isInstalled()) return 'install-required';
   if (Notification.permission === 'denied') return 'denied';
   if (Notification.permission !== 'granted') return 'ready';
   const worker = await navigator.serviceWorker.ready;
-  return (await worker.pushManager.getSubscription()) ? 'enabled' : 'ready';
+  const subscription = await worker.pushManager.getSubscription();
+  if (!subscription) return 'ready';
+  if (userId) {
+    const { data, error } = await supabase.from('device_subscriptions')
+      .select('enabled').eq('owner_id', userId)
+      .eq('endpoint_hash', await hashEndpoint(subscription.endpoint)).maybeSingle();
+    if (error) throw new Error(error.message);
+    return data?.enabled ? 'enabled' : 'ready';
+  }
+  return 'enabled';
 }
 
 function decodePublicKey(): Uint8Array<ArrayBuffer> {
@@ -48,10 +58,13 @@ export async function registerDevice(userId: string): Promise<void> {
     ?? (await registration.pushManager.subscribe({
       userVisibleOnly: true, applicationServerKey: decodePublicKey(),
     }));
+  const environment = detectDeviceEnvironment(navigator.userAgent);
   const { error } = await supabase.from('device_subscriptions').upsert({
     owner_id: userId,
-    platform: /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'ios'
-      : /Android/.test(navigator.userAgent) ? 'android' : 'web',
+    platform: environment.platform,
+    device_type: environment.deviceType,
+    browser_name: environment.browserName,
+    last_seen_at: new Date().toISOString(),
     endpoint_hash: await hashEndpoint(subscription.endpoint),
     subscription_data: subscription.toJSON(),
     enabled: true,
