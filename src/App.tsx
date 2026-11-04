@@ -6,11 +6,12 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
 import { TrendSparkline } from './components/TrendSparkline';
+import { ProjectProgressReport } from './components/ProjectProgressReport';
 import { calculateAverageCycleDays, calculateCompletionRate, countClosuresByDay } from './domain/metrics';
 import { TASK_PRIORITIES, type TaskStatus } from './domain/models';
 import { FIELD_LIMITS, validateEventFields, validateRequiredText, validateOptionalText } from './domain/formValidation';
@@ -78,6 +79,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const { projects, tasks, events, loading, error, refresh } = useOrbitData(userId);
   const [view, setView] = useState<View>('dashboard');
   const [accountSection, setAccountSection] = useState<AccountSection>('profile');
+  const [reportTab, setReportTab] = useState<'indicators' | 'progress'>('indicators');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const selectedEvent = events.find((item) => item.id === selectedEventId);
@@ -370,7 +372,15 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
         {view === 'reports' && (
           <>
-            <div className="heading"><div><h1>Indicadores</h1><p>Mide resultados y velocidad de cierre.</p></div></div>
+            <div className="heading"><div><h1>Reportes</h1><p>Consulta indicadores y la evolución de tus proyectos.</p></div></div>
+            <div className="report-section-tabs" role="group" aria-label="Tipo de reporte">
+              <button type="button" className={reportTab === 'indicators' ? 'active' : ''} aria-pressed={reportTab === 'indicators'}
+                onClick={() => setReportTab('indicators')}><ChartNoAxesCombined size={17} aria-hidden="true" />Indicadores</button>
+              <button type="button" className={reportTab === 'progress' ? 'active' : ''} aria-pressed={reportTab === 'progress'}
+                onClick={() => setReportTab('progress')}><TrendingUp size={17} aria-hidden="true" />Progreso</button>
+            </div>
+            {reportTab === 'progress' && <ProjectProgressReport projects={projects} tasks={tasks} />}
+            {reportTab === 'indicators' && <>
             <select aria-label="Proyecto del reporte" className="filter" value={selectedProject}
               onChange={(event) => setSelectedProject(event.target.value)}>
               <option value="">Todos los proyectos</option>
@@ -396,6 +406,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 ))}
               </div>
             </section>
+            </>}
           </>
         )}
       </main>
