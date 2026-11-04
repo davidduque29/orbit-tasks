@@ -178,7 +178,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   return (
     <div className="shell">
       <header className="header">
-        <div className="wordmark"><img className="brand-logo" src="/orbit-tasks/orbit-planet.svg" alt="" /><span>Orbit <b>Tasks</b></span></div>
+        <div className="wordmark"><img className="brand-logo" src="/orbit-tasks/orbit-approved.webp" alt="" /><span>Orbit <b>Tasks</b></span></div>
         <UserProfile userId={userId} email={email} onAccountClick={() => { setView('account'); setAccountSection('profile'); }} />
       </header>
       <nav className="tabs" aria-label="Secciones">
