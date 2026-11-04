@@ -179,3 +179,31 @@ label input, label textarea, label select { margin-top: 6px; }
   }
   .workspace, .task-board, .notification-center { min-width: 0; max-width: 100%; }
 }
+
+/* Device management is intentionally independent from global notification settings. */
+.device-modal { width: min(100%,650px); max-height: 88vh; overflow-y: auto; }
+.device-modal-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.device-modal-heading h2 { font-size: 21px; margin-bottom: 5px; }
+.device-modal-heading p { line-height:1.5; }
+.device-modal-heading button { min-width:42px; }
+.device-help { font-size:12px; line-height:1.6; color:#66748c; }
+.device-list { display:grid; gap:12px; margin:15px 0; }
+.device-item { border:1px solid #e3e6f0; border-radius:13px; padding:14px; background:#fbfcff; }
+.device-item-heading { display:flex; align-items:center; gap:10px; }
+.device-emoji { display:grid; place-items:center; width:42px; height:42px; flex-shrink:0; background:#eeeaff; border-radius:12px; font-size:23px; }
+.device-details { min-width:0; flex:1; display:grid; gap:4px; overflow-wrap:anywhere; }
+.device-details strong { font-size:13px; }
+.device-details small { font-size:11px; }
+.device-status { font-size:10px; font-weight:750; border-radius:20px; padding:5px 8px; background:#edf0f5; color:#53627e; }
+.device-status.active { background:#e1f6eb; color:#177848; }
+.device-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:13px; }
+.device-actions button { font-size:11px; }
+.device-editor { border-top:1px solid #e3e6f0; margin-top:14px; padding-top:6px; display:grid; gap:4px; }
+.device-editor label { margin:7px 0; }
+.device-editor button[type=submit] { justify-self:start; margin-top:6px; }
+.device-feedback { font-size:12px; color:#5445b3; background:#f1edff; border-radius:8px; padding:12px; }
+@media (max-width:520px) {
+  .device-modal { padding:16px; }
+  .device-item-heading { flex-wrap:wrap; }
+  .device-status { margin-left:auto; }
+}
