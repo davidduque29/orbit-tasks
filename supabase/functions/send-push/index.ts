@@ -9,7 +9,8 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 type Task = { id: string; owner_id: string; title: string; estimated_due_at: string | null; status: string; reminder_override_minutes: number[] | null };
 type Event = { id: string; owner_id: string; title: string; starts_at: string; status: string; reminder_override_minutes: number[] | null };
-type Settings = { user_id: string; task_alerts_enabled?: boolean; event_alerts_enabled?: boolean; task_lead_minutes: number[]; event_lead_minutes: number[]; overdue_enabled: boolean; overdue_repeat_minutes: number; quiet_hours_enabled: boolean; quiet_start: string; quiet_end: string; timezone: string };
+type PersonalNote = { id: string; owner_id: string; title: string; kind: 'note' | 'pending'; completed: boolean; reminder_at: string | null };
+type Settings = { user_id: string; task_alerts_enabled?: boolean; event_alerts_enabled?: boolean; note_alerts_enabled?: boolean; task_lead_minutes: number[]; event_lead_minutes: number[]; overdue_enabled: boolean; overdue_repeat_minutes: number; quiet_hours_enabled: boolean; quiet_start: string; quiet_end: string; timezone: string };
 type Device = { id: string; owner_id: string; subscription_data: { endpoint: string; keys?: { p256dh: string; auth: string } } };
 type Notification = { ownerId: string; key: string; title: string; body: string };
 
@@ -34,7 +35,7 @@ function quiet(now: Date, setting: Settings): boolean {
   const start = setting.quiet_start.slice(0, 5), end = setting.quiet_end.slice(0, 5);
   return start < end ? clock >= start && clock < end : clock >= start || clock < end;
 }
-function dueNotifications(now: Date, tasks: Task[], events: Event[], settings: Map<string,Settings>): Notification[] {
+function dueNotifications(now: Date, tasks: Task[], events: Event[], notes: PersonalNote[], settings: Map<string,Settings>): Notification[] {
   const results: Notification[] = [];
   const timestamp = now.getTime(), minute = 60000;
   const defaults = { task_lead_minutes: [1440,30], event_lead_minutes: [60,0], overdue_enabled: true, overdue_repeat_minutes: 1440 } as const;
@@ -80,6 +81,23 @@ function dueNotifications(now: Date, tasks: Task[], events: Event[], settings: M
       });
     }
   }
+  // Personal reminders fire only at the scheduled time and never after completion.
+  // The stable key is unique per device and reminder date, preventing repeat deliveries.
+  for (const note of notes) {
+    if (!note.reminder_at || (note.kind === 'pending' && note.completed)) continue;
+    const when = new Date(note.reminder_at).getTime();
+    if (!Number.isFinite(when)) continue;
+    const s = settings.get(note.owner_id);
+    if (s?.note_alerts_enabled === false || (s && quiet(now, s))) continue;
+    if (when <= timestamp && timestamp - when < 5 * minute) {
+      results.push({
+        ownerId: note.owner_id,
+        key: `note:${note.id}:reminder:${when}`,
+        title: note.kind === 'pending' ? 'Recordatorio de pendiente' : 'Recordatorio de nota',
+        body: note.title,
+      });
+    }
+  }
   return results;
 }
 
@@ -93,16 +111,17 @@ Deno.serve(async (request) => {
   }
   const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
   const now = new Date();
-  const [tasksResult, eventsResult, settingsResult, deviceResult] = await Promise.all([
+  const [tasksResult, eventsResult, notesResult, settingsResult, deviceResult] = await Promise.all([
     db.from('tasks').select('id,owner_id,title,status,estimated_due_at,reminder_override_minutes').neq('status','Finalizado').not('estimated_due_at','is',null),
     db.from('events').select('id,owner_id,title,status,starts_at,reminder_override_minutes').eq('status','Programado'),
+    db.from('notes').select('id,owner_id,title,kind,completed,reminder_at').not('reminder_at','is',null),
     db.from('notification_preferences').select('*'),
     db.from('device_subscriptions').select('id,owner_id,subscription_data').eq('enabled',true),
   ]);
-  const error = [tasksResult, eventsResult, settingsResult, deviceResult].find((r) => r.error)?.error;
+  const error = [tasksResult, eventsResult, notesResult, settingsResult, deviceResult].find((r) => r.error)?.error;
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   const settings = new Map((settingsResult.data as Settings[]).map((s) => [s.user_id,s]));
-  const candidates = dueNotifications(now, tasksResult.data as Task[], eventsResult.data as Event[],settings);
+  const candidates = dueNotifications(now, tasksResult.data as Task[], eventsResult.data as Event[],notesResult.data as PersonalNote[],settings);
   // Authorized diagnostics: one push to a specific account, no user-data disclosure.
   let diagnosticOwnerId: string | null = null;
   try {
