@@ -118,8 +118,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       await refresh();
       setEditor(null);
       setFeedback('Cambios guardados y sincronizados.');
+      return true;
     } catch (cause) {
-      setFeedback(getErrorMessage(cause));
+      const message = getErrorMessage(cause);
+      setFeedback(message);
+      if (editor) setFormError(message);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -131,11 +135,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       ?? validateOptionalText(projectDescription, 'descripción del proyecto', FIELD_LIMITS.projectDescription);
     if (validation) { setFormError(validation); return; }
     setFormError('');
-    await execute(() => orbitRepository.createProject(userId, {
+    const saved = await execute(() => orbitRepository.createProject(userId, {
       name: projectName.trim(),
       description: projectDescription.trim(),
       color: '#7558df',
     }));
+    if (!saved) return;
     setProjectName('');
     setProjectDescription('');
   }
@@ -146,7 +151,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       ?? validateOptionalText(taskDescription, 'descripción de tarea', FIELD_LIMITS.taskDescription);
     if (validation) { setFormError(validation); return; }
     setFormError('');
-    await execute(() => orbitRepository.createTask(userId, {
+    const saved = await execute(() => orbitRepository.createTask(userId, {
       project_id: taskProjectId,
       title: taskTitle.trim(),
       description: taskDescription.trim(),
@@ -154,6 +159,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       status: 'Por hacer',
       estimated_due_at: taskDue ? new Date(taskDue).toISOString() : null,
     }));
+    if (!saved) return;
     setTaskTitle('');
     setTaskDescription('');
     setTaskDue('');
@@ -164,12 +170,13 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     const validation = validateEventFields(eventTitle, eventDescription, eventStart);
     if (validation) { setFormError(validation); return; }
     setFormError('');
-    await execute(() => orbitRepository.createEvent(userId, {
+    const saved = await execute(() => orbitRepository.createEvent(userId, {
       title: eventTitle.trim(),
       description: eventDescription.trim(),
       starts_at: new Date(eventStart).toISOString(),
       project_id: eventProjectId || null,
     }));
+    if (!saved) return;
     setEventTitle('');
     setEventDescription('');
   }
