@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { getPushState, registerDevice, unregisterDevice, type PushState } from '../infrastructure/pushSupport';
 import { ToggleSwitch } from './ToggleSwitch';
-import { BellRing, CalendarDays, ListTodo, Cloud, ShieldCheck } from 'lucide-react';
+import { BellRing, CalendarDays, ListTodo, NotebookPen, Cloud, ShieldCheck } from 'lucide-react';
 import {
   DEFAULT_NOTIFICATION_SETTINGS, REMINDER_OPTIONS,
   loadNotificationSettings, normalizeIntervals, saveNotificationSettings,
@@ -131,7 +131,7 @@ export function NotificationCenter({ userId }: Props) {
     <section className="notification-center">
       <div className="heading">
         <div><h1>Centro de notificaciones</h1>
-          <p>Personaliza los avisos de tareas y eventos.</p></div>
+          <p>Personaliza los avisos de tareas, eventos y pendientes.</p></div>
         <span className="notification-bell" aria-hidden="true"><BellRing size={26}/></span>
       </div>
       <div className="notice account-notification-intro"><Cloud size={20} aria-hidden="true" /><span>Tus preferencias se guardan en Supabase. Orbit Tasks envía recordatorios cuando están activados y el dispositivo tiene permiso.</span></div>
@@ -145,6 +145,10 @@ export function NotificationCenter({ userId }: Props) {
           <ToggleSwitch label="Avisos de eventos" checked={settings.event_alerts_enabled}
             onChange={(checked) => change('event_alerts_enabled', checked)}
             description="Activa o pausa los recordatorios de la agenda." /></div>
+        <div className="notification-category-row"><NotebookPen size={19} aria-hidden="true" />
+          <ToggleSwitch label="Recordatorios de notas y pendientes" checked={settings.note_alerts_enabled}
+            onChange={(checked) => change('note_alerts_enabled', checked)}
+            description="Avisos de registros personales con fecha y hora. No se repiten después de completarlos." /></div>
         <p className="notification-save-hint"><ShieldCheck size={15} aria-hidden="true" /> Pulsa Guardar preferencias para aplicar los cambios.</p>
       </section>
       <section className="card" style={{ marginBottom: 16 }}>
