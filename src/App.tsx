@@ -201,6 +201,16 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     await execute(() => orbitRepository.updateTaskStatus(taskId, status, resolution));
   }
 
+  function openTaskForProject(projectId: string) {
+    setSelectedProject(projectId);
+    setFormError('');
+    setTaskProjectId(projectId);
+    setTaskTitle('');
+    setTaskDescription('');
+    setTaskDue('');
+    setEditor('task');
+  }
+
   function openEditor(type: Editor) {
     setFormError('');
     if (type === 'task' && projects.length === 0) {
@@ -267,7 +277,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         {space === 'projects' && view === 'dashboard' && (
           <>
             <div className="heading"><div><h1>Tu productividad</h1><p>Proyectos, tareas y eventos sincronizados en Supabase.</p></div>
-              <button onClick={() => openEditor('task')}>＋ Nueva tarea</button></div>
+              <button onClick={() => { setView('projects'); openEditor('project'); }}><FolderKanban size={17} aria-hidden="true" /> Nuevo proyecto</button></div>
             <div className="stats">
               <Stat label="Proyectos" value={String(projects.length)} kind="projects" />
               <Stat label="Pendientes" value={String(tasks.length - completed.length)} kind="pending" />
@@ -333,6 +343,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                       <span><CheckCircle2 size={17} aria-hidden="true" />Finalizadas <strong>{completedTasks}</strong></span>
                     </div>
                     <div className="card-actions">
+                      <button className="project-create-task" type="button" onClick={() => openTaskForProject(project.id)}>
+                        <Plus size={16} aria-hidden="true" /> Nueva tarea
+                      </button>
                       <button className="project-open-board" type="button"
                         onClick={() => { setSelectedProject(project.id); setView('board'); }}>
                         <ArrowRight size={15} aria-hidden="true" />Ver tablero
