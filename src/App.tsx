@@ -4,7 +4,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { MetricCard, ProgressRing, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
@@ -74,6 +74,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const { projects, tasks, events, loading, error, refresh } = useOrbitData(userId);
   const [view, setView] = useState<View>('dashboard');
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const selectedEvent = events.find((item) => item.id === selectedEventId);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [selectedProject, setSelectedProject] = useState('');
@@ -265,14 +267,13 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <div className="notice">🔔 Tus eventos se sincronizan en Supabase. Los recordatorios se procesan automáticamente; verifica el estado del dispositivo en Avisos.</div>
             <WeeklyAgenda events={events} />
             <section className="card event-list-card">
-              {events.map((item) => <div className="list-row" key={item.id}>
-                <div><strong>{item.title}</strong><p>{item.description}</p><small className="event-time"><CalendarClock size={14} aria-hidden="true" />{formatDate(item.starts_at)}</small>
-                  <ReminderOverride userId={userId} itemId={item.id} type="events" initial={item.reminder_override_minutes ?? null} />
-                </div>
-                <button className="danger" onClick={() => {
-                  if (window.confirm('¿Eliminar este evento?')) void execute(() => orbitRepository.deleteEvent(item.id));
-                }}>Eliminar</button>
-              </div>)}
+              {events.map((item) => <button type="button" className="event-compact-card" key={item.id}
+                onClick={() => setSelectedEventId(item.id)} aria-label={`Ver detalle de ${item.title}`}>
+                <span className="event-compact-icon"><CalendarDays size={19} aria-hidden="true" /></span>
+                <span className="event-compact-copy"><strong>{item.title}</strong>
+                  <small><CalendarClock size={13} aria-hidden="true" />{formatDate(item.starts_at)}</small></span>
+                <ArrowRight size={17} aria-hidden="true" />
+              </button>)}
               {events.length === 0 && <Empty message="Tu agenda está vacía." />}
             </section>
           </>
@@ -312,12 +313,43 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         )}
       </main>
 
+      {selectedEvent && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setSelectedEventId(null);
+        }}>
+          <section className="modal orbit-detail-modal" role="dialog" aria-modal="true" aria-labelledby="event-detail-title">
+            <CalendarDays className="orbit-modal-watermark" size={180} aria-hidden="true" />
+            <header className="orbit-modal-header">
+              <span className="orbit-modal-icon"><CalendarClock size={22} aria-hidden="true" /></span>
+              <div className="orbit-modal-heading"><small>Detalle del evento</small>
+                <h2 id="event-detail-title">{selectedEvent.title}</h2></div>
+              <button className="outline orbit-modal-close" aria-label="Cerrar detalle" onClick={() => setSelectedEventId(null)}><X size={19} /></button>
+            </header>
+            <div className="orbit-event-details">
+              <p>{selectedEvent.description || 'Sin descripción adicional.'}</p>
+              <p className="event-time"><CalendarClock size={16} aria-hidden="true" />{formatDate(selectedEvent.starts_at)}</p>
+              <ReminderOverride userId={userId} itemId={selectedEvent.id} type="events" initial={selectedEvent.reminder_override_minutes ?? null} />
+              <button className="danger" onClick={() => {
+                if (window.confirm('¿Eliminar este evento?')) {
+                  void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null));
+                }
+              }}><Trash2 size={15} aria-hidden="true" /> Eliminar evento</button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {editor && (
         <div className="modal-backdrop" role="presentation" onClick={() => setEditor(null)}>
-          <section className="modal" role="dialog" aria-modal="true" aria-label="Nuevo registro"
+          <section className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label="Nuevo registro"
             onClick={(event) => event.stopPropagation()}>
-            <div className="heading"><h2>{editor === 'project' ? 'Nuevo proyecto' : editor === 'task' ? 'Nueva tarea' : 'Nuevo evento'}</h2>
-              <button className="outline" onClick={() => setEditor(null)}>Cerrar</button></div>
+            <Sparkles className="orbit-modal-watermark" size={175} aria-hidden="true" />
+            <header className="orbit-modal-header">
+              <span className="orbit-modal-icon">{editor === 'project' ? <FolderKanban size={23} /> : editor === 'task' ? <ClipboardList size={23} /> : <CalendarDays size={23} />}</span>
+              <div className="orbit-modal-heading"><small>Nuevo registro</small>
+                <h2>{editor === 'project' ? 'Nuevo proyecto' : editor === 'task' ? 'Nueva tarea' : 'Nuevo evento'}</h2></div>
+              <button type="button" className="outline orbit-modal-close" aria-label="Cerrar formulario" onClick={() => setEditor(null)}><X size={19} /></button>
+            </header>
             {editor === 'project' && <form onSubmit={(event) => void saveProject(event)}>
               <label>Nombre<input required maxLength={120} value={projectName} onChange={(event) => setProjectName(event.target.value)} /></label>
               <label>Descripción<textarea value={projectDescription} onChange={(event) => setProjectDescription(event.target.value)} /></label>
