@@ -10,6 +10,7 @@
   "theme_color": "#7558df",
   "lang": "es-CO",
   "icons": [
+    { "src": "/orbit-tasks/orbit-planet.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     {
       "src": "/orbit-tasks/icons/icon-192.png",
       "sizes": "192x192",
