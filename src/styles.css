@@ -454,3 +454,22 @@ button:disabled { cursor:not-allowed; }
  .account-devices-card { padding:16px; }
  .account-device-launch button { width:100%; justify-content:center; }
 }
+
+/* Consolidated notification preferences in Account. */
+.account-notification-intro { display:flex; align-items:flex-start; gap:12px; }
+.account-notification-intro > svg { flex:0 0 20px; margin-top:3px; }
+.notification-category-card { margin:0 0 15px; }
+.notification-category-card h2 { margin-bottom:10px; }
+.notification-category-row { display:flex; align-items:center; gap:13px; padding:3px 0; border-top:1px solid #eeeaf5; }
+.notification-category-row > svg { flex:0 0 20px; color:#7154d7; }
+.notification-category-row .orbit-toggle-row { flex:1; min-width:0; }
+.notification-category-row .orbit-toggle-copy { min-width:0; }
+.notification-save-hint { display:flex; align-items:center; gap:7px; font-size:11px; color:#7464a4; margin:9px 0 0; }
+.notification-category-card .orbit-switch-input:checked { background:linear-gradient(100deg,#6544d5,#9275f4); }
+.notification-center .card { box-shadow:0 4px 18px #322b7912; }
+.notification-center .notification-bell { color:#6546cb; background:#ebe6ff; }
+@media(max-width:430px) {
+  .notification-category-row { gap:8px; }
+  .notification-category-row .orbit-toggle-copy label { font-size:12px; }
+  .notification-category-row .orbit-toggle-copy p { font-size:10px; }
+}
