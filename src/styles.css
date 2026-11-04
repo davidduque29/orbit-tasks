@@ -207,3 +207,73 @@ label input, label textarea, label select { margin-top: 6px; }
   .device-item-heading { flex-wrap:wrap; }
   .device-status { margin-left:auto; }
 }
+
+/* Orbit Tasks UI/UX redesign — violet spatial design tokens. */
+:root {
+  --orbit-primary: #6c5ce7;
+  --orbit-primary-soft: #efecff;
+  --orbit-canvas: #f7f8fc;
+  --orbit-ink: #17223c;
+  --orbit-shadow: 0 5px 22px rgba(38,32,86,.075);
+  --orbit-motion: cubic-bezier(.4,0,.2,1);
+  background: var(--orbit-canvas);
+}
+button:not(:disabled) { transition: transform 170ms var(--orbit-motion), box-shadow 170ms ease, background-color 170ms ease; }
+button:not(:disabled):active { transform: scale(.96); }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 3px solid #9c8cfd;
+  outline-offset: 2px;
+}
+button { background: var(--orbit-primary); }
+.card { box-shadow: var(--orbit-shadow); border-color: #e9e9f2; }
+.header { box-shadow: 0 2px 15px rgba(25,24,69,.035); }
+.logo { background: linear-gradient(130deg,var(--orbit-primary),#9d7ef7); }
+.tabs { border-bottom: 1px solid #e7e4f1; gap: 7px; }
+.tabs button { display:inline-flex; align-items:center; justify-content:center; gap:7px; position:relative; border-radius:9px; }
+.tabs button.active { color:#5941ca; background:var(--orbit-primary-soft); }
+.tabs button.active::after { content:""; position:absolute; height:3px; width:42%; bottom:0; left:29%; border-radius:8px; background:var(--orbit-primary); animation:orbit-tab-in 250ms var(--orbit-motion); }
+@keyframes orbit-tab-in { from { opacity:0; transform:scaleX(.2); } to { opacity:1; transform:scaleX(1); } }
+.profile-dropdown { transform-origin:top right; animation:orbit-menu-in 180ms var(--orbit-motion); }
+@keyframes orbit-menu-in { from { opacity:0; transform:translateY(-5px) scale(.95); } to { opacity:1; transform:translateY(0) scale(1); } }
+.metric-card { min-height:114px; position:relative; padding:17px; display:flex; flex-direction:column; justify-content:center; background:linear-gradient(145deg,#fff 57%,#f7f4ff); }
+.metric-card small { display:block; max-width:calc(100% - 40px); color:#66738b; font-size:12px; font-weight:600; }
+.metric-card strong { font-size:clamp(24px,3vw,34px); letter-spacing:-.8px; margin-top:8px; line-height:1.15; }
+.metric-icon { position:absolute; top:15px; right:15px; display:grid; place-items:center; width:36px; height:36px; border-radius:11px; color:#6048cd; background:#ede8ff; }
+.metric-finished .metric-icon { background:#e2f7ec; color:#218552; }
+.metric-events .metric-icon { background:#e6f4ff; color:#2685bd; }
+.metric-pending .metric-icon { background:#eeecfd; color:#5348a3; }
+.project-grid .card { background:linear-gradient(155deg,#fff 60%,#f8f5ff); }
+.project-overview { display:flex; align-items:start; justify-content:space-between; gap:12px; }
+.project-text { flex:1; min-width:0; }
+.project-text h2 { overflow-wrap:anywhere; }
+.project-text p { font-size:12px; line-height:1.5; }
+.progress-ring { width:68px; height:68px; flex:0 0 68px; position:relative; display:grid; place-items:center; }
+.progress-ring svg { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); overflow:visible; }
+.progress-ring circle { fill:none; stroke-width:5; }
+.progress-ring-track { stroke:#e8e4f7; }
+.progress-ring-value { stroke:var(--orbit-primary); stroke-linecap:round; transition:stroke-dashoffset 600ms var(--orbit-motion); }
+.progress-ring span { font-size:12px; font-weight:800; color:#5a49be; }
+.card-actions button, .date-badge, .event-time { display:inline-flex; align-items:center; gap:6px; }
+.card-actions button { min-height:35px; }
+.date-badge { white-space:nowrap; font-size:11px; color:#3d8466; padding:5px 8px; background:#e6f7ee; border-radius:8px; }
+.date-badge.overdue { color:#a44452; background:#fff0f2; }
+.date-badge.neutral { color:#667991; background:#eef4fa; }
+.event-time { margin-top:6px; }
+.chart-bar { background:linear-gradient(180deg,#a792ff,var(--orbit-primary)); }
+.task-summary { transition:background 160ms ease,transform 160ms ease; }
+.status-indicator { padding:4px 8px; border-radius:14px; }
+.status-active { background:#fff8d9; } .status-progress { background:#fff0dc; }
+.status-blocked { background:#ffe6e8; } .status-completed { background:#e2f7e8; }
+.device-sound-guide { border:1px solid #e7e2fa; border-radius:12px; margin-top:14px; padding:13px; background:#faf9ff; }
+.device-sound-guide summary { cursor:pointer; font-size:12px; font-weight:700; color:#5e50bd; }
+.device-sound-guide p { margin:10px 0 0; line-height:1.55; font-size:12px; }
+@media (max-width:700px) {
+ .tabs button { gap:5px; font-size:12px; min-height:44px; }
+ .tabs button svg { width:14px; height:14px; }
+ .date-badge { white-space:normal; }
+ .list-row { align-items:flex-start; }
+ .metric-card { min-height:105px; }
+}
+@media (prefers-reduced-motion:reduce) {
+ *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}
