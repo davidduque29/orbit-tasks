@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
 import { CharacterCounter } from './components/CharacterCounter';
+import { REMINDER_OPTIONS } from './infrastructure/notificationSettings';
 import { NotesBoard } from './components/NotesBoard';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
@@ -111,6 +112,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [eventTitle, setEventTitle] = useState('');
   const [eventDescription, setEventDescription] = useState('');
   const [eventStart, setEventStart] = useState(toLocalInput(new Date(Date.now() + 3_600_000)));
+  const [eventReminderMinutes, setEventReminderMinutes] = useState(0);
+  const [allowWeekendEvent, setAllowWeekendEvent] = useState(false);
   const [eventProjectId, setEventProjectId] = useState('');
   const [formError, setFormError] = useState('');
 
@@ -163,7 +166,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
   async function saveTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const validation = validateRequiredText(taskTitle, 'título de tarea', FIELD_LIMITS.taskTitle)
+    const validation = validateRequiredText(taskTitle, 'título de tarea', FIELD_LIMITS.taskTitle, 4)
       ?? validateOptionalText(taskDescription, 'descripción de tarea', FIELD_LIMITS.taskDescription);
     if (validation) { setFormError(validation); return; }
     setFormError('');
@@ -183,7 +186,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
   async function saveEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const validation = validateEventFields(eventTitle, eventDescription, eventStart);
+    const validation = validateEventFields(eventTitle, eventDescription, eventStart, new Date(), allowWeekendEvent);
     if (validation) { setFormError(validation); return; }
     setFormError('');
     const saved = await execute(() => orbitRepository.createEvent(userId, {
@@ -191,10 +194,13 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       description: eventDescription.trim(),
       starts_at: new Date(eventStart).toISOString(),
       project_id: eventProjectId || null,
+      reminder_override_minutes: eventReminderMinutes === -1 ? [] : [eventReminderMinutes],
     }));
     if (!saved) return;
     setEventTitle('');
     setEventDescription('');
+    setEventReminderMinutes(0);
+    setAllowWeekendEvent(false);
   }
 
   async function changeStatus(taskId: string, status: TaskStatus, resolution: string) {
@@ -213,6 +219,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
   function openEditor(type: Editor) {
     setFormError('');
+    if (type === 'event') {
+      setEventStart(toLocalInput(new Date(Date.now() + 3_600_000)));
+      setEventReminderMinutes(0);
+      setAllowWeekendEvent(false);
+    }
     if (type === 'task' && projects.length === 0) {
       setFeedback('Crea primero un proyecto para registrar tareas.');
       setEditor('project');
@@ -519,7 +530,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             </form>}
             {editor === 'task' && <form onSubmit={(event) => void saveTask(event)} className="orbit-validated-form">
               <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título de la tarea <small>*</small></span>
-                <input required minLength={2} spellCheck={true} lang="es" autoCorrect="on" maxLength={FIELD_LIMITS.taskTitle} placeholder="Ej.: Validar el tablero Kanban" value={taskTitle}
+                <input required minLength={4} spellCheck={true} lang="es" autoCorrect="on" maxLength={FIELD_LIMITS.taskTitle} placeholder="Ej.: Validar el tablero Kanban" value={taskTitle}
                   onChange={(event) => setTaskTitle(event.target.value.slice(0, FIELD_LIMITS.taskTitle))} />
                 <CharacterCounter value={taskTitle} max={FIELD_LIMITS.taskTitle} /></label>
               <label><span className="form-label-icon"><AlignLeft size={16} aria-hidden="true"/>Descripción (opcional)</span>
@@ -540,7 +551,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             </form>}
             {editor === 'event' && <form onSubmit={(event) => void saveEvent(event)} className="orbit-validated-form">
               <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título del evento <small>*</small></span>
-                <input required minLength={2} spellCheck={true} lang="es" autoCorrect="on" maxLength={FIELD_LIMITS.eventTitle} placeholder="Ej.: Reunión de seguimiento" value={eventTitle}
+                <input required minLength={4} spellCheck={true} lang="es" autoCorrect="on" maxLength={FIELD_LIMITS.eventTitle} placeholder="Ej.: Reunión de seguimiento" value={eventTitle}
                   onChange={(event) => setEventTitle(event.target.value.slice(0, FIELD_LIMITS.eventTitle))} />
                 <CharacterCounter value={eventTitle} max={FIELD_LIMITS.eventTitle} /></label>
               <label><span className="form-label-icon"><AlignLeft size={16} aria-hidden="true"/>Descripción (opcional)</span>
@@ -548,8 +559,24 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                   onChange={(event) => setEventDescription(event.target.value.slice(0, FIELD_LIMITS.eventDescription))} />
                 <CharacterCounter value={eventDescription} max={FIELD_LIMITS.eventDescription} /></label>
               <label><span className="form-label-icon"><CalendarClock size={16} aria-hidden="true"/>Fecha y hora <small>*</small></span>
-                <input required type="datetime-local" value={eventStart}
-                  onChange={(event) => setEventStart(event.target.value)} /></label>
+                <input required type="datetime-local" min={toLocalInput(new Date())} value={eventStart}
+                  onChange={(event) => setEventStart(event.target.value)} />
+                <span className="field-help">Selecciona una fecha futura. Los eventos en sábado o domingo requieren confirmación.</span>
+              </label>
+              {eventStart && [0, 6].includes(new Date(eventStart).getDay()) && (
+                <label className="event-weekend-confirm">
+                  <input type="checkbox" checked={allowWeekendEvent} onChange={(event) => setAllowWeekendEvent(event.target.checked)} />
+                  Confirmo que este evento se realizará durante el fin de semana.
+                </label>
+              )}
+              <label className="event-reminder-select">
+                <span className="form-label-icon"><Bell size={17} aria-hidden="true"/>¿Cuándo quieres recibir el aviso?</span>
+                <select value={eventReminderMinutes} onChange={(event) => setEventReminderMinutes(Number(event.target.value))}>
+                  <option value={-1}>Sin recordatorio</option>
+                  {REMINDER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+                <span className="field-help">Por defecto recibirás un aviso al inicio. Para varios avisos, edita el evento después de crearlo.</span>
+              </label>
               <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto opcional</span>
                 <select value={eventProjectId} onChange={(event) => setEventProjectId(event.target.value)}>
                   <option value="">Sin proyecto</option>
