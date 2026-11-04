@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Orbit Tasks">
+<defs><linearGradient id="planet" x1=".1" y1="0" x2=".9" y2="1"><stop stop-color="#9465f8"/><stop offset=".48" stop-color="#6043ce"/><stop offset="1" stop-color="#352072"/></linearGradient><linearGradient id="ring" x1=".15" y1="1" x2=".95" y2="0"><stop stop-color="#3e208a"/><stop offset=".55" stop-color="#9874ff"/><stop offset="1" stop-color="#5b3cc7"/></linearGradient></defs>
+<circle cx="132" cy="127" r="83" fill="url(#planet)"/>
+<path d="M75 60c-24 33-27 84-8 114" fill="none" stroke="#c2a8ff" stroke-opacity=".28" stroke-width="9" stroke-linecap="round"/>
+<path d="M51 120C19 164 17 194 54 198c45 5 136-54 168-102 10-15 12-28 3-34-8-6-22-4-40 3" fill="none" stroke="#422489" stroke-width="19" stroke-linecap="round"/>
+<path d="M49 120C21 163 25 181 59 181c52 0 129-51 165-108" fill="none" stroke="url(#ring)" stroke-width="14" stroke-linecap="round"/>
+<path d="M154 84l6 15 15 6-15 6-6 15-6-15-15-6 15-6z" fill="#fff"/>
+</svg>
