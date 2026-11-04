@@ -17,6 +17,7 @@ export interface NewTask {
 }
 
 export interface NewEvent {
+  reminder_override_minutes: number[];
   title: string;
   description: string;
   starts_at: string;
