@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 export interface NotificationSettings {
   task_alerts_enabled: boolean;
   event_alerts_enabled: boolean;
+  note_alerts_enabled: boolean;
   task_lead_minutes: number[];
   overdue_enabled: boolean;
   overdue_repeat_minutes: number;
@@ -16,6 +17,7 @@ export interface NotificationSettings {
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   task_alerts_enabled: true,
   event_alerts_enabled: true,
+  note_alerts_enabled: true,
   task_lead_minutes: [1440, 30],
   overdue_enabled: true,
   overdue_repeat_minutes: 1440,
@@ -57,7 +59,7 @@ export function validateNotificationSettings(settings: NotificationSettings): vo
 
 export async function loadNotificationSettings(userId: string): Promise<NotificationSettings> {
   const { data, error } = await supabase.from('notification_preferences')
-    .select('task_alerts_enabled,event_alerts_enabled,task_lead_minutes,overdue_enabled,overdue_repeat_minutes,event_lead_minutes,quiet_hours_enabled,quiet_start,quiet_end,timezone')
+    .select('task_alerts_enabled,event_alerts_enabled,note_alerts_enabled,task_lead_minutes,overdue_enabled,overdue_repeat_minutes,event_lead_minutes,quiet_hours_enabled,quiet_start,quiet_end,timezone')
     .eq('user_id', userId).maybeSingle();
   if (error) throw error;
   if (!data) return { ...DEFAULT_NOTIFICATION_SETTINGS };
