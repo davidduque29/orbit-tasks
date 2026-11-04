@@ -216,6 +216,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           <div className="orbit-modal-heading"><small>Pendientes personales</small><h2 id="note-editor-title">{editId ? 'Editar registro' : 'Nuevo registro'}</h2></div>
           <button type="button" className="outline orbit-modal-close" aria-label="Cerrar" onClick={() => setEditorOpen(false)}><X size={19}/></button>
         </header>
+        {error && <p role="alert" className="field-error">{error}</p>}
         <form className="orbit-validated-form" onSubmit={(event) => void save(event)}>
           <label>Tipo
             <select value={kind} onChange={event => setKind(event.target.value as NoteKind)}>
@@ -246,6 +247,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           <div className="orbit-modal-heading"><small>Organización personal</small><h2 id="categories-title">Mis categorías</h2></div>
           <button type="button" className="outline orbit-modal-close" aria-label="Cerrar" onClick={() => setCategoriesOpen(false)}><X size={19}/></button>
         </header>
+        {error && <p role="alert" className="field-error">{error}</p>}
         <form className="note-category-form" onSubmit={(event) => void addCategory(event)}>
           <label>Nombre<input required maxLength={35} placeholder="Ej.: Familia" value={newCategory} onChange={event => setNewCategory(event.target.value)}/></label>
           <label>Color<input type="color" aria-label="Color de categoría" value={categoryColor} onChange={event => setCategoryColor(event.target.value)}/></label>
