@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { assessPassword, MIN_PASSWORD_LENGTH } from '../domain/passwordPolicy';
-import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
+import { CalendarDays, ClipboardCheck, Eye, EyeOff, FolderKanban, LockKeyhole, Mail } from 'lucide-react';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
@@ -101,7 +101,7 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
   return (
     <main className="auth-page">
       <section className={feedback && !notice ? 'auth-card auth-error-shake' : 'auth-card'}>
-        <div className="logo">✦</div>
+        <img className="auth-brand-logo" src="/orbit-tasks/orbit-planet.svg" alt="Logo Orbit Tasks" />
         <h1>Orbit Tasks</h1>
         <p>{isResetting
           ? 'Crea una nueva contraseña para proteger tu cuenta.'
@@ -109,6 +109,7 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
             ? 'Te enviaremos un enlace para recuperar el acceso.'
             : 'Organiza proyectos, tareas y eventos desde cualquier dispositivo.'}</p>
 
+        <div className="auth-feature-icons" aria-hidden="true"><CalendarDays/><ClipboardCheck/><FolderKanban/></div>
         <form onSubmit={(event) => void handleSubmit(event)}>
           {!isResetting && (
             <>
