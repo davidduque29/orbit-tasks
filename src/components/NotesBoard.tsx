@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { AlignLeft, Bell, CalendarClock, Check, CheckCircle2, FolderPlus, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { AlignLeft, Bell, CalendarClock, Check, CheckCircle2, FolderPlus, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, SlidersHorizontal, CheckSquare, Circle } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
 
 type NoteKind = 'note' | 'pending';
@@ -10,6 +10,46 @@ type Note = {
 };
 type Category = { id: string; name: string; color: string; owner_id: string };
 const TITLE_MAX = 80, DESCRIPTION_MAX = 300;
+
+type SpeechResult = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
+type SpeechRecognizer = {
+  lang: string; interimResults: boolean; continuous: boolean;
+  onresult: ((event: SpeechResult) => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void; stop: () => void;
+};
+type SpeechConstructor = new () => SpeechRecognizer;
+type SpeechWindow = Window & { SpeechRecognition?: SpeechConstructor; webkitSpeechRecognition?: SpeechConstructor };
+
+function getSpeechConstructor(): SpeechConstructor | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const browser = window as SpeechWindow;
+  return browser.SpeechRecognition ?? browser.webkitSpeechRecognition;
+}
+
+function completionTone(): void {
+  const compatibleWindow = window as Window & { webkitAudioContext?: typeof AudioContext };
+  const AudioContextConstructor = window.AudioContext ?? compatibleWindow.webkitAudioContext;
+  if (!AudioContextConstructor) return;
+  const audio = new AudioContextConstructor();
+  void audio.resume().then(() => {
+    const now = audio.currentTime;
+    for (const [index, pitch] of [523.25, 659.25].entries()) {
+      const tone = audio.createOscillator();
+      const volume = audio.createGain();
+      tone.type = 'sine';
+      tone.frequency.value = pitch;
+      volume.gain.setValueAtTime(0.0001, now + index * .105);
+      volume.gain.exponentialRampToValueAtTime(.11, now + index * .105 + .015);
+      volume.gain.exponentialRampToValueAtTime(0.0001, now + index * .105 + .16);
+      tone.connect(volume).connect(audio.destination);
+      tone.start(now + index * .105);
+      tone.stop(now + index * .105 + .17);
+    }
+    window.setTimeout(() => { void audio.close(); }, 550);
+  }).catch(() => { void audio.close(); });
+}
 
 function localDateTime(value: string | null): string {
   if (!value) return '';
@@ -33,7 +73,14 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [showCompleted, setShowCompleted] = useState(true);
+  const [statusTab, setStatusTab] = useState<'active' | 'completed'>('active');
+  const [quickOptionsOpen, setQuickOptionsOpen] = useState(false);
+  const [quickCategory, setQuickCategory] = useState('');
+  const [quickReminder, setQuickReminder] = useState('');
+  const [soundEnabled, setSoundEnabled] = useState(() => window.localStorage.getItem('orbit-completion-sound') !== 'off');
+  const [listening, setListening] = useState(false);
+  const recognizer = useRef<SpeechRecognizer | null>(null);
+  const speechAvailable = Boolean(getSpeechConstructor());
   const [editId, setEditId] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -45,6 +92,47 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [categoryId, setCategoryId] = useState('');
   const [reminder, setReminder] = useState('');
   const [quickTitle, setQuickTitle] = useState('');
+
+  useEffect(() => () => { recognizer.current?.stop(); recognizer.current = null; }, []);
+
+  function toggleSound() {
+    setSoundEnabled((previous) => {
+      window.localStorage.setItem('orbit-completion-sound', previous ? 'off' : 'on');
+      return !previous;
+    });
+  }
+
+  function toggleVoice() {
+    if (recognizer.current) {
+      recognizer.current.stop();
+      recognizer.current = null;
+      setListening(false);
+      return;
+    }
+    const Constructor = getSpeechConstructor();
+    if (!Constructor) {
+      setError('Este navegador no ofrece dictado desde la app. Usa el micrófono del teclado de tu celular.');
+      return;
+    }
+    const speech = new Constructor();
+    speech.lang = 'es-CO';
+    speech.interimResults = false;
+    speech.continuous = false;
+    speech.onresult = (result) => {
+      const transcript = result.results[0]?.[0]?.transcript?.trim() ?? '';
+      if (transcript) setQuickTitle((previous) => [previous.trim(), transcript].filter(Boolean).join(' ').slice(0, TITLE_MAX));
+      setError('');
+    };
+    speech.onerror = (result) => {
+      setListening(false);
+      recognizer.current = null;
+      if (result.error !== 'aborted') setError('No se pudo reconocer la voz. Revisa el permiso de micrófono o usa el dictado del teclado.');
+    };
+    speech.onend = () => { setListening(false); recognizer.current = null; };
+    recognizer.current = speech;
+    try { speech.start(); setListening(true); setError(''); }
+    catch { recognizer.current = null; setListening(false); setError('El dictado no se pudo iniciar en este navegador.'); }
+  }
 
   const load = useCallback(async () => {
     const [notesResponse, categoriesResponse] = await Promise.all([
@@ -66,12 +154,15 @@ export function NotesBoard({ userId }: { userId: string }) {
   }, [load]);
 
   const filtered = useMemo(() => notes.filter((note) => {
-    if (!showCompleted && note.completed) return false;
+    if (statusTab === 'active' && note.completed) return false;
+    if (statusTab === 'completed' && !note.completed) return false;
     if (categoryFilter !== 'all' && (categoryFilter === 'none'
       ? note.category_id !== null : note.category_id !== categoryFilter)) return false;
     return [note.title, note.description].join(' ').toLocaleLowerCase('es')
       .includes(search.toLocaleLowerCase('es').trim());
-  }), [notes, search, categoryFilter, showCompleted]);
+  }), [notes, search, categoryFilter, statusTab]);
+  const completedCount = notes.filter((note) => note.completed).length;
+  const activeCount = notes.length - completedCount;
 
   const openEditor = (note?: Note) => {
     setError('');
@@ -94,10 +185,19 @@ export function NotesBoard({ userId }: { userId: string }) {
     event.preventDefault();
     const cleaned = quickTitle.trim();
     if (cleaned.length < 2 || cleaned.length > TITLE_MAX) { setError('El título debe tener entre 2 y 80 caracteres.'); return; }
+    const when = quickReminder ? new Date(quickReminder) : null;
+    if (when && (!Number.isFinite(when.getTime()) || when.getTime() <= Date.now())) {
+      setError('El recordatorio debe tener una fecha y hora futuras.'); return;
+    }
     if (await perform(async () => {
-      const { error: insertError } = await supabase.from('notes').insert({ owner_id: userId, kind: 'pending', title: cleaned });
+      const { error: insertError } = await supabase.from('notes').insert({
+        owner_id: userId, kind: 'pending', title: cleaned,
+        category_id: quickCategory || null, reminder_at: when?.toISOString() ?? null,
+      });
       if (insertError) throw insertError;
-    }, 'Pendiente creado.')) setQuickTitle('');
+    }, 'Pendiente creado.')) {
+      setQuickTitle(''); setQuickReminder(''); setStatusTab('active');
+    }
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -123,13 +223,16 @@ export function NotesBoard({ userId }: { userId: string }) {
   }
   async function toggle(note: Note) {
     if (note.kind !== 'pending') return;
+    const completed = !note.completed;
+    // Unlock audio on the user gesture: iOS Safari may block sound after async work.
+    const sound = soundEnabled && completed;
+    if (sound) completionTone();
     await perform(async () => {
-      const completed = !note.completed;
       const { error: updateError } = await supabase.from('notes').update({
         completed, completed_at: completed ? new Date().toISOString() : null, updated_at: new Date().toISOString(),
       }).eq('id', note.id).eq('owner_id', userId);
       if (updateError) throw updateError;
-    }, note.completed ? 'Pendiente reactivado.' : 'Pendiente completado.');
+    }, completed ? 'Pendiente completado.' : 'Pendiente reactivado.');
   }
   async function remove(note: Note) {
     if (!window.confirm(`¿Eliminar "${note.title}"?`)) return;
