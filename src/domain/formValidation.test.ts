@@ -33,7 +33,11 @@ describe('Orbit Tasks form validation', () => {
 
   it('rejects invalid dates and forbidden control chars', () => {
     expect(validateEventFields('Reunión', 'Nota', 'not-a-date')).toMatch(/fecha/);
-    expect(validateEventFields('Reunión', 'Nota', '2026-11-04T10:30')).toBeNull();
+    expect(validateEventFields('Reunión', 'Nota', '2026-11-04T10:30', new Date('2026-11-03T10:00:00'))).toBeNull();
+    expect(validateEventFields('dd', '', '2026-11-04T10:30', new Date('2026-11-03T10:00:00'))).toMatch(/al menos 4/);
+    expect(validateEventFields('Reunión', '', '2026-11-01T10:30', new Date('2026-11-03T10:00:00'))).toMatch(/futuras/);
+    expect(validateEventFields('Reunión', '', '2026-11-07T10:30', new Date('2026-11-03T10:00:00'), false)).toMatch(/sábado o domingo/);
+    expect(validateEventFields('Reunión', '', '2026-11-07T10:30', new Date('2026-11-03T10:00:00'), true)).toBeNull();
     expect(validateRequiredText('Prueba\u0001', 'título', 50)).toMatch(/no permitidos/);
   });
 });
