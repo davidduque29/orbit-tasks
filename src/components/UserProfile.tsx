@@ -6,6 +6,8 @@ import { DeviceManager } from './DeviceManager';
 interface UserProfileProps {
   userId: string;
   email: string;
+  embedded?: boolean;
+  onAccountClick?: () => void;
 }
 
 function initials(name: string): string {
@@ -13,7 +15,7 @@ function initials(name: string): string {
   return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0]?.slice(0, 2) || 'U').toLocaleUpperCase();
 }
 
-export function UserProfile({ userId, email }: UserProfileProps) {
+export function UserProfile({ userId, email, embedded = false, onAccountClick }: UserProfileProps) {
   const fallback = email.split('@')[0] || 'Usuario';
   const [displayName, setDisplayName] = useState(fallback);
   const [draftName, setDraftName] = useState('');
@@ -115,19 +117,20 @@ export function UserProfile({ userId, email }: UserProfileProps) {
   }
 
   return (
-    <div className="profile-root">
-      <button type="button" className="profile-trigger" aria-haspopup="true" aria-expanded={menuOpen}
+    <div className={embedded ? "profile-root profile-embedded" : "profile-root"}>
+      {!embedded && <button type="button" className="profile-trigger" aria-haspopup="true" aria-expanded={menuOpen}
         onClick={() => setMenuOpen((current) => !current)}>
         {avatar(false)}
         <span className="profile-trigger-name">{displayName}</span>
         <span aria-hidden="true">⌄</span>
-      </button>
-      {menuOpen && (
-        <div className="profile-dropdown">
+      </button>}
+      {(embedded || menuOpen) && (
+        <div className={embedded ? "profile-dropdown profile-inline" : "profile-dropdown"}>
           <div className="profile-heading">
             {avatar(true)}
             <div><strong>{displayName}</strong><small>{email}</small></div>
           </div>
+          {(embedded || !onAccountClick) && <>
           <label className="profile-upload-action">
             <Camera size={17} aria-hidden="true" />
             {uploadingAvatar ? 'Cargando fotografía…' : 'Subir o cambiar fotografía'}
@@ -153,6 +156,8 @@ export function UserProfile({ userId, email }: UserProfileProps) {
             }}>✎ Editar nombre</button>
           )}
           <button type="button" className="outline profile-action" onClick={() => { setMenuOpen(false); setDevicesOpen(true); }}>📱 Mis dispositivos</button>
+          </>}
+          {!embedded && onAccountClick && <button type="button" className="outline profile-action" onClick={() => {setMenuOpen(false); onAccountClick();}}>⚙️ Abrir mi cuenta</button> }
           {feedback && <p className="profile-feedback" role="status">{feedback}</p>}
           <button type="button" className="profile-logout" onClick={() => void supabase.auth.signOut()}>
             Cerrar sesión
