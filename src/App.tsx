@@ -4,8 +4,8 @@ import { AuthScreen } from './components/AuthScreen';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
-import { MetricCard, ProgressRing, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone } from 'lucide-react';
+import { MetricCard, type StatKind } from './components/DashboardVisuals';
+import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
@@ -82,6 +82,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [selectedProject, setSelectedProject] = useState('');
+  const [expandedProjects, setExpandedProjects] = useState<string[]>([]);
+  const [projectSearch, setProjectSearch] = useState('');
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [taskTitle, setTaskTitle] = useState('');
@@ -220,28 +222,60 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           <>
             <div className="heading"><div><h1>Proyectos</h1><p>Tu trabajo organizado por iniciativas.</p></div>
               <button onClick={() => openEditor('project')}>＋ Nuevo proyecto</button></div>
-            <div className="project-grid">
-              {projects.map((project) => {
+            <div className="project-search"><Search size={18} aria-hidden="true" />
+              <input type="search" aria-label="Buscar proyectos" placeholder="Buscar proyectos..."
+                value={projectSearch} onChange={(event) => setProjectSearch(event.target.value)} />
+            </div>
+            <div className="project-grid compact-project-grid">
+              {projects.filter((project) => [project.name, project.description].join(' ').toLocaleLowerCase()
+                .includes(projectSearch.trim().toLocaleLowerCase())).map((project) => {
                 const projectTasks = tasks.filter((task) => task.project_id === project.id);
                 const totalTasks = projectTasks.length;
                 const completedTasks = projectTasks.filter((task) => task.status === 'Finalizado').length;
                 const pendingTasks = totalTasks - completedTasks;
-                return <article className="card" key={project.id}>
-                  <div className="project-overview"><div className="project-text"><h2>{project.name}</h2><p>{project.description || 'Sin descripción'}</p></div><ProgressRing percent={calculateCompletionRate(projectTasks)} label={project.name} /></div>
-                  <small>Progreso: {completedTasks} de {totalTasks} finalizadas</small>
-                  <div className="project-task-summary" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem 0.9rem', marginTop: '0.7rem', marginBottom: '0.8rem' }}>
-                    <span><strong>Total:</strong> {totalTasks}</span>
-                    <span><strong>Pendientes:</strong> {pendingTasks}</span>
-                    <span><strong>Finalizadas:</strong> {completedTasks}</span>
+                const progress = calculateCompletionRate(projectTasks);
+                const expanded = expandedProjects.includes(project.id);
+                return <article className={expanded ? 'card project-compact-card is-expanded' : 'card project-compact-card'}
+                  key={project.id}>
+                  <button className="project-compact-summary" type="button" aria-expanded={expanded}
+                    aria-controls={`project-detail-${project.id}`}
+                    onClick={() => setExpandedProjects((current) => expanded
+                      ? current.filter((id) => id !== project.id) : [...current, project.id])}>
+                    <span className="project-compact-icon"><FolderKanban size={22} aria-hidden="true" /></span>
+                    <span className="project-compact-copy">
+                      <strong>{project.name}</strong>
+                      <span className="project-compact-metrics">
+                        <ListTodo size={14} aria-hidden="true" /> {totalTasks} {totalTasks === 1 ? 'tarea' : 'tareas'}
+                        <span className="project-compact-percent">{progress.toFixed(0)}%</span>
+                      </span>
+                    </span>
+                    <span className="project-compact-chevron" aria-hidden="true">
+                      {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </span>
+                  </button>
+                  <div className="project-progress-track" role="progressbar" aria-label={`Avance de ${project.name}`}
+                    aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
+                    <div style={{ width: `${progress}%` }} />
                   </div>
-                  <div className="card-actions">
-                    <button className="outline" onClick={() => { setSelectedProject(project.id); setView('board'); }}><ArrowRight size={14} aria-hidden="true"/> Ver tablero</button>
-                    <button className="danger" onClick={() => {
-                      if (window.confirm('¿Eliminar el proyecto y todas sus tareas?')) {
-                        void execute(() => orbitRepository.deleteProject(project.id));
-                      }
-                    }}><Trash2 size={14} aria-hidden="true"/> Eliminar</button>
-                  </div>
+                  {expanded && <div id={`project-detail-${project.id}`} className="project-compact-details">
+                    <p>{project.description || 'Sin descripción adicional.'}</p>
+                    <div className="project-compact-totals">
+                      <span><ListTodo size={17} aria-hidden="true" />Total <strong>{totalTasks}</strong></span>
+                      <span><ArrowRight size={17} aria-hidden="true" />Pendientes <strong>{pendingTasks}</strong></span>
+                      <span><CheckCircle2 size={17} aria-hidden="true" />Finalizadas <strong>{completedTasks}</strong></span>
+                    </div>
+                    <div className="card-actions">
+                      <button className="project-open-board" type="button"
+                        onClick={() => { setSelectedProject(project.id); setView('board'); }}>
+                        <ArrowRight size={15} aria-hidden="true" />Ver tablero
+                      </button>
+                      <button className="danger" type="button" onClick={() => {
+                        if (window.confirm('¿Eliminar el proyecto y todas sus tareas?')) {
+                          void execute(() => orbitRepository.deleteProject(project.id));
+                        }
+                      }}><Trash2 size={15} aria-hidden="true" />Eliminar</button>
+                    </div>
+                  </div>}
                 </article>;
               })}
             </div>
