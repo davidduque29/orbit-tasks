@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { assessPassword, MIN_PASSWORD_LENGTH } from '../domain/passwordPolicy';
+import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
@@ -32,6 +33,7 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
   const isRegistering = mode === 'register' && !isResetting;
   const isCreatingPassword = isRegistering || isResetting;
   const passwordAssessment = assessPassword(password, email);
+  const passwordProgress = passwordAssessment.valid ? 100 : Math.min(80, Math.round((password.length / MIN_PASSWORD_LENGTH) * 65));
 
   function changeMode(nextMode: AuthMode) {
     setMode(nextMode);
@@ -98,7 +100,7 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
 
   return (
     <main className="auth-page">
-      <section className="auth-card">
+      <section className={feedback && !notice ? 'auth-card auth-error-shake' : 'auth-card'}>
         <div className="logo">✦</div>
         <h1>Orbit Tasks</h1>
         <p>{isResetting
@@ -111,29 +113,33 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
           {!isResetting && (
             <>
               <label htmlFor="email">Correo electrónico</label>
-              <input id="email" type="email" autoComplete="email" value={email}
-                onChange={(event) => setEmail(event.target.value)} required />
+              <div className="auth-field"><Mail size={18} aria-hidden="true"/><input id="email" type="email" autoComplete="email" value={email}
+                onChange={(event) => setEmail(event.target.value)} required /></div>
             </>
           )}
 
           {!isRecovering && (
             <>
               <label htmlFor="password">{isResetting ? 'Nueva contraseña' : 'Contraseña'}</label>
-              <div style={{ position: 'relative' }}>
-                <input id="password" type={showPassword ? 'text' : 'password'} minLength={isCreatingPassword ? MIN_PASSWORD_LENGTH : undefined}
+              <div className="auth-field auth-password-field">
+                <LockKeyhole size={18} aria-hidden="true"/><input id="password" type={showPassword ? 'text' : 'password'} minLength={isCreatingPassword ? MIN_PASSWORD_LENGTH : undefined}
                   autoComplete={isResetting || isRegistering ? 'new-password' : 'current-password'}
                   value={password} onChange={(event) => setPassword(event.target.value)}
                   style={{ paddingRight: '3.6rem', width: '100%' }} required />
-                <button type="button" className="text-button"
+                <button type="button" className="auth-password-toggle"
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)}
-                  style={{ position: 'absolute', right: '0.6rem', top: '50%',
-                    transform: 'translateY(-50%)', margin: 0, padding: '0.4rem',
-                    width: '2.5rem', height: '2.5rem' }}>
-                  {showPassword ? '🙈' : '👁'}
+                  aria-pressed={showPassword} onClick={() => setShowPassword((visible) => !visible)}>
+                  {showPassword ? <EyeOff size={19} aria-hidden="true"/> : <Eye size={19} aria-hidden="true"/>}
                 </button>
               </div>
             </>
+          )}
+
+          {isCreatingPassword && (
+            <div className="password-strength" aria-label="Progreso de requisitos de contraseña">
+              <div className="password-strength-track"><div className={passwordAssessment.valid ? 'password-strength-value valid' : 'password-strength-value'} style={{width: `${passwordProgress}%`}} /></div>
+              <small>{passwordAssessment.valid ? 'Requisitos de contraseña cumplidos' : 'Completa los requisitos de contraseña'}</small>
+            </div>
           )}
 
           {isCreatingPassword && (
