@@ -157,7 +157,7 @@ export function UserProfile({ userId, email, embedded = false, onAccountClick }:
           )}
           <button type="button" className="outline profile-action" onClick={() => { setMenuOpen(false); setDevicesOpen(true); }}>📱 Mis dispositivos</button>
           </>}
-          {!embedded && onAccountClick && <button type="button" className="outline profile-action" onClick={() => {setMenuOpen(false); onAccountClick();}}>⚙️ Abrir mi cuenta</button> }
+          {!embedded && onAccountClick && <button type="button" className="outline profile-action" onClick={() => {setMenuOpen(false); onAccountClick();}}>⚙️ Mi cuenta</button> }
           {feedback && <p className="profile-feedback" role="status">{feedback}</p>}
           <button type="button" className="profile-logout" onClick={() => void supabase.auth.signOut()}>
             Cerrar sesión
