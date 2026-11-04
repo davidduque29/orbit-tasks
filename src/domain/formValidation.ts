@@ -4,8 +4,8 @@ export const FIELD_LIMITS = {
   password: 256,
   eventTitle: 50,
   eventDescription: 200,
-  taskTitle: 100,
-  taskDescription: 500,
+  taskTitle: 50,
+  taskDescription: 200,
   projectName: 80,
   projectDescription: 300,
 } as const;
