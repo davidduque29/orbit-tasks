@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { getPushState, registerDevice, unregisterDevice, type PushState } from '../infrastructure/pushSupport';
 import { ToggleSwitch } from './ToggleSwitch';
+import { BellRing, CalendarDays, ListTodo, Cloud, ShieldCheck } from 'lucide-react';
 import {
   DEFAULT_NOTIFICATION_SETTINGS, REMINDER_OPTIONS,
   loadNotificationSettings, normalizeIntervals, saveNotificationSettings,
@@ -131,9 +132,21 @@ export function NotificationCenter({ userId }: Props) {
       <div className="heading">
         <div><h1>Centro de notificaciones</h1>
           <p>Personaliza los avisos de tareas y eventos.</p></div>
-        <span className="notification-bell" aria-hidden="true">🔔</span>
+        <span className="notification-bell" aria-hidden="true"><BellRing size={26}/></span>
       </div>
-      <p className="notice">Tus preferencias se guardan en Supabase. Ya verificamos una entrega Web Push en iPhone; la llegada de cada aviso depende de la conexión y los permisos del dispositivo.</p>
+      <div className="notice account-notification-intro"><Cloud size={20} aria-hidden="true" /><span>Tus preferencias se guardan en Supabase. Orbit Tasks envía recordatorios cuando están activados y el dispositivo tiene permiso.</span></div>
+      <section className="card notification-category-card" aria-label="Tipos de avisos">
+        <h2>Tipos de avisos</h2>
+        <div className="notification-category-row"><ListTodo size={19} aria-hidden="true" />
+          <ToggleSwitch label="Avisos del tablero y tareas" checked={settings.task_alerts_enabled}
+            onChange={(checked) => change('task_alerts_enabled', checked)}
+            description="Activa o pausa los recordatorios de tareas, vencimientos e impedimentos." /></div>
+        <div className="notification-category-row"><CalendarDays size={19} aria-hidden="true" />
+          <ToggleSwitch label="Avisos de eventos" checked={settings.event_alerts_enabled}
+            onChange={(checked) => change('event_alerts_enabled', checked)}
+            description="Activa o pausa los recordatorios de la agenda." /></div>
+        <p className="notification-save-hint"><ShieldCheck size={15} aria-hidden="true" /> Pulsa Guardar preferencias para aplicar los cambios.</p>
+      </section>
       <section className="card" style={{ marginBottom: 16 }}>
         <h2>Notificaciones en este dispositivo</h2>
         <p>Permite que Orbit Tasks reciba avisos cuando esté cerrada.</p>
