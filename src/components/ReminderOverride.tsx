@@ -11,8 +11,8 @@ interface Props {
 export function ReminderOverride({ userId, itemId, type, initial }: Props) {
   const [custom, setCustom] = useState(initial !== null);
   const [intervals, setIntervals] = useState<number[]>(initial ?? []);
-  const [newAmount, setNewAmount] = useState('2');
-  const [newUnit, setNewUnit] = useState('60');
+  const [newAmount, setNewAmount] = useState('');
+  const [newUnit, setNewUnit] = useState('1');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
@@ -34,7 +34,7 @@ export function ReminderOverride({ userId, itemId, type, initial }: Props) {
   }
 
   function addInterval() {
-    const minutes = Number(newAmount) * Number(newUnit);
+    const minutes = (newAmount.trim() ? Number(newAmount) : 0) * Number(newUnit);
     if (!Number.isSafeInteger(minutes) || minutes < 1 || minutes > 525600) {
       setMessage('El intervalo debe ser de entre 1 minuto y 1 año.');
       setError(true);
@@ -49,16 +49,16 @@ export function ReminderOverride({ userId, itemId, type, initial }: Props) {
 
   return (
     <details className="reminder-override">
-      <summary>🔔 Recordatorios de {type === 'tasks' ? 'la tarea' : 'este evento'}</summary>
+      <summary>🔔 {type === 'tasks' ? 'Configurar avisos de la tarea' : 'Cambiar o agregar avisos del evento'}</summary>
       <form onSubmit={(event) => void save(event)}>
         <label className="notification-check">
           <input type="checkbox" checked={custom} onChange={(event) => setCustom(event.target.checked)} />
-          Personalizar avisos de este registro
+          Personalizar horarios de notificación
         </label>
-        {!custom && <p className="muted">Se aplican las preferencias generales.</p>}
+        {!custom && <p className="muted">Se aplican las preferencias generales de Mi cuenta → Avisos.</p>}
         {custom && (
           <>
-            <p className="muted">Si no seleccionas intervalos, este registro no tendrá avisos anticipados.</p>
+            <p className="muted">Elige uno o varios momentos para avisarte. Si no seleccionas ninguno, no se enviarán recordatorios de este registro.</p>
             <div className="notification-choice-grid">
               {presets.map((option) => (
                 <label key={option.value} className="notification-check">
@@ -76,16 +76,24 @@ export function ReminderOverride({ userId, itemId, type, initial }: Props) {
                 {n} minutos antes
               </label>
             ))}
-            <div className="notification-custom">
-              <input aria-label="Cantidad de intervalo" type="number" min="1"
-                value={newAmount} onChange={(event) => setNewAmount(event.target.value)} />
-              <select aria-label="Unidad de intervalo" value={newUnit}
-                onChange={(event) => setNewUnit(event.target.value)}>
-                <option value="1">Minutos</option><option value="60">Horas</option>
-                <option value="1440">Días</option><option value="10080">Semanas</option>
-              </select>
-              <button type="button" className="outline" onClick={addInterval}>Agregar</button>
-            </div>
+            <details className="notification-advanced-interval">
+              <summary>Opciones avanzadas: agregar otro aviso personalizado</summary>
+              <p className="muted">Ejemplo: para recibir un aviso 2 horas antes, introduce 2 y selecciona Horas.</p>
+              <div className="notification-custom">
+                <label>Anticipación
+                  <input aria-label="Cantidad de anticipación" placeholder="Ej.: 2" type="number" min="1" max="525600"
+                    value={newAmount} onChange={(event) => setNewAmount(event.target.value)} />
+                </label>
+                <label>Unidad
+                  <select aria-label="Unidad de anticipación" value={newUnit}
+                    onChange={(event) => setNewUnit(event.target.value)}>
+                    <option value="1">Minutos</option><option value="60">Horas</option>
+                    <option value="1440">Días</option><option value="10080">Semanas</option>
+                  </select>
+                </label>
+                <button type="button" className="outline" onClick={addInterval}>Añadir aviso</button>
+              </div>
+            </details>
           </>
         )}
         {message && <p role="status" className={error ? 'error' : 'feedback'}>{message}</p>}
