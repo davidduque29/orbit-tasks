@@ -1,7 +1,7 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Project, Task, TaskStatus } from '../domain/models';
 import { ReminderOverride } from './ReminderOverride';
-import { Search, List, Columns3, ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { Search, List, Columns3, Plus, X, ClipboardList, CalendarDays, Flag, Bell } from 'lucide-react';
 
 type DisplayStatus = 'Activa' | 'En progreso' | 'Impedimento' | 'Finalizado';
 type TimeFilter = 'all' | 'overdue' | 'today' | 'week' | 'closed';
@@ -123,8 +123,14 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
-  const [expanded, setExpanded] = useState<string[]>([]);
-  const [expandAll, setExpandAll] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const selectedTask = tasks.find((task) => task.id === selectedTaskId);
+  useEffect(() => {
+    if (!selectedTaskId) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelectedTaskId(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [selectedTaskId]);
 
   const now = new Date();
   const filtered = useMemo(() => tasks.filter((task) => {
@@ -142,20 +148,20 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
     && task.estimated_due_at && new Date(task.estimated_due_at) < now).length;
 
   function taskItem(task: Task) {
-    const isOpen = expandAll ? !expanded.includes(task.id) : expanded.includes(task.id);
     return (
-      <article className="task-list-item" key={task.id}>
-        <button type="button" className="task-summary" aria-expanded={isOpen}
-          onClick={() => setExpanded((current) => current.includes(task.id)
-            ? current.filter((id) => id !== task.id) : [...current, task.id])}>
-          <span aria-hidden="true">{isOpen ? <ChevronDown size={17} /> : <ChevronRight size={17} />}</span>
-          <span className="task-summary-main"><strong>{task.title}</strong>
-            <small>{projects.find((p) => p.id === task.project_id)?.name ?? 'Proyecto'} · {dateLabel(task.estimated_due_at)}</small>
+      <article className="task-list-item task-compact-card" key={task.id}>
+        <button type="button" className="task-summary task-compact-button"
+          aria-label={`Ver detalles de ${task.title}`}
+          onClick={() => setSelectedTaskId(task.id)}>
+          <span className="task-summary-main">
+            <strong>{task.title}</strong>
+            <span className="task-compact-meta"><Flag size={13} aria-hidden="true" />{task.priority}
+              {task.estimated_due_at && <><CalendarDays size={13} aria-hidden="true" />{dateLabel(task.estimated_due_at)}</>}
+              {task.reminder_override_minutes?.length ? <Bell size={13} aria-label="Con recordatorios" /> : null}
+            </span>
           </span>
           <StatusDot status={displayStatus(task.status)} />
         </button>
-        {isOpen && <TaskDetails key={task.id + ':' + task.status + ':' + task.resolution}
-          task={task} projects={projects} onSave={onSave} onDelete={onDelete} saving={saving} userId={userId} />}
       </article>
     );
   }
@@ -207,16 +213,10 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
         <span>{filtered.length} tareas · {overdue} vencidas</span>
       </div>
       {view === 'list' && (
-        <>
-          <div className="board-expand-controls">
-            <button className="outline" type="button" onClick={() => { setExpandAll(true); setExpanded([]); }}>Expandir todas</button>
-            <button className="outline" type="button" onClick={() => { setExpandAll(false); setExpanded([]); }}>Contraer todas</button>
-          </div>
-          <div className="task-list">
-            {filtered.map(taskItem)}
-            {filtered.length === 0 && <p className="empty">No encontramos tareas con esos filtros.</p>}
-          </div>
-        </>
+        <div className="task-list">
+          {filtered.map(taskItem)}
+          {filtered.length === 0 && <p className="empty">No encontramos tareas con esos filtros.</p>}
+        </div>
       )}
       {view === 'kanban' && (
         <div className="kanban">
@@ -226,6 +226,27 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
               {filtered.filter((task) => displayStatus(task.status) === status).map(taskItem)}
             </section>
           ))}
+        </div>
+      )}
+      {selectedTask && (
+        <div className="modal-backdrop" role="presentation"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedTaskId(null); }}>
+          <section className="modal orbit-detail-modal" role="dialog" aria-modal="true"
+            aria-labelledby="task-detail-title">
+            <ClipboardList className="orbit-modal-watermark" size={180} aria-hidden="true" />
+            <header className="orbit-modal-header">
+              <span className="orbit-modal-icon"><ClipboardList size={23} aria-hidden="true" /></span>
+              <div className="orbit-modal-heading"><small>Detalle de tarea</small>
+                <h2 id="task-detail-title">{selectedTask.title}</h2></div>
+              <button type="button" className="outline orbit-modal-close" aria-label="Cerrar detalle de tarea"
+                onClick={() => setSelectedTaskId(null)}><X size={20} /></button>
+            </header>
+            <TaskDetails key={selectedTask.id + ':' + selectedTask.status + ':' + selectedTask.resolution}
+              task={selectedTask} projects={projects}
+              onSave={async (id, status, resolution) => { await onSave(id, status, resolution); }}
+              onDelete={async (id) => { await onDelete(id); setSelectedTaskId(null); }}
+              saving={saving} userId={userId} />
+          </section>
         </div>
       )}
     </section>
