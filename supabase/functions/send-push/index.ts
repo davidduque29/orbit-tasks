@@ -9,7 +9,7 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 type Task = { id: string; owner_id: string; title: string; estimated_due_at: string | null; status: string; reminder_override_minutes: number[] | null };
 type Event = { id: string; owner_id: string; title: string; starts_at: string; status: string; reminder_override_minutes: number[] | null };
-type Settings = { user_id: string; task_lead_minutes: number[]; event_lead_minutes: number[]; overdue_enabled: boolean; overdue_repeat_minutes: number; quiet_hours_enabled: boolean; quiet_start: string; quiet_end: string; timezone: string };
+type Settings = { user_id: string; task_alerts_enabled?: boolean; event_alerts_enabled?: boolean; task_lead_minutes: number[]; event_lead_minutes: number[]; overdue_enabled: boolean; overdue_repeat_minutes: number; quiet_hours_enabled: boolean; quiet_start: string; quiet_end: string; timezone: string };
 type Device = { id: string; owner_id: string; subscription_data: { endpoint: string; keys?: { p256dh: string; auth: string } } };
 type Notification = { ownerId: string; key: string; title: string; body: string };
 
@@ -43,7 +43,7 @@ function dueNotifications(now: Date, tasks: Task[], events: Event[], settings: M
     const deadline = new Date(task.estimated_due_at).getTime();
     if (!Number.isFinite(deadline)) continue;
     const s = settings.get(task.owner_id);
-    if (s && quiet(now, s)) continue;
+    if (s?.task_alerts_enabled === false || (s && quiet(now, s))) continue;
     const intervals = task.reminder_override_minutes ?? s?.task_lead_minutes ?? defaults.task_lead_minutes;
     for (const offset of [...new Set(intervals)]) {
       const when = deadline - offset * minute;
@@ -69,7 +69,7 @@ function dueNotifications(now: Date, tasks: Task[], events: Event[], settings: M
     const start = new Date(event.starts_at).getTime();
     if (!Number.isFinite(start)) continue;
     const s = settings.get(event.owner_id);
-    if (s && quiet(now, s)) continue;
+    if (s?.event_alerts_enabled === false || (s && quiet(now, s))) continue;
     const intervals = event.reminder_override_minutes ?? s?.event_lead_minutes ?? defaults.event_lead_minutes;
     for (const offset of [...new Set(intervals)]) {
       const when = start - offset * minute;
