@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { AlignLeft, Bell, CalendarClock, Check, CheckCircle2, FolderPlus, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
-import { CharacterCounter } from './CharacterCounter';
 
 type NoteKind = 'note' | 'pending';
 type Note = {
