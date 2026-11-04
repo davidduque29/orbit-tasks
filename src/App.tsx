@@ -7,6 +7,7 @@ import { MetricCard, ProgressRing, type StatKind } from './components/DashboardV
 import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
+import { WeeklyAgenda } from './components/WeeklyAgenda';
 import { calculateAverageCycleDays, calculateCompletionRate, countClosuresByDay } from './domain/metrics';
 import { TASK_PRIORITIES, type TaskStatus } from './domain/models';
 import { useOrbitData } from './hooks/useOrbitData';
@@ -261,7 +262,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <div className="heading"><div><h1>Eventos y agenda</h1><p>Registra citas y compromisos importantes.</p></div>
               <button onClick={() => openEditor('event')}>＋ Nuevo evento</button></div>
             <div className="notice">🔔 Tus eventos se sincronizan en Supabase. Los recordatorios se procesan automáticamente; verifica el estado del dispositivo en Avisos.</div>
-            <section className="card">
+            <WeeklyAgenda events={events} />
+            <section className="card event-list-card">
               {events.map((item) => <div className="list-row" key={item.id}>
                 <div><strong>{item.title}</strong><p>{item.description}</p><small className="event-time"><CalendarClock size={14} aria-hidden="true" />{formatDate(item.starts_at)}</small>
                   <ReminderOverride userId={userId} itemId={item.id} type="events" initial={item.reminder_override_minutes ?? null} />
