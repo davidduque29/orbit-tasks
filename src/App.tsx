@@ -346,6 +346,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                     aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
                     <div style={{ width: `${progress}%` }} />
                   </div>
+                  <button className="project-create-task project-create-task-shortcut" type="button"
+                    onClick={() => openTaskForProject(project.id)}
+                    aria-label={`Crear una tarea en ${project.name}`}>
+                    <Plus size={16} aria-hidden="true"/> Crear tarea
+                  </button>
                   {expanded && <div id={`project-detail-${project.id}`} className="project-compact-details">
                     <p>{project.description || 'Sin descripción adicional.'}</p>
                     <div className="project-compact-totals">
@@ -354,9 +359,6 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                       <span><CheckCircle2 size={17} aria-hidden="true" />Finalizadas <strong>{completedTasks}</strong></span>
                     </div>
                     <div className="card-actions">
-                      <button className="project-create-task" type="button" onClick={() => openTaskForProject(project.id)}>
-                        <Plus size={16} aria-hidden="true" /> Nueva tarea
-                      </button>
                       <button className="project-open-board" type="button"
                         onClick={() => { setSelectedProject(project.id); setView('board'); }}>
                         <ArrowRight size={15} aria-hidden="true" />Ver tablero
