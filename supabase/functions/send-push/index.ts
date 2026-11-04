@@ -183,8 +183,15 @@ Deno.serve(async (request) => {
         const { data: attemptRow } = await db.from('push_delivery_log')
           .select('attempts').match(match).maybeSingle();
         const currentAttempts = attemptRow?.attempts ?? 3;
-        const permanentlyRejected = statusCode === 404 || statusCode === 410;
-        const nextRetry = permanentlyRejected || currentAttempts >= 3
+        const errorCode = providerReason ?? (statusCode ? `HTTP_${statusCode}` : 'NETWORK_ERROR');
+        const { data: rule, error: ruleError } = await db.from('push_error_rules')
+          .select('retryable,requires_resubscription').eq('code', errorCode).eq('active', true).maybeSingle();
+        if (ruleError) console.error('push_error_rule_lookup_failed', { code: ruleError.code });
+        // Unrecognized 4xx rejections are non-retryable, while connection and
+        // provider 5xx failures are eligible for bounded retries.
+        const retryable = rule?.retryable ?? (statusCode === null || statusCode >= 500);
+        const permanentlyRejected = rule?.requires_resubscription ?? (statusCode === 404 || statusCode === 410);
+        const nextRetry = !retryable || permanentlyRejected || currentAttempts >= 3
           ? null
           : new Date(Date.now() + Math.min(currentAttempts * 60_000, 180_000)).toISOString();
         const { error: saveFailureError } = await db.from('push_delivery_log')
@@ -192,7 +199,7 @@ Deno.serve(async (request) => {
             state: 'failed',
             error_message: `${providerReason ?? errorType}: ${message}`,
             http_status: statusCode,
-            error_code: providerReason ?? (statusCode ? `HTTP_${statusCode}` : 'NETWORK_ERROR'),
+            error_code: errorCode,
             next_retry_at: nextRetry,
             last_attempt_at: new Date().toISOString(),
           }).match(match);
