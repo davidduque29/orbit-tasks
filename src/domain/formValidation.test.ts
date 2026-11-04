@@ -13,6 +13,8 @@ describe('Orbit Tasks form validation', () => {
   });
   it('accepts a normal email and rejects malformed and overlong input', () => {
     expect(validateEmail('  persona@correo.com  ')).toBeNull();
+    expect(FIELD_LIMITS.email).toBe(50);
+    expect(validateEmail(`${'a'.repeat(43)}@test.com`)).toMatch(/50 caracteres/);
     expect(validateEmail('sin-arroba')).toMatch(/correo válido/);
     expect(validateEmail('alguien@@correo.com')).not.toBeNull();
     expect(validateEmail('abc@correo..com')).not.toBeNull();
