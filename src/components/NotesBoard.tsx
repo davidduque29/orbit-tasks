@@ -268,11 +268,46 @@ export function NotesBoard({ userId }: { userId: string }) {
       <div><h1>Pendientes</h1><p>Notas rápidas, actividades personales y recordatorios, sin crear un proyecto.</p></div>
       <button type="button" onClick={() => openEditor()}><Plus size={17} aria-hidden="true"/> Nuevo pendiente</button>
     </div>
-    <form className="card quick-note-form" onSubmit={(event) => void quickAdd(event)}>
-      <ListTodo size={20} aria-hidden="true"/>
-      <input aria-label="Título del pendiente rápido" placeholder="¿Qué necesitas recordar?" minLength={2} maxLength={TITLE_MAX}
-        value={quickTitle} onChange={event => setQuickTitle(event.target.value.slice(0, TITLE_MAX))} spellCheck lang="es" required/>
-      <button type="submit" disabled={busy || quickTitle.trim().length < 2} aria-label="Agregar pendiente rápido"><Plus size={19}/></button>
+    <form className="card quick-capture" onSubmit={(event) => void quickAdd(event)}>
+      <div className="quick-capture-main">
+        <ListTodo size={20} aria-hidden="true"/>
+        <input aria-label="Título del pendiente rápido" placeholder="¿Qué necesitas recordar?" minLength={2} maxLength={TITLE_MAX}
+          value={quickTitle} onChange={event => setQuickTitle(event.target.value.slice(0, TITLE_MAX))} spellCheck lang="es" required/>
+        <button type="button" className={listening ? 'quick-voice is-listening' : 'quick-voice'}
+          aria-label={listening ? 'Detener dictado' : 'Dictar pendiente por voz'}
+          aria-pressed={listening} onClick={toggleVoice} title={speechAvailable ? 'Dictar en español' : 'Usa el micrófono del teclado'}>
+          {listening ? <MicOff size={19}/> : <Mic size={19}/>}
+        </button>
+        <button type="submit" className="quick-create" disabled={busy || quickTitle.trim().length < 2}
+          aria-label="Agregar pendiente rápido"><Plus size={19}/></button>
+      </div>
+      {listening && <p className="quick-listening" role="status">Escuchando… di tu pendiente en voz alta.</p>}
+      {!speechAvailable && <small className="quick-voice-hint">Para dictar, utiliza el micrófono de tu teclado.</small>}
+      <div className="quick-capture-bottom">
+        <button type="button" className="quick-options-toggle" aria-expanded={quickOptionsOpen}
+          onClick={() => setQuickOptionsOpen(!quickOptionsOpen)}>
+          <SlidersHorizontal size={16}/> {quickOptionsOpen ? 'Ocultar detalles' : 'Categoría y recordatorio'}
+        </button>
+        <span className="quick-preview">
+          {quickCategory && categories.find(category => category.id === quickCategory)?.name}
+          {quickReminder && <><CalendarClock size={13}/> {reminderLabel(new Date(quickReminder).toISOString())}</>}
+        </span>
+      </div>
+      {quickOptionsOpen && <div className="quick-capture-options">
+        <label><Tag size={15} aria-hidden="true"/> Categoría
+          <select value={quickCategory} onChange={event => setQuickCategory(event.target.value)}>
+            <option value="">Sin categoría</option>
+            {categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+          </select>
+        </label>
+        <label><CalendarClock size={15} aria-hidden="true"/> Recordatorio
+          <input type="datetime-local" min={localDateTime(new Date().toISOString())}
+            value={quickReminder} onChange={event => setQuickReminder(event.target.value)}/>
+        </label>
+        <button className="outline quick-category-link" type="button" onClick={() => { setError(''); setCategoriesOpen(true); }}>
+          <FolderPlus size={15}/> Crear categoría
+        </button>
+      </div>}
     </form>
     <div className="notes-toolbar">
       <label className="notes-search"><Search size={17} aria-hidden="true"/><input aria-label="Buscar notas y pendientes"
@@ -285,7 +320,19 @@ export function NotesBoard({ userId }: { userId: string }) {
       {categories.map(category => <button key={category.id} type="button" className={categoryFilter === category.id ? 'active' : ''}
         onClick={() => setCategoryFilter(category.id)}><span className="note-category-dot" style={{background:category.color}}/>{category.name}</button>)}
     </div>
-    <label className="notes-show-completed"><input type="checkbox" checked={showCompleted} onChange={event => setShowCompleted(event.target.checked)}/> Mostrar completados</label>
+    <div className="notes-status-row">
+      <div className="notes-status-tabs" role="tablist" aria-label="Estado de pendientes">
+        <button type="button" role="tab" aria-selected={statusTab === 'active'} className={statusTab === 'active' ? 'selected' : ''}
+          onClick={() => setStatusTab('active')}><Circle size={15}/> Activos <span>{activeCount}</span></button>
+        <button type="button" role="tab" aria-selected={statusTab === 'completed'} className={statusTab === 'completed' ? 'selected' : ''}
+          onClick={() => setStatusTab('completed')}><CheckSquare size={15}/> Completados <span>{completedCount}</span></button>
+      </div>
+      <button type="button" className="note-sound-toggle" aria-label={soundEnabled ? 'Silenciar sonido al completar' : 'Activar sonido al completar'}
+        aria-pressed={soundEnabled} onClick={toggleSound}>
+        {soundEnabled ? <Volume2 size={17}/> : <VolumeX size={17}/>}
+        <span>{soundEnabled ? 'Sonido activado' : 'Sin sonido'}</span>
+      </button>
+    </div>
     {error && <p className="error" role="alert">{error}</p>}
     {message && <p className="feedback" role="status">{message}</p>}
     {loading && <p className="muted">Cargando tus pendientes…</p>}
@@ -312,7 +359,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => void remove(note)} disabled={busy}><Trash2 size={17}/></button>
         </div>
       </article>)}
-      {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/><h2>Todo está al día</h2><p>No hay registros con los filtros actuales. Puedes crear uno sin asignarlo a ningún proyecto.</p></div>}
+      {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/><h2>{statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2><p>{statusTab === 'active' ? 'No hay pendientes activos con estos filtros. Crea uno nuevo para comenzar.' : 'Aquí verás los pendientes que hayas marcado como completados.'}</p></div>}
     </div>}
     {editorOpen && <div className="modal-backdrop" role="presentation" onMouseDown={event => {if(event.target === event.currentTarget) setEditorOpen(false);}}>
       <section className="modal orbit-detail-modal note-modal" role="dialog" aria-modal="true" aria-labelledby="note-editor-title">
