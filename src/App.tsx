@@ -5,13 +5,14 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
 import { TrendSparkline } from './components/TrendSparkline';
 import { calculateAverageCycleDays, calculateCompletionRate, countClosuresByDay } from './domain/metrics';
 import { TASK_PRIORITIES, type TaskStatus } from './domain/models';
+import { FIELD_LIMITS, validateEventFields, validateRequiredText, validateOptionalText } from './domain/formValidation';
 import { useOrbitData } from './hooks/useOrbitData';
 import { orbitRepository } from './infrastructure/orbitRepository';
 import { supabase } from './infrastructure/supabaseClient';
@@ -95,6 +96,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [eventDescription, setEventDescription] = useState('');
   const [eventStart, setEventStart] = useState(toLocalInput(new Date(Date.now() + 3_600_000)));
   const [eventProjectId, setEventProjectId] = useState('');
+  const [formError, setFormError] = useState('');
 
   const visibleTasks = useMemo(
     () => tasks.filter((task) => !selectedProject || task.project_id === selectedProject),
@@ -125,6 +127,10 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
   async function saveProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validation = validateRequiredText(projectName, 'nombre del proyecto', FIELD_LIMITS.projectName)
+      ?? validateOptionalText(projectDescription, 'descripción del proyecto', FIELD_LIMITS.projectDescription);
+    if (validation) { setFormError(validation); return; }
+    setFormError('');
     await execute(() => orbitRepository.createProject(userId, {
       name: projectName.trim(),
       description: projectDescription.trim(),
@@ -136,6 +142,10 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
   async function saveTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validation = validateRequiredText(taskTitle, 'título de tarea', FIELD_LIMITS.taskTitle)
+      ?? validateOptionalText(taskDescription, 'descripción de tarea', FIELD_LIMITS.taskDescription);
+    if (validation) { setFormError(validation); return; }
+    setFormError('');
     await execute(() => orbitRepository.createTask(userId, {
       project_id: taskProjectId,
       title: taskTitle.trim(),
@@ -151,6 +161,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
   async function saveEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const validation = validateEventFields(eventTitle, eventDescription, eventStart);
+    if (validation) { setFormError(validation); return; }
+    setFormError('');
     await execute(() => orbitRepository.createEvent(userId, {
       title: eventTitle.trim(),
       description: eventDescription.trim(),
@@ -166,6 +179,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   }
 
   function openEditor(type: Editor) {
+    setFormError('');
     if (type === 'task' && projects.length === 0) {
       setFeedback('Crea primero un proyecto para registrar tareas.');
       setEditor('project');
@@ -415,32 +429,56 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 <h2>{editor === 'project' ? 'Nuevo proyecto' : editor === 'task' ? 'Nueva tarea' : 'Nuevo evento'}</h2></div>
               <button type="button" className="outline orbit-modal-close" aria-label="Cerrar formulario" onClick={() => setEditor(null)}><X size={19} /></button>
             </header>
-            {editor === 'project' && <form onSubmit={(event) => void saveProject(event)}>
-              <label>Nombre<input required maxLength={120} value={projectName} onChange={(event) => setProjectName(event.target.value)} /></label>
-              <label>Descripción<textarea value={projectDescription} onChange={(event) => setProjectDescription(event.target.value)} /></label>
+            {formError && <p className="field-error form-validation-alert" role="alert">{formError}</p>}
+            {editor === 'project' && <form onSubmit={(event) => void saveProject(event)} className="orbit-validated-form">
+              <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Nombre del proyecto <small>*</small></span>
+                <input required minLength={2} maxLength={FIELD_LIMITS.projectName} placeholder="Ej.: Mejoras de Orbit Tasks" value={projectName}
+                  onChange={(event) => setProjectName(event.target.value)} />
+                <span className="field-counter">{projectName.length}/{FIELD_LIMITS.projectName}</span></label>
+              <label><span className="form-label-icon"><AlignLeft size={16} aria-hidden="true"/>Descripción (opcional)</span>
+                <textarea maxLength={FIELD_LIMITS.projectDescription} placeholder="Describe brevemente el objetivo del proyecto..." value={projectDescription}
+                  onChange={(event) => setProjectDescription(event.target.value)} />
+                <span className="field-counter">{projectDescription.length}/{FIELD_LIMITS.projectDescription}</span></label>
               <button disabled={saving}>Guardar proyecto</button>
             </form>}
-            {editor === 'task' && <form onSubmit={(event) => void saveTask(event)}>
-              <label>Título<input required maxLength={200} value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} /></label>
-              <label>Descripción<textarea value={taskDescription} onChange={(event) => setTaskDescription(event.target.value)} /></label>
-              <label>Proyecto<select required value={taskProjectId} onChange={(event) => setTaskProjectId(event.target.value)}>
-                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-              </select></label>
-              <label>Prioridad<select value={taskPriority} onChange={(event) => setTaskPriority(event.target.value as typeof taskPriority)}>
-                {TASK_PRIORITIES.map((priority) => <option key={priority}>{priority}</option>)}
-              </select></label>
-              <label>Fecha estimada<input type="datetime-local" value={taskDue} onChange={(event) => setTaskDue(event.target.value)} /></label>
+            {editor === 'task' && <form onSubmit={(event) => void saveTask(event)} className="orbit-validated-form">
+              <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título de la tarea <small>*</small></span>
+                <input required minLength={2} maxLength={FIELD_LIMITS.taskTitle} placeholder="Ej.: Validar el tablero Kanban" value={taskTitle}
+                  onChange={(event) => setTaskTitle(event.target.value)} />
+                <span className="field-counter">{taskTitle.length}/{FIELD_LIMITS.taskTitle}</span></label>
+              <label><span className="form-label-icon"><AlignLeft size={16} aria-hidden="true"/>Descripción (opcional)</span>
+                <textarea maxLength={FIELD_LIMITS.taskDescription} placeholder="¿Qué se debe realizar?" value={taskDescription}
+                  onChange={(event) => setTaskDescription(event.target.value)} />
+                <span className="field-counter">{taskDescription.length}/{FIELD_LIMITS.taskDescription}</span></label>
+              <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto <small>*</small></span>
+                <select required value={taskProjectId} onChange={(event) => setTaskProjectId(event.target.value)}>
+                  {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                </select></label>
+              <label><span className="form-label-icon"><Flag size={16} aria-hidden="true"/>Prioridad</span>
+                <select value={taskPriority} onChange={(event) => setTaskPriority(event.target.value as typeof taskPriority)}>
+                  {TASK_PRIORITIES.map((priority) => <option key={priority}>{priority}</option>)}
+                </select></label>
+              <label><span className="form-label-icon"><Clock3 size={16} aria-hidden="true"/>Fecha estimada</span>
+                <input type="datetime-local" value={taskDue} onChange={(event) => setTaskDue(event.target.value)} /></label>
               <button disabled={saving}>Guardar tarea</button>
             </form>}
-            {editor === 'event' && <form onSubmit={(event) => void saveEvent(event)}>
-              <label>Título<input required maxLength={200} value={eventTitle} onChange={(event) => setEventTitle(event.target.value)} /></label>
-              <label>Descripción<textarea value={eventDescription} onChange={(event) => setEventDescription(event.target.value)} /></label>
-              <label>Fecha y hora<input required type="datetime-local" value={eventStart}
-                onChange={(event) => setEventStart(event.target.value)} /></label>
-              <label>Proyecto opcional<select value={eventProjectId} onChange={(event) => setEventProjectId(event.target.value)}>
-                <option value="">Sin proyecto</option>
-                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-              </select></label>
+            {editor === 'event' && <form onSubmit={(event) => void saveEvent(event)} className="orbit-validated-form">
+              <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título del evento <small>*</small></span>
+                <input required minLength={2} maxLength={FIELD_LIMITS.eventTitle} placeholder="Ej.: Reunión de seguimiento" value={eventTitle}
+                  onChange={(event) => setEventTitle(event.target.value)} />
+                <span className="field-counter">{eventTitle.length}/{FIELD_LIMITS.eventTitle}</span></label>
+              <label><span className="form-label-icon"><AlignLeft size={16} aria-hidden="true"/>Descripción (opcional)</span>
+                <textarea maxLength={FIELD_LIMITS.eventDescription} placeholder="Agrega el lugar, propósito o detalles del evento..." value={eventDescription}
+                  onChange={(event) => setEventDescription(event.target.value)} />
+                <span className="field-counter">{eventDescription.length}/{FIELD_LIMITS.eventDescription}</span></label>
+              <label><span className="form-label-icon"><CalendarClock size={16} aria-hidden="true"/>Fecha y hora <small>*</small></span>
+                <input required type="datetime-local" value={eventStart}
+                  onChange={(event) => setEventStart(event.target.value)} /></label>
+              <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto opcional</span>
+                <select value={eventProjectId} onChange={(event) => setEventProjectId(event.target.value)}>
+                  <option value="">Sin proyecto</option>
+                  {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                </select></label>
               <button disabled={saving}>Guardar evento</button>
             </form>}
           </section>
