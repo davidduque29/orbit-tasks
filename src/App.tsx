@@ -57,6 +57,12 @@ export function App() {
       if (event === 'PASSWORD_RECOVERY') {
         setPasswordRecovery(true);
       }
+      if (event === 'SIGNED_OUT') {
+        // Keep a choice only during the current signed-in session, not between logins.
+        for (const key of Object.keys(window.sessionStorage)) {
+          if (key.startsWith('orbit-session-space:')) window.sessionStorage.removeItem(key);
+        }
+      }
       setSession(nextSession);
       setAuthLoading(false);
     });
@@ -82,11 +88,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const { projects, tasks, events, loading, error, refresh } = useOrbitData(userId);
   const [view, setView] = useState<View>('dashboard');
   const [space, setSpace] = useState<Space>(() => {
-    const previous = window.localStorage.getItem(`orbit-space:${userId}`);
-    return previous === 'notes' || previous === 'projects' ? previous : 'pick';
+    const choice = window.sessionStorage.getItem(`orbit-session-space:${userId}`);
+    return choice === 'notes' || choice === 'projects' ? choice : 'pick';
   });
-  function chooseSpace(target: Exclude<Space, 'pick'>) {
-    window.localStorage.setItem(`orbit-space:${userId}`, target);
+  function chooseSpace(target: Space) {
+    if (target === 'pick') window.sessionStorage.removeItem(`orbit-session-space:${userId}`);
+    else window.sessionStorage.setItem(`orbit-session-space:${userId}`, target);
     setSpace(target);
     setView('dashboard');
     setFeedback('');
@@ -239,12 +246,16 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         <div className="wordmark"><img className="brand-logo" src="/orbit-tasks/orbit-approved.webp" alt="" /><span>Orbit <b>Tasks</b></span></div>
         <div className="orbit-header-actions">
           {space !== 'pick' && <div className="space-switch">
-            <label htmlFor="space-selector" className="sr-only">Espacio de trabajo</label>
-            <select id="space-selector" aria-label="Cambiar espacio de trabajo" value={space}
-              onChange={(event) => chooseSpace(event.target.value as Exclude<Space, 'pick'>)}>
-              <option value="notes">✓ Pendientes</option>
-              <option value="projects">▣ Proyectos</option>
-            </select>
+            <label htmlFor="space-selector" className="space-switch-label">Espacio de trabajo</label>
+            <div className="space-switch-controls">
+              <select id="space-selector" aria-label="Cambiar espacio de trabajo" value={space}
+                onChange={(event) => chooseSpace(event.target.value as Space)}>
+                <option value="notes">Pendientes</option>
+                <option value="projects">Proyectos</option>
+              </select>
+              <button type="button" className="space-choose-button" onClick={() => chooseSpace('pick')} title="Elegir módulo"
+                aria-label="Volver a elegir entre Pendientes y Proyectos"><LayoutDashboard size={18} aria-hidden="true"/></button>
+            </div>
           </div>}
           <UserProfile userId={userId} email={email} onAccountClick={() => { setView('account'); setAccountSection('profile'); }} />
         </div>
