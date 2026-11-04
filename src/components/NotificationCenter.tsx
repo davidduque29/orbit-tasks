@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { getPushState, registerDevice, unregisterDevice, type PushState } from '../infrastructure/pushSupport';
+import { ToggleSwitch } from './ToggleSwitch';
 import {
   DEFAULT_NOTIFICATION_SETTINGS, REMINDER_OPTIONS,
   loadNotificationSettings, normalizeIntervals, saveNotificationSettings,
@@ -162,11 +163,8 @@ export function NotificationCenter({ userId }: Props) {
           </section>
           <section className="card">
             <h2>Tareas vencidas</h2>
-            <label className="notification-check">
-              <input type="checkbox" checked={settings.overdue_enabled}
-                onChange={(event) => change('overdue_enabled', event.target.checked)} />
-              Activar avisos de tareas vencidas
-            </label>
+            <ToggleSwitch label="Activar avisos de tareas vencidas" checked={settings.overdue_enabled}
+              onChange={(checked) => change('overdue_enabled', checked)} description="Recibe avisos cuando una tarea supere su fecha límite." />
             {settings.overdue_enabled && (
               <label>Repetir avisos
                 <select value={String(settings.overdue_repeat_minutes)}
@@ -187,11 +185,8 @@ export function NotificationCenter({ userId }: Props) {
           </section>
           <section className="card">
             <h2>Horario de silencio</h2>
-            <label className="notification-check">
-              <input type="checkbox" checked={settings.quiet_hours_enabled}
-                onChange={(event) => change('quiet_hours_enabled', event.target.checked)} />
-              No molestar durante el horario configurado
-            </label>
+            <ToggleSwitch label="No molestar durante el horario configurado" checked={settings.quiet_hours_enabled}
+              onChange={(checked) => change('quiet_hours_enabled', checked)} description="Durante estas horas el programador no enviará recordatorios." />
             {settings.quiet_hours_enabled && (
               <div className="notification-time-grid">
                 <label>Desde <input type="time" value={settings.quiet_start.slice(0,5)}
