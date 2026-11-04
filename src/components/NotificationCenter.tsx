@@ -73,8 +73,8 @@ export function NotificationCenter({ userId }: Props) {
   const [pushMessage, setPushMessage] = useState('');
 
   useEffect(() => {
-    void getPushState().then(setPushState).catch(() => setPushState('unsupported'));
-  }, []);
+    void getPushState(userId).then(setPushState).catch(() => setPushState('unsupported'));
+  }, [userId]);
 
   async function togglePush() {
     setPushBusy(true);
@@ -82,9 +82,9 @@ export function NotificationCenter({ userId }: Props) {
     try {
       if (pushState === 'enabled') await unregisterDevice(userId);
       else await registerDevice(userId);
-      const next = await getPushState();
+      const next = await getPushState(userId);
       setPushState(next);
-      setPushMessage(next === 'enabled' ? 'Dispositivo registrado. El programador está activo; falta verificar la entrega de una notificación de prueba.' : 'Notificaciones desactivadas en este dispositivo.');
+      setPushMessage(next === 'enabled' ? 'Dispositivo registrado. La entrega dependerá de los permisos y ajustes del sistema.' : 'Notificaciones desactivadas en este dispositivo.');
     } catch (cause) {
       setPushMessage(cause instanceof Error ? cause.message : 'No se pudo cambiar la suscripción.');
     } finally { setPushBusy(false); }
@@ -132,7 +132,7 @@ export function NotificationCenter({ userId }: Props) {
           <p>Personaliza los avisos de tareas y eventos.</p></div>
         <span className="notification-bell" aria-hidden="true">🔔</span>
       </div>
-      <p className="notice">Tus preferencias se guardan en Supabase. El programador de avisos está configurado; estamos comprobando la entrega push real en los dispositivos.</p>
+      <p className="notice">Tus preferencias se guardan en Supabase. Ya verificamos una entrega Web Push en iPhone; la llegada de cada aviso depende de la conexión y los permisos del dispositivo.</p>
       <section className="card" style={{ marginBottom: 16 }}>
         <h2>Notificaciones en este dispositivo</h2>
         <p>Permite que Orbit Tasks reciba avisos cuando esté cerrada.</p>
@@ -145,6 +145,12 @@ export function NotificationCenter({ userId }: Props) {
           </button>
         )}
         {pushMessage && <p role="status">{pushMessage}</p>}
+        <details className="device-sound-guide">
+          <summary>🔊 Sonido y vibración: ¿por qué podría llegar en silencio?</summary>
+          <p>En iPhone, una aplicación web instalada no puede imponer un sonido personalizado ni forzar la vibración. Revisa Ajustes → Notificaciones → Orbit Tasks y activa Sonidos, si está disponible. Comprueba además Modos de concentración, el modo silencio y Ajustes → Sonidos y vibraciones.</p>
+          <p>En Android, el navegador puede admitir patrones de vibración, pero las preferencias y permisos del sistema siempre tienen prioridad. Orbit Tasks solicita una vibración breve únicamente cuando el navegador la soporta.</p>
+          <p><strong>Nota:</strong> mostrar una notificación no garantiza que el sistema reproduzca sonido o vibración.</p>
+        </details>
       </section>
       {loading ? <p>Consultando preferencias…</p> : (
         <form onSubmit={(event) => void submit(event)} className="notification-settings-form">
