@@ -419,3 +419,38 @@ button:not(:disabled):hover { filter:brightness(1.035); }
 button:not(:disabled):active { filter:brightness(.96); transform:scale(.97); }
 button:disabled { cursor:not-allowed; }
 @media(prefers-reduced-motion:reduce){ .task-compact-button:hover:not(:disabled),.auth-card form>button[type="submit"]:hover:not(:disabled) { transform:none; } }
+
+/* Account as a distinct, navigable setting area. */
+.account-page { max-width:940px; margin:0 auto; }
+.account-page-icon { color:#6c5ce7; }
+.account-navigation { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin:12px 0 19px; }
+.account-navigation button { display:flex; justify-content:center; align-items:center; gap:8px; padding:13px 6px; background:#fff; color:#66558e; border:1px solid #e4e0f2; box-shadow:0 2px 8px #332c7710; }
+.account-navigation button.account-nav-active { background:#eee9ff; color:#5e43bf; border-color:#c5b8f9; box-shadow:inset 0 -3px #6c5ce7; }
+.account-profile-card { max-width:620px; margin:0 auto; padding:18px; }
+.account-profile-card .profile-embedded { width:100%; position:static; }
+.account-profile-card .profile-inline { position:static; display:block; transform:none; animation:none; box-shadow:none; border:0; width:100%; min-width:0; padding:0; }
+.account-profile-card .profile-heading { padding:8px 2px 15px; }
+.account-profile-card .profile-heading .profile-avatar.large { width:62px; height:62px; }
+.account-profile-card .profile-upload-action { margin:10px 0; }
+.account-profile-card .profile-logout { margin-top:18px; }
+.account-devices-card { padding:24px; }
+.account-device-launch { display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding:20px 0; }
+.account-device-icon { display:grid; place-items:center; background:#eee9ff; color:#6650d0; padding:17px; border-radius:16px; }
+.account-device-launch > div:nth-child(2) { flex:1 1 200px; }
+.account-device-launch strong { color:#202c47; font-size:15px; }
+.account-device-launch p { font-size:12px; margin:5px 0 0; }
+.account-device-launch button { display:flex; align-items:center; gap:7px; }
+.metric-progress-track { background:#e9e6f0; height:7px; border-radius:8px; overflow:hidden; margin-top:14px; }
+.metric-progress-track > div { height:100%; background:linear-gradient(90deg,#8265ee,#78c4c1); border-radius:8px; transition:width .6s ease; }
+.report-trend-card .chart-column:nth-child(3n + 1) .chart-bar { background:linear-gradient(180deg,#8f72f5,#6746dc); }
+.report-trend-card .chart-column:nth-child(3n + 2) .chart-bar { background:linear-gradient(180deg,#80c7c6,#7b88c7); }
+.report-trend-card .chart-column:nth-child(3n) .chart-bar { background:linear-gradient(180deg,#75bfbe,#a18bcc); }
+.report-trend-card .chart-bar { box-shadow:0 4px 9px #5540b51a; }
+@media(max-width:520px) {
+ .account-navigation { gap:6px; }
+ .account-navigation button { font-size:11px; gap:5px; padding:12px 4px; }
+ .account-navigation svg { width:14px; }
+ .account-profile-card { padding:14px; }
+ .account-devices-card { padding:16px; }
+ .account-device-launch button { width:100%; justify-content:center; }
+}
