@@ -131,7 +131,8 @@ Deno.serve(async (request) => {
           .select('id,state,attempts,next_retry_at').match(match).maybeSingle();
         if (existingError || !existing || existing.state !== 'failed'
             || existing.attempts >= 3
-            || (existing.next_retry_at && Date.parse(existing.next_retry_at) > Date.now())) {
+            || !existing.next_retry_at
+            || Date.parse(existing.next_retry_at) > Date.now()) {
           skipped++;
           continue;
         }
