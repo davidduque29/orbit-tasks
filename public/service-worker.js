@@ -74,6 +74,7 @@ self.addEventListener('push', (event) => {
     tag,
     icon: '/orbit-tasks/icons/icon-192.png',
     badge: '/orbit-tasks/icons/icon-192.png',
+    vibrate: [160, 80, 160], // Applied only when supported; iOS ignores this option.
     data: { url: '/orbit-tasks/' },
   }));
 });
