@@ -198,6 +198,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           <strong className={note.completed ? 'note-done' : ''}>{note.title}</strong>
           {note.description && <span>{note.description}</span>}
           <small>
+            <CalendarClock size={13} aria-hidden="true"/> Creado: {reminderLabel(note.created_at)}
             {note.category_id && <><span className="note-category-dot" style={{background: categoryName(note.category_id)?.color ?? '#7658D8'}}/>{categoryName(note.category_id)?.name ?? 'Sin categoría'} · </>}
             {note.reminder_at && <><CalendarClock size={13} aria-hidden="true"/>{reminderLabel(note.reminder_at)}</>}
             {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
@@ -217,6 +218,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           <button type="button" className="outline orbit-modal-close" aria-label="Cerrar" onClick={() => setEditorOpen(false)}><X size={19}/></button>
         </header>
         {error && <p role="alert" className="field-error">{error}</p>}
+        {editId && <p className="note-created-at">Fecha de creación: {reminderLabel(notes.find(note => note.id === editId)?.created_at ?? null)}</p>}
         <form className="orbit-validated-form" onSubmit={(event) => void save(event)}>
           <label>Tipo
             <select value={kind} onChange={event => setKind(event.target.value as NoteKind)}>
