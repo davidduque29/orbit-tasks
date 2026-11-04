@@ -101,7 +101,7 @@ export function AuthScreen({ resetMode = false, onPasswordReset }: AuthScreenPro
   return (
     <main className="auth-page">
       <section className={feedback && !notice ? 'auth-card auth-error-shake' : 'auth-card'}>
-        <img className="auth-brand-logo" src="/orbit-tasks/orbit-planet.svg" alt="Logo Orbit Tasks" />
+        <img className="auth-brand-logo" src="/orbit-tasks/orbit-approved.webp" alt="Logo Orbit Tasks" />
         <h1>Orbit Tasks</h1>
         <p>{isResetting
           ? 'Crea una nueva contraseña para proteger tu cuenta.'
