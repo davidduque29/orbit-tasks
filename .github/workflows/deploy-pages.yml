@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: orbit-tasks-pages
+  group: orbit-tasks-pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -40,6 +40,8 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_nNlSGxYkm7zITD4_dcPkFw_kdCJBzIa
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+      # A fresh workflow run uploads a single github-pages artifact.
+      # Do not re-run a failed job from the same run: that duplicates artifacts.
       - name: Upload static build
         uses: actions/upload-pages-artifact@v3
         with:
