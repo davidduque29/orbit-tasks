@@ -24,6 +24,7 @@ export function MetricCard({ label, value, kind = 'tasks', children }: {
     <span className="metric-icon" aria-hidden="true"><Icon size={20} strokeWidth={2.1}/></span>
     <small>{label}</small>
     <strong>{value}</strong>
+    {kind === 'progress' && <div className="metric-progress-track" aria-hidden="true"><div style={{width:`${Math.max(0,Math.min(100,Number.parseFloat(value) || 0))}%`}} /></div>}
     {children}
   </article>;
 }
