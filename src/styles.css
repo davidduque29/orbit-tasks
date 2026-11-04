@@ -317,3 +317,35 @@ button { background: var(--orbit-primary); }
 .password-strength-value.valid { background:#28a76d; }
 .auth-error-shake { animation:orbit-auth-shake 300ms ease-in-out; }
 @keyframes orbit-auth-shake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-5px); } 40%,80% { transform:translateX(5px); } }
+
+/* Manual UI/UX: searchable task board, accessible switches and report trends. */
+.board-search { position:relative; display:flex; align-items:center; }
+.board-search svg { position:absolute; left:12px; color:#7766c9; pointer-events:none; }
+.board-search input { padding-left:39px; border:1.5px solid #cfc8f4; background:#fdfcff; }
+.board-search input:focus { border-color:var(--orbit-primary); box-shadow:0 0 0 3px #6c5ce71c; }
+.board-view-controls button, .task-board .heading > button { display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+.task-list-item { transition:background 180ms ease,opacity 200ms ease; }
+.task-summary { border-left:3px solid transparent; }
+.task-summary[aria-expanded="true"] { background:#f9f7ff; border-left-color:var(--orbit-primary); }
+.orbit-toggle-row { display:flex; justify-content:space-between; align-items:center; gap:14px; padding:14px 0; }
+.orbit-toggle-copy { flex:1; min-width:0; }
+.orbit-toggle-copy label { margin:0; font-size:13px; line-height:1.45; cursor:pointer; }
+.orbit-toggle-copy p { margin:4px 0 0; line-height:1.45; font-size:11px; }
+.orbit-switch-input { appearance:none; -webkit-appearance:none; width:48px; min-width:48px; height:28px; border:0; border-radius:30px; background:#ccd1e0; cursor:pointer; position:relative; margin:0; transition:background-color 200ms ease; }
+.orbit-switch-input::before { content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 1px 4px #0002; transition:transform 200ms ease; }
+.orbit-switch-input:checked { background:var(--orbit-primary); }
+.orbit-switch-input:checked::before { transform:translateX(20px); }
+.orbit-switch-input:focus-visible { outline:3px solid #9c8cfd; outline-offset:3px; }
+.orbit-switch-input:disabled { opacity:.55; cursor:not-allowed; }
+.report-trend-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.report-trend-heading h2 { margin-bottom:5px; }
+.report-trend-heading p { font-size:12px; margin:0; }
+.trend-sparkline { width:134px; min-width:105px; height:52px; }
+.trend-sparkline svg { display:block; width:100%; height:100%; }
+.report-trend-card .chart { min-height:160px; padding-top:12px; }
+@media (max-width:550px) {
+ .orbit-toggle-row { gap:10px; }
+ .board-search input { font-size:14px; }
+ .report-trend-heading { flex-wrap:nowrap; }
+ .trend-sparkline { width:100px; min-width:90px; }
+}
