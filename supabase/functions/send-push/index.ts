@@ -103,6 +103,19 @@ Deno.serve(async (request) => {
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   const settings = new Map((settingsResult.data as Settings[]).map((s) => [s.user_id,s]));
   const candidates = dueNotifications(now, tasksResult.data as Task[], eventsResult.data as Event[],settings);
+  // Authorized diagnostics: one push to a specific account, no user-data disclosure.
+  let diagnosticOwnerId: string | null = null;
+  try {
+    const input = await request.json() as { diagnostic?: boolean; ownerId?: string };
+    if (input.diagnostic === true && typeof input.ownerId === 'string'
+      && /^[a-f0-9-]{36}$/i.test(input.ownerId)) diagnosticOwnerId = input.ownerId;
+  } catch { /* Regular cron body may be empty. */ }
+  if (diagnosticOwnerId) candidates.push({
+    ownerId: diagnosticOwnerId,
+    key: `diagnostic:${diagnosticOwnerId}:${now.getTime()}`,
+    title: 'Orbit Tasks · Prueba de notificaciones',
+    body: 'Comprobando la entrega de avisos a tu dispositivo.',
+  });
   const byOwner = new Map<string,Device[]>();
   for (const d of deviceResult.data as Device[]) byOwner.set(d.owner_id,[...(byOwner.get(d.owner_id) ?? []),d]);
   webpush.setVapidDetails('https://davidduque29.github.io/orbit-tasks/',PUBLIC_KEY,PRIVATE_KEY);
