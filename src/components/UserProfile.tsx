@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { Camera, UploadCloud } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { DeviceManager } from './DeviceManager';
 
@@ -21,20 +22,71 @@ export function UserProfile({ userId, email }: UserProfileProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [avatarPath, setAvatarPath] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     let active = true;
-    void supabase.from('profiles').select('display_name').eq('user_id', userId).maybeSingle()
+    void supabase.from('profiles').select('display_name,avatar_path').eq('user_id', userId).maybeSingle()
       .then(({ data, error }) => {
         if (!active) return;
         if (error) {
           setFeedback('No se pudo cargar el perfil.');
-        } else if (data?.display_name && data.display_name !== 'Usuario') {
-          setDisplayName(data.display_name);
+        } else {
+          if (data?.display_name && data.display_name !== 'Usuario') setDisplayName(data.display_name);
+          const path = typeof data?.avatar_path === 'string' ? data.avatar_path : null;
+          setAvatarPath(path);
+          if (path) void supabase.storage.from('profile-avatars').createSignedUrl(path, 3600)
+            .then(({data: signed,error: signError}) => {
+              if (active && !signError && signed?.signedUrl) setAvatarUrl(signed.signedUrl);
+            });
         }
       });
     return () => { active = false; };
   }, [userId]);
+
+  async function uploadAvatar(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const formats: Record<string,string> = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+    const extension = formats[file.type];
+    if (!extension || file.size > 3 * 1024 * 1024 || file.size === 0) {
+      setFeedback('Selecciona una foto JPG, PNG o WebP de hasta 3 MB.');
+      return;
+    }
+    setUploadingAvatar(true);
+    setFeedback('');
+    const nextPath = `${userId}/${crypto.randomUUID()}.${extension}`;
+    try {
+      const storage = supabase.storage.from('profile-avatars');
+      const {error: uploadError} = await storage.upload(nextPath, file, {contentType: file.type, upsert:false});
+      if (uploadError) throw uploadError;
+      const {data: updated, error: profileError} = await supabase.from('profiles')
+        .update({avatar_path:nextPath,updated_at:new Date().toISOString()})
+        .eq('user_id',userId).select('user_id').maybeSingle();
+      if (profileError || !updated) {
+        await storage.remove([nextPath]);
+        throw profileError ?? new Error('No se encontró el perfil para guardar la foto.');
+      }
+      const {data: signed, error: signError} = await storage.createSignedUrl(nextPath,3600);
+      if (signError) throw signError;
+      const oldPath = avatarPath;
+      setAvatarPath(nextPath);
+      setAvatarUrl(signed.signedUrl);
+      setFeedback('Fotografía actualizada.');
+      if (oldPath && oldPath !== nextPath) void storage.remove([oldPath]);
+    } catch (cause) {
+      setFeedback(cause instanceof Error ? cause.message : 'No se pudo cargar la fotografía.');
+    } finally {setUploadingAvatar(false);}
+  }
+
+  const avatar = (large: boolean) => (
+    <span className={large ? 'profile-avatar large' : 'profile-avatar'} aria-hidden="true">
+      {avatarUrl ? <img src={avatarUrl} alt="" referrerPolicy="no-referrer" /> : initials(displayName)}
+    </span>
+  );
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,16 +118,23 @@ export function UserProfile({ userId, email }: UserProfileProps) {
     <div className="profile-root">
       <button type="button" className="profile-trigger" aria-haspopup="true" aria-expanded={menuOpen}
         onClick={() => setMenuOpen((current) => !current)}>
-        <span className="profile-avatar" aria-hidden="true">{initials(displayName)}</span>
+        {avatar(false)}
         <span className="profile-trigger-name">{displayName}</span>
         <span aria-hidden="true">⌄</span>
       </button>
       {menuOpen && (
         <div className="profile-dropdown">
           <div className="profile-heading">
-            <span className="profile-avatar large" aria-hidden="true">{initials(displayName)}</span>
+            {avatar(true)}
             <div><strong>{displayName}</strong><small>{email}</small></div>
           </div>
+          <label className="profile-upload-action">
+            <Camera size={17} aria-hidden="true" />
+            {uploadingAvatar ? 'Cargando fotografía…' : 'Subir o cambiar fotografía'}
+            <input aria-label="Subir fotografía de perfil" type="file" accept="image/jpeg,image/png,image/webp"
+              disabled={uploadingAvatar} onChange={(event) => void uploadAvatar(event)} />
+          </label>
+          <small className="profile-upload-hint"><UploadCloud size={13} aria-hidden="true" /> JPG, PNG o WebP · Máximo 3 MB</small>
           {editing ? (
             <form onSubmit={(event) => void save(event)}>
               <label htmlFor="profile-name">Nombre para mostrar</label>
