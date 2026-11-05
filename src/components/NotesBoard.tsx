@@ -241,8 +241,24 @@ export function NotesBoard({ userId }: { userId: string }) {
       if (updateError) throw updateError;
     }, completed ? 'Pendiente completado.' : 'Pendiente reactivado.');
   }
+  async function stopSeries() {
+    const upcoming = historyRows.find(note => note.recurrence_rule && !note.recurrence_next_created);
+    if (!upcoming || !window.confirm('¿Detener las próximas repeticiones? Conservaremos las ocurrencias y el historial existentes.')) return;
+    const done = await perform(async () => {
+      const { data, error: updateError } = await supabase.from('notes')
+        .update({ recurrence_rule: null, updated_at: new Date().toISOString() })
+        .eq('id', upcoming.id).eq('owner_id', userId)
+        .eq('recurrence_next_created', false).not('recurrence_rule', 'is', null)
+        .select('id');
+      if (updateError) throw updateError;
+      if (!data?.length) throw new Error('La repetición ya fue procesada. Actualiza la lista e inténtalo de nuevo.');
+    }, 'Repetición detenida. Se conserva el historial.');
+    if (done) setHistorySeriesId(null);
+  }
   async function remove(note: Note) {
-    if (!window.confirm(`¿Eliminar "${note.title}"?`)) return;
+    const isLastScheduled = Boolean(note.recurrence_rule && !note.recurrence_next_created);
+    const warning = isLastScheduled ? ' Al eliminar esta ocurrencia se detendrán las próximas repeticiones.' : '';
+    if (!window.confirm(`¿Eliminar "${note.title}"?${warning}`)) return;
     await perform(async () => {
       const { error: deleteError } = await supabase.from('notes').delete().eq('id', note.id).eq('owner_id', userId);
       if (deleteError) throw deleteError;
@@ -473,6 +489,10 @@ export function NotesBoard({ userId }: { userId: string }) {
           <span><strong>{historyUpcoming}</strong> Próximos</span>
         </div>
         <p className="field-help">Cada fecha es independiente. Los vencidos no se marcan automáticamente como completados.</p>
+        {error && <p className="error" role="alert">{error}</p>}
+        {historyRows.some(note => note.recurrence_rule && !note.recurrence_next_created) &&
+          <button type="button" className="outline notes-stop-recurrence" disabled={busy}
+            onClick={() => void stopSeries()}><X size={16}/> Detener repeticiones futuras</button>}
         <div className="notes-history-list">
           {historyRows.map(note => <div className="notes-history-item" key={note.id}>
             {note.completed ? <CheckCircle2 size={18} aria-hidden="true" className="notes-history-success"/> :
