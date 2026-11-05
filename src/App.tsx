@@ -7,7 +7,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
 import { ReminderModal } from './components/ReminderModal';
@@ -104,6 +104,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [reportTab, setReportTab] = useState<'indicators' | 'progress'>('indicators');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const selectedEvent = events.find((item) => item.id === selectedEventId);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -200,18 +201,22 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     const reminderError = validateReminder(eventSchedule);
     if (reminderError) { setFormError(reminderError); return; }
     setFormError('');
-    const saved = await execute(() => orbitRepository.createEvent(userId, {
+    const payload = {
       title: eventTitle.trim(),
       description: eventDescription.trim(),
       starts_at: new Date(eventStart).toISOString(),
       project_id: eventProjectId || null,
       reminder_override_minutes: eventSchedule.at ? [0] : [],
       recurrence_rule: eventSchedule.rule,
-    }));
+    };
+    const saved = await execute(() => editingEventId
+      ? orbitRepository.updateEvent(editingEventId, userId, payload)
+      : orbitRepository.createEvent(userId, payload));
     if (!saved) return;
     setEventTitle('');
     setEventDescription('');
     setEventSchedule({ at: null, rule: null });
+    setEditingEventId(null);
     setAllowWeekendEvent(false);
   }
 
@@ -229,9 +234,31 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEditor('task');
   }
 
+  function editEvent(item: typeof events[number]) {
+    setEditingEventId(item.id);
+    setEventTitle(item.title);
+    setEventDescription(item.description);
+    setEventStart(toLocalInput(new Date(item.starts_at)));
+    setEventSchedule({
+      at: item.reminder_override_minutes?.length
+        ? new Date(item.starts_at).toISOString()
+        : null,
+      rule: item.recurrence_rule,
+    });
+    setEventProjectId(item.project_id ?? '');
+    setAllowWeekendEvent([0, 6].includes(new Date(item.starts_at).getDay()));
+    setFormError('');
+    setSelectedEventId(null);
+    setEditor('event');
+  }
+
   function openEditor(type: Editor) {
     setFormError('');
     if (type === 'event') {
+      setEditingEventId(null);
+      setEventTitle('');
+      setEventDescription('');
+      setEventProjectId('');
       setEventStart(toLocalInput(new Date(Date.now() + 3_600_000)));
       setEventSchedule({ at: null, rule: null });
       setAllowWeekendEvent(false);
@@ -513,6 +540,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <p>{selectedEvent.description || 'Sin descripción adicional.'}</p>
               <p className="event-time"><CalendarClock size={16} aria-hidden="true" />{formatDate(selectedEvent.starts_at)}</p>
               <ReminderOverride userId={userId} itemId={selectedEvent.id} type="events" initial={selectedEvent.reminder_override_minutes ?? null} />
+              <button type="button" className="outline" onClick={() => editEvent(selectedEvent)}>
+                <Pencil size={16} aria-hidden="true" /> Editar evento y horario
+              </button>
               <button className="danger" onClick={() => {
                 if (window.confirm('¿Eliminar este evento?')) {
                   void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null));
@@ -541,7 +571,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <header className="orbit-modal-header">
               <span className="orbit-modal-icon">{editor === 'project' ? <FolderKanban size={23} /> : editor === 'task' ? <ClipboardList size={23} /> : <CalendarDays size={23} />}</span>
               <div className="orbit-modal-heading"><small>Nuevo registro</small>
-                <h2>{editor === 'project' ? 'Nuevo proyecto' : editor === 'task' ? 'Nueva tarea' : 'Nuevo evento'}</h2></div>
+                <h2>{editor === 'project' ? 'Nuevo proyecto' : editor === 'task' ? 'Nueva tarea' : editingEventId ? 'Editar evento' : 'Nuevo evento'}</h2></div>
               <button type="button" className="outline orbit-modal-close" aria-label="Cerrar formulario" onClick={() => setEditor(null)}><X size={19} /></button>
             </header>
             {formError && <p className="field-error form-validation-alert" role="alert">{formError}</p>}
@@ -587,14 +617,26 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                   onChange={(event) => setEventDescription(event.target.value.slice(0, FIELD_LIMITS.eventDescription))} />
                 <CharacterCounter value={eventDescription} max={FIELD_LIMITS.eventDescription} /></label>
               <label><span className="form-label-icon"><CalendarClock size={16} aria-hidden="true"/>Fecha y hora <small>*</small></span>
-                <input required type="datetime-local" min={toLocalInput(new Date())} value={eventStart}
-                  onChange={(event) => {
-                    const next = event.target.value;
-                    setEventStart(next);
-                    if (eventSchedule.at && next && Number.isFinite(new Date(next).getTime())) {
-                      setEventSchedule(previous => ({ ...previous, at: new Date(next).toISOString() }));
-                    }
-                  }} />
+                <div className="event-date-time-controls">
+                  <input aria-label="Fecha del evento" required type="date" min={toLocalInput(new Date()).slice(0, 10)}
+                    value={eventStart.slice(0, 10)}
+                    onChange={(event) => {
+                      const next = `${event.target.value}T${eventStart.slice(11, 16) || '09:00'}`;
+                      setEventStart(next);
+                      if (eventSchedule.at && Number.isFinite(new Date(next).getTime())) {
+                        setEventSchedule(previous => ({ ...previous, at: new Date(next).toISOString() }));
+                      }
+                    }} />
+                  <input aria-label="Hora del evento" required type="time"
+                    value={eventStart.slice(11, 16)}
+                    onChange={(event) => {
+                      const next = `${eventStart.slice(0, 10)}T${event.target.value}`;
+                      setEventStart(next);
+                      if (eventSchedule.at && Number.isFinite(new Date(next).getTime())) {
+                        setEventSchedule(previous => ({ ...previous, at: new Date(next).toISOString() }));
+                      }
+                    }} />
+                </div>
                 <span className="field-help">Selecciona una fecha futura. Los eventos en sábado o domingo requieren confirmación.</span>
               </label>
               {eventStart && [0, 6].includes(new Date(eventStart).getDay()) && (
@@ -615,7 +657,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                   <option value="">Sin proyecto</option>
                   {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                 </select></label>
-              <button disabled={saving}>Guardar evento</button>
+              <button disabled={saving}>{editingEventId ? 'Guardar cambios' : 'Guardar evento'}</button>
             </form>}
           </section>
         </div>
