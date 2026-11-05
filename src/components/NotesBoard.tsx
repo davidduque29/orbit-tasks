@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { AlignLeft, Bell, CalendarClock, Check, CheckCircle2, FolderPlus, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, SlidersHorizontal, CheckSquare, Circle } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
+import { ReminderModal } from './ReminderModal';
+import { NO_REMINDER, reminderSummary, validateReminder, type ReminderSchedule, type RecurrenceRule } from '../domain/reminders';
 
 type NoteKind = 'note' | 'pending';
 type Note = {
   id: string; owner_id: string; category_id: string | null; kind: NoteKind;
   title: string; description: string; reminder_at: string | null; completed: boolean;
   completed_at: string | null; created_at: string; updated_at: string;
+  recurrence_rule: RecurrenceRule | null;
 };
 type Category = { id: string; name: string; color: string; owner_id: string };
 const TITLE_MAX = 80, DESCRIPTION_MAX = 300;
@@ -76,7 +79,8 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [statusTab, setStatusTab] = useState<'active' | 'completed'>('active');
   const [quickOptionsOpen, setQuickOptionsOpen] = useState(false);
   const [quickCategory, setQuickCategory] = useState('');
-  const [quickReminder, setQuickReminder] = useState('');
+  const [quickReminder, setQuickReminder] = useState<ReminderSchedule>(NO_REMINDER);
+  const [reminderTarget, setReminderTarget] = useState<'quick' | 'editor' | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(() => window.localStorage.getItem('orbit-completion-sound') !== 'off');
   const [listening, setListening] = useState(false);
   const recognizer = useRef<SpeechRecognizer | null>(null);
@@ -90,7 +94,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [description, setDescription] = useState('');
   const [kind, setKind] = useState<NoteKind>('pending');
   const [categoryId, setCategoryId] = useState('');
-  const [reminder, setReminder] = useState('');
+  const [reminder, setReminder] = useState<ReminderSchedule>(NO_REMINDER);
   const [quickTitle, setQuickTitle] = useState('');
 
   useEffect(() => () => { recognizer.current?.stop(); recognizer.current = null; }, []);
@@ -172,7 +176,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     setDescription(note?.description ?? '');
     setKind(note?.kind ?? 'pending');
     setCategoryId(note?.category_id ?? '');
-    setReminder(localDateTime(note?.reminder_at ?? null));
+    setReminder({ at: note?.reminder_at ?? null, rule: note?.recurrence_rule ?? null });
     setEditorOpen(true);
   };
   async function perform(action: () => Promise<void>, success: string) {
@@ -185,18 +189,17 @@ export function NotesBoard({ userId }: { userId: string }) {
     event.preventDefault();
     const cleaned = quickTitle.trim();
     if (cleaned.length < 2 || cleaned.length > TITLE_MAX) { setError('El título debe tener entre 2 y 80 caracteres.'); return; }
-    const when = quickReminder ? new Date(quickReminder) : null;
-    if (when && (!Number.isFinite(when.getTime()) || when.getTime() <= Date.now())) {
-      setError('El recordatorio debe tener una fecha y hora futuras.'); return;
-    }
+    const reminderError = validateReminder(quickReminder);
+    if (reminderError) { setError(reminderError); return; }
     if (await perform(async () => {
       const { error: insertError } = await supabase.from('notes').insert({
         owner_id: userId, kind: 'pending', title: cleaned,
-        category_id: quickCategory || null, reminder_at: when?.toISOString() ?? null,
+        category_id: quickCategory || null, reminder_at: quickReminder.at,
+        recurrence_rule: quickReminder.rule,
       });
       if (insertError) throw insertError;
     }, 'Pendiente creado.')) {
-      setQuickTitle(''); setQuickReminder(''); setStatusTab('active');
+      setQuickTitle(''); setQuickReminder(NO_REMINDER); setStatusTab('active');
     }
   }
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -205,11 +208,11 @@ export function NotesBoard({ userId }: { userId: string }) {
     if (cleaned.length < 2 || cleaned.length > TITLE_MAX || description.length > DESCRIPTION_MAX) {
       setError('Verifica los límites del título (80) y la descripción (300).'); return;
     }
-    const date = reminder ? new Date(reminder) : null;
-    if (date && !Number.isFinite(date.getTime())) { setError('Selecciona una fecha válida.'); return; }
+    const reminderError = validateReminder(reminder);
+    if (reminderError) { setError(reminderError); return; }
     const payload = {
       kind, title: cleaned, description: description.trim(),
-      category_id: categoryId || null, reminder_at: date?.toISOString() ?? null,
+      category_id: categoryId || null, reminder_at: reminder.at, recurrence_rule: reminder.rule,
     };
     const done = await perform(async () => {
       const result = editId
@@ -290,7 +293,7 @@ export function NotesBoard({ userId }: { userId: string }) {
         </button>
         <span className="quick-preview">
           {quickCategory && categories.find(category => category.id === quickCategory)?.name}
-          {quickReminder && <><CalendarClock size={13}/> {reminderLabel(new Date(quickReminder).toISOString())}</>}
+          {quickReminder.at && <><CalendarClock size={13}/> {reminderSummary(quickReminder)}</>}
         </span>
       </div>
       {quickOptionsOpen && <div className="quick-capture-options">
@@ -300,10 +303,12 @@ export function NotesBoard({ userId }: { userId: string }) {
             {categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
           </select>
         </label>
-        <label><CalendarClock size={15} aria-hidden="true"/> Recordatorio
-          <input type="datetime-local" min={localDateTime(new Date().toISOString())}
-            value={quickReminder} onChange={event => setQuickReminder(event.target.value)}/>
-        </label>
+        <div className="quick-reminder-field">
+          <span><CalendarClock size={15} aria-hidden="true"/> Recordatorio</span>
+          <button type="button" className="outline" onClick={() => setReminderTarget('quick')}>
+            {reminderSummary(quickReminder)}
+          </button>
+        </div>
         <button className="outline quick-category-link" type="button" onClick={() => { setError(''); setCategoriesOpen(true); }}>
           <FolderPlus size={15}/> Crear categoría
         </button>
@@ -386,13 +391,22 @@ export function NotesBoard({ userId }: { userId: string }) {
             <select value={categoryId} onChange={event => setCategoryId(event.target.value)}>
               <option value="">Sin categoría</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
             </select></label>
-          <label><span className="form-label-icon"><Bell size={16}/>Recordatorio opcional</span>
-            <input type="datetime-local" value={reminder} onChange={event => setReminder(event.target.value)}/>
-            <small className="field-help">Para recibir avisos con la app cerrada, activa las notificaciones desde Mi cuenta → Avisos.</small></label>
+          <div className="reminder-editor-field">
+            <span className="form-label-icon"><Bell size={16}/>Recordatorio opcional</span>
+            <button type="button" className="outline" onClick={() => setReminderTarget('editor')}>
+              <CalendarClock size={17}/>{reminderSummary(reminder)}
+            </button>
+            <small className="field-help">Para recibir avisos con la app cerrada, activa las notificaciones desde Mi cuenta → Avisos.</small>
+          </div>
           <button type="submit" disabled={busy}><Check size={17}/>{busy ? 'Guardando…' : editId ? 'Guardar cambios' : 'Guardar registro'}</button>
         </form>
       </section>
     </div>}
+    {reminderTarget && <ReminderModal variant="notes" schedule={reminderTarget === 'quick' ? quickReminder : reminder}
+      onClose={() => setReminderTarget(null)} onSave={value => {
+        if (reminderTarget === 'quick') setQuickReminder(value); else setReminder(value);
+        setReminderTarget(null);
+      }}/>}
     {categoriesOpen && <div className="modal-backdrop" role="presentation" onMouseDown={event => {if(event.target === event.currentTarget) setCategoriesOpen(false);}}>
       <section className="modal orbit-detail-modal note-modal" role="dialog" aria-modal="true" aria-labelledby="categories-title">
         <header className="orbit-modal-header"><span className="orbit-modal-icon"><FolderPlus size={22}/></span>
