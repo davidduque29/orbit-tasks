@@ -294,6 +294,8 @@ export function NotesBoard({ userId }: { userId: string }) {
   }
   async function deleteEntireSeries(note: Note) {
     const key = seriesKey(note);
+    const count = notes.filter(item => seriesKey(item) === key).length;
+    if (!window.confirm(`¿Eliminar definitivamente las ${count} ocurrencias de esta serie, incluido su historial? Esta acción no se puede deshacer.`)) return;
     const done = await perform(async () => {
       const { error: deleteError } = await supabase.from('notes').delete()
         .eq('owner_id', userId)
