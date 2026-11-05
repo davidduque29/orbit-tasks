@@ -231,6 +231,10 @@ export function NotesBoard({ userId }: { userId: string }) {
       previousNote.reminder_at !== reminder.at ||
       JSON.stringify(previousNote.recurrence_rule) !== JSON.stringify(reminder.rule)
     );
+    if (previousNote?.recurrence_next_created && scheduleChanged) {
+      setError('Esta ocurrencia ya generó la siguiente. Edita la ocurrencia más reciente para cambiar el horario de repetición.');
+      return;
+    }
     const payload = {
       kind: previousNote?.kind ?? 'pending', title: cleaned,
       category_id: categoryId || null, reminder_at: reminder.at, recurrence_rule: reminder.rule,
@@ -541,9 +545,13 @@ export function NotesBoard({ userId }: { userId: string }) {
             </select></label>
           <div className="reminder-editor-field">
             <span className="form-label-icon"><Bell size={16}/>Recordatorio opcional</span>
-            <button type="button" className="outline" onClick={() => setReminderTarget('editor')}>
+            <button type="button" className="outline"
+              disabled={Boolean(editId && notes.find(note => note.id === editId)?.recurrence_next_created)}
+              onClick={() => setReminderTarget('editor')}>
               <CalendarClock size={17}/>{reminderSummary(reminder)}
             </button>
+            {editId && notes.find(note => note.id === editId)?.recurrence_next_created &&
+              <small className="field-help">Esta fecha ya generó otra ocurrencia. Modifica la más reciente para cambiar la repetición.</small>}
             <small className="field-help">Para recibir avisos con la app cerrada, activa las notificaciones desde Mi cuenta → Avisos.</small>
           </div>
           <button type="submit" disabled={busy}><Check size={17}/>{busy ? 'Guardando…' : editId ? 'Guardar cambios' : 'Guardar registro'}</button>
