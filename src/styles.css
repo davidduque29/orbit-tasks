@@ -914,3 +914,27 @@ button:disabled { cursor:not-allowed; }
 .notes-delete-all { background:#b33e57; color:#fff; }
 .notes-delete-all:hover { background:#982f49; }
 .notes-delete-cancel { width:100%; margin-top:12px; min-height:42px; }
+
+/* Workspace navigation is a primary app-level control, distinct from form selects. */
+.workspace-navigation { padding:12px 22px 14px; background:#fff; border-bottom:1px solid #eeeafd; }
+.workspace-navigation-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:1080px; margin:0 auto 8px; color:#6e718d; font-size:12px; font-weight:750; }
+.workspace-navigation-home { display:inline-flex; align-items:center; justify-content:center; gap:5px; min-height:32px; padding:5px 9px; border-radius:10px; color:#6655c5; background:transparent; font-size:11px; font-weight:700; }
+.workspace-navigation-home:hover { background:#f1edff; }
+.workspace-navigation-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; max-width:1080px; padding:5px; margin:auto; background:#f5f2ff; border:1px solid #ded5fc; border-radius:21px; }
+.workspace-navigation-item { display:flex; align-items:center; justify-content:center; gap:10px; min-width:0; min-height:48px; border-radius:16px; padding:10px 12px; color:#49368f; background:transparent; font-size:14px; font-weight:800; }
+.workspace-navigation-item.is-active { background:linear-gradient(120deg,#6533df,#922cf2); color:#fff; box-shadow:0 4px 12px #6943d53d; }
+.workspace-navigation-item:not(.is-active):hover { background:#eae3ff; }
+.workspace-navigation-item:focus-visible, .workspace-navigation-home:focus-visible { outline:3px solid #a992f8; outline-offset:2px; }
+@media(max-width:700px) {
+  .workspace-navigation { padding:8px 12px 12px; }
+  .workspace-navigation-item { min-height:48px; gap:5px; padding:9px 4px; font-size:12px; }
+  .workspace-navigation-item svg { width:18px; height:18px; flex-shrink:0; }
+  .header .orbit-header-actions { display:flex; justify-content:flex-end; width:auto; }
+  .header .profile-root:not(.profile-embedded) { width:auto; flex:0 1 auto; max-width:205px; }
+  .header .profile-trigger { width:auto; min-width:0; max-width:205px; }
+}
+@media(max-width:375px) {
+  .workspace-navigation-item { flex-direction:column; gap:3px; font-size:11px; }
+  .workspace-navigation-options { border-radius:17px; }
+  .workspace-navigation-item { border-radius:13px; }
+}
