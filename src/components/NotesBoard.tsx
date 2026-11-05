@@ -273,7 +273,6 @@ export function NotesBoard({ userId }: { userId: string }) {
 
   return <section className="notes-board">
     <div className="heading notes-heading"><div><h1>Pendientes</h1><p>Captura rápidamente tus actividades personales.</p></div>
-      {section === 'pending' && <button type="button" onClick={() => openEditor()}><Plus size={17}/> Nuevo pendiente</button>}
     </div>
     <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
       <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17}/> Pendientes</button>
@@ -281,6 +280,7 @@ export function NotesBoard({ userId }: { userId: string }) {
       <button type="button" className={section === 'categories' ? 'selected' : ''} aria-current={section === 'categories' ? 'page' : undefined} onClick={() => setSection('categories')}><FolderPlus size={17}/> Categorías</button>
     </nav>
     {section === 'pending' && <>
+    <p className="quick-capture-label">Registra aquí tu pendiente o tarea</p>
     <form className="card quick-capture" onSubmit={(event) => void quickAdd(event)}>
       <div className="quick-capture-main">
         <ListTodo size={20} aria-hidden="true"/>
