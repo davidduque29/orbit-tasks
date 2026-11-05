@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Bell, CalendarClock, Check, CheckCircle2, FolderPlus, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, SlidersHorizontal, CheckSquare, Circle } from 'lucide-react';
+import { Bell, CalendarClock, Check, CheckCircle2, FolderPlus, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, SlidersHorizontal, CheckSquare, Circle, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { ReminderModal } from './ReminderModal';
 import { NO_REMINDER, reminderSummary, validateReminder, type ReminderSchedule, type RecurrenceRule } from '../domain/reminders';
@@ -73,7 +73,6 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [section, setSection] = useState<'pending' | 'search' | 'categories'>('pending');
   const [statusTab, setStatusTab] = useState<'active' | 'completed'>('active');
   const [quickOptionsOpen, setQuickOptionsOpen] = useState(false);
-  const [quickCategory, setQuickCategory] = useState('');
   const [quickReminder, setQuickReminder] = useState<ReminderSchedule>(NO_REMINDER);
   const [reminderTarget, setReminderTarget] = useState<'quick' | 'editor' | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(() => window.localStorage.getItem('orbit-completion-sound') !== 'off');
@@ -216,7 +215,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     if (await perform(async () => {
       const { error: insertError } = await supabase.from('notes').insert({
         owner_id: userId, kind: 'pending', title: cleaned,
-        category_id: quickCategory || null, reminder_at: quickReminder.at,
+        category_id: null, reminder_at: quickReminder.at,
         recurrence_rule: quickReminder.rule,
       });
       if (insertError) throw insertError;
@@ -349,7 +348,6 @@ export function NotesBoard({ userId }: { userId: string }) {
     }, 'Categoría eliminada.');
     if (done) {
       if (categoryId === category.id) setCategoryId('');
-      if (quickCategory === category.id) setQuickCategory('');
       if (editingCategoryId === category.id) resetCategory();
     }
   }
@@ -361,7 +359,6 @@ export function NotesBoard({ userId }: { userId: string }) {
     <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
       <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17}/> Pendientes</button>
       <button type="button" className={section === 'search' ? 'selected' : ''} aria-current={section === 'search' ? 'page' : undefined} onClick={() => setSection('search')}><Search size={17}/> Buscar</button>
-      <button type="button" className={section === 'categories' ? 'selected' : ''} aria-current={section === 'categories' ? 'page' : undefined} onClick={() => setSection('categories')}><FolderPlus size={17}/> Categorías</button>
     </nav>
     {section === 'pending' && <>
     <p className="quick-capture-label">Registra aquí tu pendiente o tarea</p>
@@ -380,31 +377,21 @@ export function NotesBoard({ userId }: { userId: string }) {
       </div>
       {listening && <p className="quick-listening" role="status">Escuchando… di tu pendiente en voz alta.</p>}
       {!speechAvailable && <small className="quick-voice-hint">Para dictar, utiliza el micrófono de tu teclado.</small>}
-      <div className="quick-capture-bottom">
-        <button type="button" className="quick-options-toggle" aria-expanded={quickOptionsOpen}
-          onClick={() => setQuickOptionsOpen(!quickOptionsOpen)}>
-          <SlidersHorizontal size={16}/> {quickOptionsOpen ? 'Ocultar detalles' : 'Categoría y recordatorio'}
+      <div className="quick-capture-bottom reminder-capture-bottom">
+        <button type="button" className="quick-options-toggle reminder-options-toggle"
+          aria-expanded={quickOptionsOpen} aria-controls="quick-reminder-details"
+          onClick={() => setQuickOptionsOpen((previous) => !previous)}>
+          <CalendarClock size={17} aria-hidden="true"/>
+          <strong>Recordatorio</strong>
+          <span className="reminder-inline-summary">{reminderSummary(quickReminder)}</span>
+          {quickOptionsOpen ? <ChevronUp size={17} aria-hidden="true"/> : <ChevronDown size={17} aria-hidden="true"/>}
         </button>
-        <span className="quick-preview">
-          {quickCategory && categories.find(category => category.id === quickCategory)?.name}
-          {quickReminder.at && <><CalendarClock size={13}/> {reminderSummary(quickReminder)}</>}
-        </span>
       </div>
-      {quickOptionsOpen && <div className="quick-capture-options">
-        <label><Tag size={15} aria-hidden="true"/> Categoría
-          <select value={quickCategory} onChange={event => setQuickCategory(event.target.value)}>
-            <option value="">Sin categoría</option>
-            {categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
-          </select>
-        </label>
-        <div className="quick-reminder-field">
-          <span><CalendarClock size={15} aria-hidden="true"/> Recordatorio</span>
-          <button type="button" className="outline" onClick={() => setReminderTarget('quick')}>
-            {reminderSummary(quickReminder)}
-          </button>
-        </div>
-        <button className="outline quick-category-link" type="button" onClick={() => { setError(''); setSection('categories'); }}>
-          <FolderPlus size={15}/> Crear categoría
+      {quickOptionsOpen && <div className="quick-reminder-details" id="quick-reminder-details">
+        <p>Configura la fecha, la hora y la repetición de este pendiente.</p>
+        <button type="button" className="outline quick-reminder-configure" onClick={() => setReminderTarget('quick')}>
+          <CalendarClock size={16} aria-hidden="true"/>
+          {quickReminder.at ? 'Modificar recordatorio' : 'Configurar recordatorio'}
         </button>
       </div>}
     </form>
