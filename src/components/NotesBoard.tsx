@@ -10,6 +10,7 @@ type Note = {
   title: string; description: string; reminder_at: string | null; completed: boolean;
   completed_at: string | null; created_at: string; updated_at: string;
   recurrence_rule: RecurrenceRule | null;
+  recurrence_series_id: string | null; recurrence_next_created: boolean;
 };
 type Category = { id: string; name: string; color: string; owner_id: string };
 const TITLE_MAX = 80;
@@ -88,6 +89,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [categoryId, setCategoryId] = useState('');
   const [reminder, setReminder] = useState<ReminderSchedule>(NO_REMINDER);
   const [quickTitle, setQuickTitle] = useState('');
+  const [historySeriesId, setHistorySeriesId] = useState<string | null>(null);
 
   useEffect(() => () => { recognizer.current?.stop(); recognizer.current = null; }, []);
 
@@ -153,6 +155,18 @@ export function NotesBoard({ userId }: { userId: string }) {
     if (section === 'pending') return statusTab === 'active' ? !note.completed : note.completed;
     return section === 'search' && note.title.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es'));
   }), [notes, section, statusTab, search]);
+  const seriesKey = (note: Note) => note.recurrence_series_id ?? note.id;
+  const recurringSeries = useMemo(() => new Set(notes.filter(note =>
+    note.recurrence_rule || note.recurrence_series_id
+  ).map(note => note.recurrence_series_id ?? note.id)), [notes]);
+  const historyRows = useMemo(() => historySeriesId
+    ? notes.filter(note => seriesKey(note) === historySeriesId)
+      .sort((a, b) => (b.reminder_at ?? '').localeCompare(a.reminder_at ?? ''))
+    : [], [historySeriesId, notes]);
+  const historyCompleted = historyRows.filter(note => note.completed).length;
+  const historyOverdue = historyRows.filter(note => !note.completed &&
+    note.reminder_at && new Date(note.reminder_at).getTime() < Date.now()).length;
+  const historyUpcoming = historyRows.length - historyCompleted - historyOverdue;
   const completedCount = notes.filter((note) => note.completed).length;
   const activeCount = notes.length - completedCount;
 
@@ -356,6 +370,9 @@ export function NotesBoard({ userId }: { userId: string }) {
         </div>
         <button type="button" className="note-summary" onClick={() => openEditor(note)}>
           <strong className={note.completed ? 'note-done' : ''}>{note.title}</strong>
+          {recurringSeries.has(seriesKey(note)) && <span className="notes-recurrence-indicator">
+            <CalendarClock size={13} aria-hidden="true"/> Recurrente · {note.reminder_at ? reminderLabel(note.reminder_at) : 'Sin fecha'}
+          </span>}
           {note.description && <span>{note.description}</span>}
           <small>
             <CalendarClock size={13} aria-hidden="true"/> Creado: {reminderLabel(note.created_at)}
@@ -365,6 +382,9 @@ export function NotesBoard({ userId }: { userId: string }) {
           </small>
         </button>
         <div className="note-actions">
+          {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
+            aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
+            onClick={() => setHistorySeriesId(seriesKey(note))}><CalendarClock size={17}/></button>}
           <button type="button" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17}/></button>
           <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => void remove(note)} disabled={busy}><Trash2 size={17}/></button>
         </div>
@@ -391,6 +411,9 @@ export function NotesBoard({ userId }: { userId: string }) {
         </div>
         <button type="button" className="note-summary" onClick={() => openEditor(note)}>
           <strong className={note.completed ? 'note-done' : ''}>{note.title}</strong>
+          {recurringSeries.has(seriesKey(note)) && <span className="notes-recurrence-indicator">
+            <CalendarClock size={13} aria-hidden="true"/> Recurrente · {note.reminder_at ? reminderLabel(note.reminder_at) : 'Sin fecha'}
+          </span>}
           {note.description && <span>{note.description}</span>}
           <small>
             <CalendarClock size={13} aria-hidden="true"/> Creado: {reminderLabel(note.created_at)}
@@ -400,6 +423,9 @@ export function NotesBoard({ userId }: { userId: string }) {
           </small>
         </button>
         <div className="note-actions">
+          {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
+            aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
+            onClick={() => setHistorySeriesId(seriesKey(note))}><CalendarClock size={17}/></button>}
           <button type="button" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17}/></button>
           <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => void remove(note)} disabled={busy}><Trash2 size={17}/></button>
         </div>
@@ -428,6 +454,37 @@ export function NotesBoard({ userId }: { userId: string }) {
         <button type="button" className="outline" disabled={busy} aria-label={`Eliminar categoría ${category.name}`} onClick={() => void removeCategory(category)}><Trash2 size={16}/></button>
       </div>)}
       {!categories.length && <p className="muted">Aún no hay categorías.</p>}
+    </div>}
+    {historySeriesId && <div className="modal-backdrop" role="presentation"
+      onMouseDown={event => { if (event.target === event.currentTarget) setHistorySeriesId(null); }}>
+      <section className="modal orbit-detail-modal note-modal notes-history-modal" role="dialog"
+        aria-modal="true" aria-labelledby="notes-history-title">
+        <header className="orbit-modal-header">
+          <span className="orbit-modal-icon"><CalendarClock size={22}/></span>
+          <div className="orbit-modal-heading"><small>Seguimiento de repeticiones</small>
+            <h2 id="notes-history-title">Historial del pendiente</h2></div>
+          <button type="button" className="outline orbit-modal-close" aria-label="Cerrar historial"
+            onClick={() => setHistorySeriesId(null)}><X size={19}/></button>
+        </header>
+        <p className="notes-history-name">{historyRows[0]?.title ?? 'Pendiente recurrente'}</p>
+        <div className="notes-history-stats" aria-label="Resumen de ocurrencias">
+          <span><strong>{historyCompleted}</strong> Completados</span>
+          <span><strong>{historyOverdue}</strong> Pendientes vencidos</span>
+          <span><strong>{historyUpcoming}</strong> Próximos</span>
+        </div>
+        <p className="field-help">Cada fecha es independiente. Los vencidos no se marcan automáticamente como completados.</p>
+        <div className="notes-history-list">
+          {historyRows.map(note => <div className="notes-history-item" key={note.id}>
+            {note.completed ? <CheckCircle2 size={18} aria-hidden="true" className="notes-history-success"/> :
+              <Circle size={18} aria-hidden="true"/>}
+            <div><strong>{note.reminder_at ? reminderLabel(note.reminder_at) : 'Sin fecha programada'}</strong>
+              <small>{note.completed
+                ? `Completado: ${reminderLabel(note.completed_at)}`
+                : note.reminder_at && new Date(note.reminder_at).getTime() < Date.now()
+                  ? 'Pendiente vencido' : 'Próxima ocurrencia'}</small></div>
+          </div>)}
+        </div>
+      </section>
     </div>}
     {editorOpen && <div className="modal-backdrop" role="presentation" onMouseDown={event => {if(event.target === event.currentTarget) setEditorOpen(false);}}>
       <section className="modal orbit-detail-modal note-modal" role="dialog" aria-modal="true" aria-labelledby="note-editor-title">
