@@ -99,10 +99,21 @@ export function ReminderModal({
                 previous.filter(d => d !== value) : [...previous, value].sort())}>{day}</button>;
           })}</div>
         </fieldset>}
-        <label className="reminder-field">
+        <div className="reminder-field">
           <span>Repetir hasta (opcional)</span>
-          <input type="date" min={dateTime.slice(0,10)} value={until} onChange={event => { setUntil(event.target.value); setError(''); }}/>
-        </label>
+          <div className="reminder-end-fields">
+            <label>
+              <span>Fecha final</span>
+              <input type="date" min={dateTime.slice(0,10)} value={until}
+                onChange={event => { setUntil(event.target.value); setError(''); }}/>
+            </label>
+            <label>
+              <span>Hora del último aviso</span>
+              <input type="time" value={dateTime.slice(11, 16)} readOnly
+                aria-label="Hora final; igual a la hora del primer aviso"/>
+            </label>
+          </div>
+        </div>
         <p className="field-help">
           {until && dateTime
             ? `Último día permitido: ${until.split('-').reverse().join('/')} a las ${new Date(dateTime).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}. `
