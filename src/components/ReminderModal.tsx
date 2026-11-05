@@ -75,11 +75,22 @@ export function ReminderModal({
             <Repeat2 size={15} aria-hidden="true"/>{option.title}
           </button>)}
       </div>
-      {mode !== 'none' && <label className="reminder-field">
+      {mode !== 'none' && <div className="reminder-field">
         <span><CalendarClock size={16} aria-hidden="true"/> Fecha y hora {repeating ? 'del primer aviso' : 'del aviso'}</span>
-        <input type="datetime-local" required min={toLocalDateTime(new Date())}
-          value={dateTime} onChange={event => { setDateTime(event.target.value); setError(''); }}/>
-      </label>}
+        <div className="event-date-time-controls">
+          <input type="date" required aria-label="Fecha del primer aviso"
+            min={toLocalDateTime(new Date()).slice(0, 10)} value={dateTime.slice(0, 10)}
+            onChange={event => {
+              setDateTime(`${event.target.value}T${dateTime.slice(11, 16) || '09:00'}`);
+              setError('');
+            }}/>
+          <input type="time" required aria-label="Hora del primer aviso" value={dateTime.slice(11, 16)}
+            onChange={event => {
+              setDateTime(`${dateTime.slice(0, 10)}T${event.target.value}`);
+              setError('');
+            }}/>
+        </div>
+      </div>
       {repeating && <>
         {mode !== 'weekdays' && <label className="reminder-field">
           <span>Repetir cada</span>
