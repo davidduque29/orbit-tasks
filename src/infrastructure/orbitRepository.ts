@@ -36,6 +36,7 @@ export interface OrbitRepository {
   deleteTask(taskId: string): Promise<void>;
   listEvents(): Promise<OrbitEvent[]>;
   createEvent(userId: string, input: NewEvent): Promise<OrbitEvent>;
+  updateEvent(eventId: string, userId: string, input: NewEvent): Promise<OrbitEvent>;
   deleteEvent(eventId: string): Promise<void>;
 }
 
@@ -108,6 +109,18 @@ export const orbitRepository: OrbitRepository = {
     const { data, error } = await supabase
       .from('events')
       .insert({ ...input, owner_id: userId })
+      .select('*')
+      .single();
+    throwOnError(error);
+    return data as OrbitEvent;
+  },
+
+  async updateEvent(eventId, userId, input) {
+    const { data, error } = await supabase
+      .from('events')
+      .update({ ...input, updated_at: new Date().toISOString() })
+      .eq('id', eventId)
+      .eq('owner_id', userId)
       .select('*')
       .single();
     throwOnError(error);
