@@ -54,12 +54,6 @@ function completionTone(): void {
   }).catch(() => { void audio.close(); });
 }
 
-function localDateTime(value: string | null): string {
-  if (!value) return '';
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return '';
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-}
 function reminderLabel(value: string | null) {
   return value ? new Date(value).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 }
