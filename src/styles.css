@@ -867,3 +867,5 @@ button:disabled { cursor:not-allowed; }
  .notes-categories-pane .note-category-form { grid-template-columns:minmax(0,1fr) 62px; }
  .notes-categories-pane .note-category-form > button { grid-column:1 / -1; justify-content:center; }
 }
+
+.quick-capture-label { margin:0 0 9px; font-size:13px; line-height:1.4; font-weight:650; color:#655b89; }
