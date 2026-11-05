@@ -334,6 +334,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         {space === 'notes' && view === 'account' && <button type="button" className="outline space-return" onClick={() => setView('dashboard')}>
           <NotebookPen size={17} aria-hidden="true"/> Volver a Pendientes
         </button>}
+        {space === 'events' && view === 'account' && <button type="button" className="outline space-return" onClick={() => setView('events')}>
+          <CalendarDays size={17} aria-hidden="true"/> Volver a Eventos
+        </button>}
         {space === 'projects' && view === 'dashboard' && (
           <>
             <div className="heading"><div><h1>Tu productividad</h1><p>Proyectos y tareas sincronizados en Supabase.</p></div>
