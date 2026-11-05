@@ -539,10 +539,10 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <div className="orbit-event-details">
               <p>{selectedEvent.description || 'Sin descripción adicional.'}</p>
               <p className="event-time"><CalendarClock size={16} aria-hidden="true" />{formatDate(selectedEvent.starts_at)}</p>
-              <ReminderOverride userId={userId} itemId={selectedEvent.id} type="events" initial={selectedEvent.reminder_override_minutes ?? null} />
-              <button type="button" className="outline" onClick={() => editEvent(selectedEvent)}>
-                <Pencil size={16} aria-hidden="true" /> Editar evento y horario
+              <button type="button" className="outline event-edit-primary" onClick={() => editEvent(selectedEvent)}>
+                <Pencil size={16} aria-hidden="true" /> Editar título, fecha y hora
               </button>
+              <ReminderOverride userId={userId} itemId={selectedEvent.id} type="events" initial={selectedEvent.reminder_override_minutes ?? null} />
               <button className="danger" onClick={() => {
                 if (window.confirm('¿Eliminar este evento?')) {
                   void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null));
