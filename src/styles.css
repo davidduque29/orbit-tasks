@@ -938,3 +938,41 @@ button:disabled { cursor:not-allowed; }
   .workspace-navigation-options { border-radius:17px; }
   .workspace-navigation-item { border-radius:13px; }
 }
+
+/* Compact pending capture: reminder is optional and stays collapsed by default. */
+.notes-section-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.reminder-capture-bottom { padding-top:6px; margin-top:6px; }
+.quick-capture-bottom .reminder-options-toggle { width:100%; display:flex; gap:8px; align-items:center; text-align:left; min-height:38px; padding:6px 4px; color:#5540b3; }
+.reminder-options-toggle strong { font-weight:750; white-space:nowrap; }
+.reminder-inline-summary { margin-left:auto; min-width:0; max-width:55%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:11px; color:#66627d; font-weight:600; }
+.reminder-options-toggle > svg:last-child { flex-shrink:0; }
+.quick-reminder-details { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:9px; padding:9px 4px 3px; border-top:1px solid #ede8fc; }
+.quick-reminder-details p { margin:0; color:#6c7287; font-size:12px; line-height:1.45; }
+.quick-reminder-configure { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:40px; width:100%; border-radius:11px; background:#f7f4ff; font-size:12px; }
+
+/* Profile concept 1: name and secondary account label in a compact header pill. */
+.profile-trigger { display:flex; align-items:center; gap:9px; max-width:250px; min-height:54px; padding:5px 11px 5px 5px; background:linear-gradient(125deg,#fff,#f8f5ff); border:1px solid #ded4fb; box-shadow:0 3px 12px #6652b811; }
+.profile-root:not(.profile-embedded) { flex:0 1 250px; }
+.profile-trigger-identity { display:grid; align-content:center; gap:2px; flex:1 1 auto; min-width:0; text-align:left; }
+.profile-trigger-name { font-size:13px; font-weight:800; line-height:1.2; }
+.profile-trigger-identity small { display:flex; align-items:center; gap:4px; font-size:11px; color:#7466a9; white-space:nowrap; }
+.profile-trigger-chevron { flex:0 0 16px; color:#403463; }
+.profile-trigger .profile-avatar:not(.large) { width:42px; height:42px; flex-basis:42px; border:2px solid white; box-shadow:0 0 0 1px #cbbaf9; }
+@media(max-width:700px) {
+  .header { display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:8px; padding:12px 13px; }
+  .header .wordmark { font-size:clamp(14px,3.8vw,19px); flex:0 0 auto; min-width:0; }
+  .header .brand-logo { width:clamp(32px,8vw,42px); height:clamp(32px,8vw,42px); }
+  .header .orbit-header-actions { flex:0 1 205px; min-width:0; }
+  .header .profile-root:not(.profile-embedded) { max-width:205px; }
+  .header .profile-trigger { width:100%; max-width:205px; min-height:51px; padding:4px 8px 4px 4px; }
+  .header .profile-trigger-name { display:block; font-size:12px; }
+  .header .profile-trigger-identity small { font-size:10px; }
+}
+@media(max-width:390px) {
+  .header { padding:10px 9px; gap:6px; }
+  .header .wordmark { font-size:14px; gap:5px; }
+  .header .orbit-header-actions { flex-basis:178px; }
+  .header .profile-trigger { gap:6px; }
+  .header .profile-trigger .profile-avatar:not(.large) { width:35px; height:35px; flex-basis:35px; }
+  .header .profile-trigger-name { font-size:11px; }
+}
