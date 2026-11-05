@@ -1,3 +1,5 @@
+import type { RecurrenceRule } from './reminders';
+
 export const TASK_STATUSES = [
   'Por hacer',
   'En progreso',
@@ -48,6 +50,7 @@ export interface OrbitEvent {
   starts_at: string;
   ends_at: string | null;
   reminder_override_minutes: number[] | null;
+  recurrence_rule: RecurrenceRule | null;
   status: 'Programado' | 'Completado' | 'Cancelado';
   created_at: string;
   updated_at: string;
