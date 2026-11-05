@@ -220,7 +220,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       description: eventDescription.trim(),
       starts_at: new Date(eventStart).toISOString(),
       project_id: eventProjectId || null,
-      reminder_override_minutes: eventSchedule.at ? [0] : [],
+      reminder_override_minutes: editingEventId
+        ? (events.find(item => item.id === editingEventId)?.reminder_override_minutes ?? (eventSchedule.at ? [0] : []))
+        : (eventSchedule.at ? [0] : []),
       recurrence_rule: eventSchedule.rule,
     };
     const saved = await execute(() => editingEventId
@@ -606,8 +608,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <div className="orbit-event-details">
               <p>{selectedEvent.description || 'Sin descripción adicional.'}</p>
               <p className="event-time"><CalendarClock size={16} aria-hidden="true" />{formatDate(selectedEvent.starts_at)}</p>
+              <p className="field-help">{reminderSummary({ at: selectedEvent.recurrence_rule || selectedEvent.reminder_override_minutes?.length ? selectedEvent.starts_at : null, rule: selectedEvent.recurrence_rule })}</p>
               <button type="button" className="outline event-edit-primary" onClick={() => editEvent(selectedEvent)}>
-                <Pencil size={16} aria-hidden="true" /> Editar título, fecha y hora
+                <Pencil size={16} aria-hidden="true" /> Editar evento, recordatorio y repetición
               </button>
               <ReminderOverride userId={userId} itemId={selectedEvent.id} type="events" initial={selectedEvent.reminder_override_minutes ?? null} />
               <button className="danger" onClick={() => {
