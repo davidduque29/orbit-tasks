@@ -23,7 +23,7 @@ import { orbitRepository } from './infrastructure/orbitRepository';
 import { supabase } from './infrastructure/supabaseClient';
 
 type View = 'dashboard' | 'projects' | 'board' | 'events' | 'reports' | 'account';
-type Space = 'pick' | 'notes' | 'projects';
+type Space = 'pick' | 'notes' | 'projects' | 'events';
 type AccountSection = 'profile' | 'devices' | 'notifications';
 type Editor = 'project' | 'task' | 'event';
 
@@ -90,13 +90,13 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [view, setView] = useState<View>('dashboard');
   const [space, setSpace] = useState<Space>(() => {
     const choice = window.sessionStorage.getItem(`orbit-session-space:${userId}`);
-    return choice === 'notes' || choice === 'projects' ? choice : 'pick';
+    return choice === 'notes' || choice === 'projects' || choice === 'events' ? choice : 'pick';
   });
   function chooseSpace(target: Space) {
     if (target === 'pick') window.sessionStorage.removeItem(`orbit-session-space:${userId}`);
     else window.sessionStorage.setItem(`orbit-session-space:${userId}`, target);
     setSpace(target);
-    setView('dashboard');
+    setView(target === 'events' ? 'events' : 'dashboard');
     setFeedback('');
   }
 
@@ -284,9 +284,10 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 onChange={(event) => chooseSpace(event.target.value as Space)}>
                 <option value="notes">Pendientes</option>
                 <option value="projects">Proyectos</option>
+                <option value="events">Eventos</option>
               </select>
               <button type="button" className="space-choose-button" onClick={() => chooseSpace('pick')} title="Elegir módulo"
-                aria-label="Volver a elegir entre Pendientes y Proyectos"><LayoutDashboard size={18} aria-hidden="true"/></button>
+                aria-label="Volver a elegir el espacio de trabajo"><LayoutDashboard size={18} aria-hidden="true"/></button>
             </div>
           </div>}
           <UserProfile userId={userId} email={email} onAccountClick={() => { setView('account'); setAccountSection('profile'); }} />
@@ -295,7 +296,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       {space === 'projects' && <nav className="tabs" aria-label="Secciones">
         {([
           ['dashboard', 'Inicio', House], ['projects', 'Proyectos', FolderKanban], ['board', 'Tablero', LayoutDashboard],
-          ['events', 'Eventos', CalendarDays], ['reports', 'Reportes', ChartNoAxesCombined],
+          ['reports', 'Reportes', ChartNoAxesCombined],
         ] as const).map(([key, title, Icon]) => (
           <button type="button" aria-current={view === key ? 'page' : undefined} className={view === key ? 'active' : ''} key={key} onClick={() => setView(key)}>
             <Icon size={15} aria-hidden="true" />{title}
@@ -310,7 +311,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         {space === 'pick' && <section className="space-welcome">
           <img src="/orbit-tasks/orbit-approved.webp" alt="" className="space-welcome-logo" />
           <h1>¿Qué quieres organizar hoy?</h1>
-          <p>Dos espacios independientes para organizar tus pendientes y tus proyectos.</p>
+          <p>Tres espacios independientes para organizar tus pendientes, proyectos y eventos.</p>
           <div className="space-choice-grid">
             <button type="button" onClick={() => chooseSpace('notes')} className="space-choice space-choice-notes">
               <span className="space-choice-icon"><ListChecks size={29} aria-hidden="true" /></span>
@@ -319,7 +320,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             </button>
             <button type="button" onClick={() => chooseSpace('projects')} className="space-choice space-choice-projects">
               <span className="space-choice-icon"><FolderKanban size={29} aria-hidden="true" /></span>
-              <span><strong>Proyectos</strong><small>Tablero Kanban, eventos, tareas y reportes de evolución.</small></span>
+              <span><strong>Proyectos</strong><small>Tablero Kanban, tareas y reportes de evolución.</small></span>
+              <ArrowRight size={21} aria-hidden="true"/>
+            </button>
+            <button type="button" onClick={() => chooseSpace('events')} className="space-choice space-choice-events">
+              <span className="space-choice-icon"><CalendarDays size={29} aria-hidden="true" /></span>
+              <span><strong>Eventos</strong><small>Agenda, reuniones, recurrencias y recordatorios.</small></span>
               <ArrowRight size={21} aria-hidden="true"/>
             </button>
           </div>
@@ -330,13 +336,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         </button>}
         {space === 'projects' && view === 'dashboard' && (
           <>
-            <div className="heading"><div><h1>Tu productividad</h1><p>Proyectos, tareas y eventos sincronizados en Supabase.</p></div>
+            <div className="heading"><div><h1>Tu productividad</h1><p>Proyectos y tareas sincronizados en Supabase.</p></div>
               <button onClick={() => { setView('projects'); openEditor('project'); }}><FolderKanban size={17} aria-hidden="true" /> Nuevo proyecto</button></div>
             <div className="stats">
               <Stat label="Proyectos" value={String(projects.length)} kind="projects" />
               <Stat label="Pendientes" value={String(tasks.length - completed.length)} kind="pending" />
               <Stat label="Finalizadas" value={String(completed.length)} kind="finished" />
-              <Stat label="Próximos eventos" value={String(events.filter((item) => new Date(item.starts_at) >= new Date()).length)} kind="events" />
             </div>
             <section className="card"><h2>Próximas entregas</h2>
               {tasks.filter((task) => task.status !== 'Finalizado').sort((a, b) =>
@@ -434,7 +439,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           />
         )}
 
-        {space === 'projects' && view === 'events' && (
+        {space === 'events' && view === 'events' && (
           <>
             <div className="heading"><div><h1>Eventos y agenda</h1><p>Registra citas y compromisos importantes.</p></div>
               <button onClick={() => openEditor('event')}>＋ Nuevo evento</button></div>
