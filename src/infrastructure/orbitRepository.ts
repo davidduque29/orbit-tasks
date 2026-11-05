@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import type { OrbitEvent, Project, Task, TaskStatus } from '../domain/models';
+import type { RecurrenceRule } from '../domain/reminders';
 
 export interface NewProject {
   name: string;
@@ -18,6 +19,7 @@ export interface NewTask {
 
 export interface NewEvent {
   reminder_override_minutes: number[];
+  recurrence_rule: RecurrenceRule | null;
   title: string;
   description: string;
   starts_at: string;
