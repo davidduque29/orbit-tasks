@@ -5,6 +5,18 @@
 **Fecha:** 2026-11-05  
 **Estado:** Diseño para revisión; ningún endpoint de creación por voz está desplegado.
 
+## Diagrama de arquitectura de alto nivel
+
+![Arquitectura de Orbit Voice Assistant](assets/orbit-voice-assistant-arquitectura.svg)
+
+### ¿Cómo funciona? (explicación para cualquier persona)
+
+La persona habla con Siri y le pide crear un recordatorio. Orbit recibe la instrucción de forma segura, entiende qué se necesita, muestra los datos para confirmarlos y guarda el pendiente. Cuando llegue el momento indicado, el sistema de notificaciones de Orbit podrá enviar el aviso.
+
+**En una frase:** hablas → Orbit interpreta y confirma → guarda → te recuerda.
+
+> Este diagrama muestra la **arquitectura propuesta**, no una función ya desplegada. En la primera etapa crearemos pendientes personales; eventos y tareas de proyectos se incorporarán después. La versión SVG del diagrama está en [docs/assets/orbit-voice-assistant-arquitectura.svg](assets/orbit-voice-assistant-arquitectura.svg).
+
 ## 1. Resumen ejecutivo
 
 Orbit Voice Assistant permitirá registrar pendientes personales mediante comandos de voz ejecutados desde **Siri + Atajos de iOS**, sin requerir abrir o navegar en la PWA. Siri realizará el dictado; Orbit validará la identidad, interpretará la instrucción, confirmará la intención y persistirá el registro en Supabase. En etapas posteriores podrá admitir eventos, tareas de proyectos, lenguaje libre con IA y otros canales.
