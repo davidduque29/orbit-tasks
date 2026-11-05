@@ -151,6 +151,22 @@ export function NotesBoard({ userId }: { userId: string }) {
     return () => { active = false; };
   }, [load]);
 
+  // Scheduled occurrences are created by Supabase, even if this PWA stays open.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      void load().catch(() => { /* Keep the last usable list if temporarily offline. */ });
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    const intervalId = window.setInterval(refresh, 60_000);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+      window.clearInterval(intervalId);
+    };
+  }, [load]);
+
   const filtered = useMemo(() => notes.filter(note => {
     if (section === 'pending') return statusTab === 'active' ? !note.completed : note.completed;
     return section === 'search' && note.title.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es'));
