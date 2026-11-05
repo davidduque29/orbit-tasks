@@ -904,3 +904,13 @@ button:disabled { cursor:not-allowed; }
 }
 
 .notes-stop-recurrence { display:flex; align-items:center; justify-content:center; gap:7px; min-height:42px; width:100%; margin:8px 0 13px; color:#a33e5a; border-color:#ead2d9; background:#fff9fb; font-size:13px; }
+
+/* Recurrence status, uncluttered date and explicit delete scope */
+.notes-recurrence-indicator.is-stopped { color:#807d96; }
+.notes-history-series-status { display:inline-flex; align-items:center; width:max-content; max-width:100%; padding:7px 10px; border-radius:8px; background:#f0edfb; color:#6452b7; font-size:12px; font-weight:700; margin:2px 0 12px; }
+.notes-delete-actions { display:grid; gap:9px; margin:14px 0; }
+.notes-delete-actions > button, .notes-delete-all { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:44px; }
+.notes-delete-actions > small { margin:0 0 6px; font-size:12px; line-height:1.45; }
+.notes-delete-all { background:#b33e57; color:#fff; }
+.notes-delete-all:hover { background:#982f49; }
+.notes-delete-cancel { width:100%; margin-top:12px; min-height:42px; }
