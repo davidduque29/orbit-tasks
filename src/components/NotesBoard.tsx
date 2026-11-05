@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { AlignLeft, Bell, CalendarClock, Check, CheckCircle2, FolderPlus, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, SlidersHorizontal, CheckSquare, Circle } from 'lucide-react';
+import { Bell, CalendarClock, Check, CheckCircle2, FolderPlus, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, SlidersHorizontal, CheckSquare, Circle } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { ReminderModal } from './ReminderModal';
 import { NO_REMINDER, reminderSummary, validateReminder, type ReminderSchedule, type RecurrenceRule } from '../domain/reminders';
@@ -201,7 +201,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     const reminderError = validateReminder(reminder);
     if (reminderError) { setError(reminderError); return; }
     const payload = {
-      kind: 'pending' as const, title: cleaned,
+      kind: editId ? (notes.find(note => note.id === editId)?.kind ?? 'pending') : 'pending', title: cleaned,
       category_id: categoryId || null, reminder_at: reminder.at, recurrence_rule: reminder.rule,
     };
     const done = await perform(async () => {
