@@ -104,6 +104,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [reportTab, setReportTab] = useState<'indicators' | 'progress'>('indicators');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [eventListFilter, setEventListFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
+  const [eventListNow, setEventListNow] = useState(() => Date.now());
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const selectedEvent = events.find((item) => item.id === selectedEventId);
   const [saving, setSaving] = useState(false);
@@ -126,6 +128,18 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [allowWeekendEvent, setAllowWeekendEvent] = useState(false);
   const [eventProjectId, setEventProjectId] = useState('');
   const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    const updateNow = () => setEventListNow(Date.now());
+    const interval = window.setInterval(updateNow, 60_000);
+    window.addEventListener('focus', updateNow);
+    return () => { window.clearInterval(interval); window.removeEventListener('focus', updateNow); };
+  }, []);
+
+  const sortedEvents = useMemo(() => [...events].sort((left, right) => left.starts_at.localeCompare(right.starts_at)), [events]);
+  const upcomingEvents = sortedEvents.filter((item) => item.status !== 'Cancelado' && new Date(item.starts_at).getTime() >= eventListNow);
+  const previousEvents = sortedEvents.filter((item) => item.status === 'Cancelado' || new Date(item.starts_at).getTime() < eventListNow).reverse();
+  const displayedEvents = eventListFilter === 'upcoming' ? upcomingEvents : eventListFilter === 'past' ? previousEvents : sortedEvents;
 
   const visibleTasks = useMemo(
     () => tasks.filter((task) => !selectedProject || task.project_id === selectedProject),
@@ -454,19 +468,54 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
         {space === 'events' && view === 'events' && (
           <>
-            <div className="heading"><div><h1>Eventos y agenda</h1><p>Registra citas y compromisos importantes.</p></div>
-              <button onClick={() => openEditor('event')}>＋ Nuevo evento</button></div>
-            <div className="notice">🔔 Tus eventos se sincronizan en Supabase. Los recordatorios se procesan automáticamente; verifica el estado del dispositivo en Avisos.</div>
+            <div className="heading event-page-heading">
+              <div><h1><CalendarDays size={25} aria-hidden="true" /> Eventos y agenda</h1>
+                <p>Organiza tus citas, reuniones y compromisos importantes.</p></div>
+              <button type="button" onClick={() => openEditor('event')}><Plus size={18} aria-hidden="true"/> Nuevo evento</button>
+            </div>
+            <div className="event-reminder-hint">
+              <CalendarClock size={17} aria-hidden="true" />
+              <span>Los recordatorios se gestionan automáticamente. Revisa tus permisos en <button type="button"
+                onClick={() => { setView('account'); setAccountSection('notifications'); }}>Mi cuenta → Avisos</button>.</span>
+            </div>
             <WeeklyAgenda events={events} />
-            <section className="card event-list-card">
-              {events.map((item) => <button type="button" className="event-compact-card" key={item.id}
-                onClick={() => setSelectedEventId(item.id)} aria-label={`Ver detalle de ${item.title}`}>
-                <span className="event-compact-icon"><CalendarDays size={19} aria-hidden="true" /></span>
-                <span className="event-compact-copy"><strong>{item.title}</strong>
-                  <small><CalendarClock size={13} aria-hidden="true" />{formatDate(item.starts_at)}</small></span>
-                <ArrowRight size={17} aria-hidden="true" />
-              </button>)}
-              {events.length === 0 && <Empty message="Tu agenda está vacía." />}
+            <section className="event-list-section" aria-labelledby="event-list-title">
+              <div className="event-list-heading">
+                <h2 id="event-list-title"><ListChecks size={20} aria-hidden="true"/> Mis eventos <span>{events.length}</span></h2>
+                <div className="event-list-filters" role="group" aria-label="Filtrar eventos por fecha">
+                  {([
+                    ['upcoming', 'Próximos', upcomingEvents.length],
+                    ['past', 'Anteriores', previousEvents.length],
+                    ['all', 'Todos', events.length],
+                  ] as const).map(([key, label, count]) => (
+                    <button type="button" key={key} className={eventListFilter === key ? 'selected' : ''}
+                      aria-pressed={eventListFilter === key} onClick={() => setEventListFilter(key)}>
+                      {label} <span>{count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="card event-list-card">
+                {displayedEvents.map((item) => {
+                  const date = new Date(item.starts_at);
+                  return <button type="button" className="event-compact-card" key={item.id}
+                    onClick={() => setSelectedEventId(item.id)} aria-label={`Ver detalle de ${item.title}`}>
+                    <span className="event-date-tile" aria-hidden="true">
+                      <strong>{date.getDate()}</strong>
+                      <small>{date.toLocaleDateString('es-CO', {month:'short'}).replace('.','')}</small>
+                    </span>
+                    <span className="event-compact-copy"><strong>{item.title}</strong>
+                      <small><Clock3 size={13} aria-hidden="true" />{formatDate(item.starts_at)}</small>
+                      {item.status === 'Cancelado' && <small className="event-cancelled-label">Cancelado</small>}
+                    </span>
+                    <ArrowRight size={17} aria-hidden="true" />
+                  </button>;
+                })}
+                {displayedEvents.length === 0 && <div className="event-list-empty">
+                  <CalendarDays size={23} aria-hidden="true"/>
+                  <p>{eventListFilter === 'upcoming' ? 'No tienes eventos próximos.' : eventListFilter === 'past' ? 'No tienes eventos anteriores.' : 'Tu agenda está vacía.'}</p>
+                </div>}
+              </div>
             </section>
           </>
         )}
