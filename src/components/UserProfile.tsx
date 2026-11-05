@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Camera, UploadCloud, ChevronDown, UserRound } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { DeviceManager } from './DeviceManager';
@@ -20,6 +20,7 @@ export function UserProfile({ userId, email, embedded = false, onAccountClick }:
   const [displayName, setDisplayName] = useState(fallback);
   const [draftName, setDraftName] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [devicesOpen, setDevicesOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -47,6 +48,35 @@ export function UserProfile({ userId, email, embedded = false, onAccountClick }:
       });
     return () => { active = false; };
   }, [userId]);
+
+  useEffect(() => {
+    if (embedded || !menuOpen) return;
+
+    function closeOnOutsideInteraction(event: PointerEvent) {
+      if (event.target instanceof Node && !menuRef.current?.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMenuOpen(false);
+    }
+
+    function closeOnScroll(event: Event) {
+      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return;
+      setMenuOpen(false);
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsideInteraction);
+    document.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('scroll', closeOnScroll, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideInteraction);
+      document.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('scroll', closeOnScroll, true);
+    };
+  }, [embedded, menuOpen]);
 
   async function uploadAvatar(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -117,7 +147,7 @@ export function UserProfile({ userId, email, embedded = false, onAccountClick }:
   }
 
   return (
-    <div className={embedded ? "profile-root profile-embedded" : "profile-root"}>
+    <div ref={menuRef} className={embedded ? "profile-root profile-embedded" : "profile-root"}>
       {!embedded && <button type="button" className="profile-trigger" aria-label={`Perfil de ${displayName}`} aria-haspopup="true" aria-expanded={menuOpen}
         onClick={() => setMenuOpen((current) => !current)}>
         {avatar(false)}
