@@ -138,7 +138,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
   const sortedEvents = useMemo(() => [...events].sort((left, right) => left.starts_at.localeCompare(right.starts_at)), [events]);
   const upcomingEvents = sortedEvents.filter((item) => item.status !== 'Cancelado' && new Date(item.starts_at).getTime() >= eventListNow);
-  const previousEvents = sortedEvents.filter((item) => item.status === 'Cancelado' || new Date(item.starts_at).getTime() < eventListNow).reverse();
+  const previousEvents = sortedEvents.filter((item) => new Date(item.starts_at).getTime() < eventListNow).reverse();
   const displayedEvents = eventListFilter === 'upcoming' ? upcomingEvents : eventListFilter === 'past' ? previousEvents : sortedEvents;
 
   const visibleTasks = useMemo(
