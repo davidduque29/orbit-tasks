@@ -12,7 +12,7 @@ type Note = {
   recurrence_rule: RecurrenceRule | null;
 };
 type Category = { id: string; name: string; color: string; owner_id: string };
-const TITLE_MAX = 80, DESCRIPTION_MAX = 300;
+const TITLE_MAX = 80;
 
 type SpeechResult = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
 type SpeechRecognizer = {
@@ -85,8 +85,6 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [newCategory, setNewCategory] = useState('');
   const [categoryColor, setCategoryColor] = useState('#7658D8');
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [kind, setKind] = useState<NoteKind>('pending');
   const [categoryId, setCategoryId] = useState('');
   const [reminder, setReminder] = useState<ReminderSchedule>(NO_REMINDER);
   const [quickTitle, setQuickTitle] = useState('');
@@ -167,8 +165,6 @@ export function NotesBoard({ userId }: { userId: string }) {
     setMessage('');
     setEditId(note?.id ?? null);
     setTitle(note?.title ?? '');
-    setDescription(note?.description ?? '');
-    setKind(note?.kind ?? 'pending');
     setCategoryId(note?.category_id ?? '');
     setReminder({ at: note?.reminder_at ?? null, rule: note?.recurrence_rule ?? null });
     setEditorOpen(true);
@@ -199,20 +195,18 @@ export function NotesBoard({ userId }: { userId: string }) {
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleaned = title.trim();
-    if (cleaned.length < 2 || cleaned.length > TITLE_MAX || description.length > DESCRIPTION_MAX) {
-      setError('Verifica los límites del título (80) y la descripción (300).'); return;
+    if (cleaned.length < 2 || cleaned.length > TITLE_MAX) {
+      setError('El título debe tener entre 2 y 80 caracteres.'); return;
     }
     const reminderError = validateReminder(reminder);
     if (reminderError) { setError(reminderError); return; }
     const payload = {
-      kind, title: cleaned, description: description.trim(),
+      kind: 'pending' as const, title: cleaned,
       category_id: categoryId || null, reminder_at: reminder.at, recurrence_rule: reminder.rule,
     };
     const done = await perform(async () => {
       const result = editId
-        ? await supabase.from('notes').update({ ...payload, completed: kind === 'note' ? false : notes.find(note => note.id === editId)?.completed ?? false,
-            completed_at: kind === 'note' ? null : notes.find(note => note.id === editId)?.completed_at ?? null,
-            updated_at: new Date().toISOString() }).eq('id', editId).eq('owner_id', userId)
+        ? await supabase.from('notes').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId).eq('owner_id', userId)
         : await supabase.from('notes').insert({ ...payload, owner_id: userId });
       if (result.error) throw result.error;
     }, editId ? 'Registro actualizado.' : 'Registro creado.');
@@ -363,24 +357,16 @@ export function NotesBoard({ userId }: { userId: string }) {
     {editorOpen && <div className="modal-backdrop" role="presentation" onMouseDown={event => {if(event.target === event.currentTarget) setEditorOpen(false);}}>
       <section className="modal orbit-detail-modal note-modal" role="dialog" aria-modal="true" aria-labelledby="note-editor-title">
         <header className="orbit-modal-header"><span className="orbit-modal-icon"><NotebookPen size={23}/></span>
-          <div className="orbit-modal-heading"><small>Pendientes personales</small><h2 id="note-editor-title">{editId ? 'Editar registro' : 'Nuevo registro'}</h2></div>
+          <div className="orbit-modal-heading"><small>Pendientes personales</small><h2 id="note-editor-title">{editId ? 'Editar pendiente' : 'Nuevo pendiente'}</h2></div>
           <button type="button" className="outline orbit-modal-close" aria-label="Cerrar" onClick={() => setEditorOpen(false)}><X size={19}/></button>
         </header>
         {error && <p role="alert" className="field-error">{error}</p>}
         {editId && <p className="note-created-at">Fecha de creación: {reminderLabel(notes.find(note => note.id === editId)?.created_at ?? null)}</p>}
         <form className="orbit-validated-form" onSubmit={(event) => void save(event)}>
-          <label>Tipo
-            <select value={kind} onChange={event => setKind(event.target.value as NoteKind)}>
-              <option value="pending">Pendiente — marcar al completar</option><option value="note">Nota — conservar información</option>
-            </select></label>
           <label><span className="form-label-icon"><ListTodo size={16}/>Título *</span>
             <input required minLength={2} maxLength={TITLE_MAX} placeholder="Ej.: Llamar a mamá" value={title} spellCheck lang="es"
               onChange={event => setTitle(event.target.value.slice(0, TITLE_MAX))}/>
             <span className="field-counter">{title.length}/{TITLE_MAX} caracteres</span></label>
-          <label><span className="form-label-icon"><AlignLeft size={16}/>Descripción opcional</span>
-            <textarea rows={3} maxLength={DESCRIPTION_MAX} placeholder="Información adicional..." value={description} spellCheck lang="es"
-              onChange={event => setDescription(event.target.value.slice(0, DESCRIPTION_MAX))}/>
-            <span className="field-counter">{description.length}/{DESCRIPTION_MAX} caracteres</span></label>
           <label><span className="form-label-icon"><Tag size={16}/>Categoría opcional</span>
             <select value={categoryId} onChange={event => setCategoryId(event.target.value)}>
               <option value="">Sin categoría</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
