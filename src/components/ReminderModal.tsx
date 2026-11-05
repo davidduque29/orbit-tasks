@@ -90,7 +90,7 @@ export function ReminderModal({
               setError('');
             }}/>
         </div>
-      </div>
+      </div>}
       {repeating && <>
         {mode !== 'weekdays' && <label className="reminder-field">
           <span>Repetir cada</span>
