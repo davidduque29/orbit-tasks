@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthScreen } from './components/AuthScreen';
 import { CharacterCounter } from './components/CharacterCounter';
-import { REMINDER_OPTIONS } from './infrastructure/notificationSettings';
 import { NotesBoard } from './components/NotesBoard';
 import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
@@ -11,6 +10,8 @@ import { MetricCard, type StatKind } from './components/DashboardVisuals';
 import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderOverride } from './components/ReminderOverride';
+import { ReminderModal } from './components/ReminderModal';
+import { reminderSummary, validateReminder, type ReminderSchedule } from './domain/reminders';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
 import { TrendSparkline } from './components/TrendSparkline';
 import { ProjectProgressReport } from './components/ProjectProgressReport';
@@ -119,7 +120,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [eventTitle, setEventTitle] = useState('');
   const [eventDescription, setEventDescription] = useState('');
   const [eventStart, setEventStart] = useState(toLocalInput(new Date(Date.now() + 3_600_000)));
-  const [eventReminderMinutes, setEventReminderMinutes] = useState(0);
+  const [eventSchedule, setEventSchedule] = useState<ReminderSchedule>({ at: null, rule: null });
+  const [eventReminderOpen, setEventReminderOpen] = useState(false);
   const [allowWeekendEvent, setAllowWeekendEvent] = useState(false);
   const [eventProjectId, setEventProjectId] = useState('');
   const [formError, setFormError] = useState('');
@@ -195,18 +197,21 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     event.preventDefault();
     const validation = validateEventFields(eventTitle, eventDescription, eventStart, new Date(), allowWeekendEvent);
     if (validation) { setFormError(validation); return; }
+    const reminderError = validateReminder(eventSchedule);
+    if (reminderError) { setFormError(reminderError); return; }
     setFormError('');
     const saved = await execute(() => orbitRepository.createEvent(userId, {
       title: eventTitle.trim(),
       description: eventDescription.trim(),
       starts_at: new Date(eventStart).toISOString(),
       project_id: eventProjectId || null,
-      reminder_override_minutes: eventReminderMinutes === -1 ? [] : [eventReminderMinutes],
+      reminder_override_minutes: eventSchedule.at ? [0] : [],
+      recurrence_rule: eventSchedule.rule,
     }));
     if (!saved) return;
     setEventTitle('');
     setEventDescription('');
-    setEventReminderMinutes(0);
+    setEventSchedule({ at: null, rule: null });
     setAllowWeekendEvent(false);
   }
 
@@ -228,7 +233,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setFormError('');
     if (type === 'event') {
       setEventStart(toLocalInput(new Date(Date.now() + 3_600_000)));
-      setEventReminderMinutes(0);
+      setEventSchedule({ at: null, rule: null });
       setAllowWeekendEvent(false);
     }
     if (type === 'task' && projects.length === 0) {
@@ -518,6 +523,15 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         </div>
       )}
 
+      {eventReminderOpen && (
+        <ReminderModal variant="events" schedule={eventSchedule}
+          onClose={() => setEventReminderOpen(false)}
+          onSave={(next) => {
+            setEventSchedule(next);
+            setEventReminderOpen(false);
+          }}/>
+      )}
+
       {editor && (
         <div className="modal-backdrop" role="presentation" onClick={() => setEditor(null)}>
           <section className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label="Nuevo registro"
@@ -582,14 +596,13 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                   Confirmo que este evento se realizará durante el fin de semana.
                 </label>
               )}
-              <label className="event-reminder-select">
-                <span className="form-label-icon"><Bell size={17} aria-hidden="true"/>¿Cuándo quieres recibir el aviso?</span>
-                <select value={eventReminderMinutes} onChange={(event) => setEventReminderMinutes(Number(event.target.value))}>
-                  <option value={-1}>Sin recordatorio</option>
-                  {REMINDER_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
-                <span className="field-help">Por defecto recibirás un aviso al inicio. Para varios avisos, edita el evento después de crearlo.</span>
-              </label>
+              <div className="event-reminder-select">
+                <span className="form-label-icon"><Bell size={17} aria-hidden="true"/>Recordatorio y repetición</span>
+                <button type="button" className="outline" onClick={() => setEventReminderOpen(true)}>
+                  <CalendarClock size={17} aria-hidden="true"/> {reminderSummary(eventSchedule)} · Configurar
+                </button>
+                <span className="field-help">El aviso se configura con una fecha y hora; los eventos repetidos mantienen ese horario.</span>
+              </div>
               <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto opcional</span>
                 <select value={eventProjectId} onChange={(event) => setEventProjectId(event.target.value)}>
                   <option value="">Sin proyecto</option>
