@@ -124,7 +124,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     if (appleMobile) {
       // Safari's SpeechRecognition opens a system recording sheet that may need
       // manual dismissal. Prefer iOS keyboard dictation for a reliable PWA flow.
-      setVoiceHint('Usa el micrófono del teclado de iPhone para dictar. El texto aparecerá aquí automáticamente.');
+      setVoiceHint(quickTitle.trim() ? '' : 'Usa el micrófono del teclado de iPhone para dictar.');
       quickInputRef.current?.focus();
       return;
     }
@@ -137,7 +137,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     }
     const Constructor = getSpeechConstructor();
     if (!Constructor) {
-      setVoiceHint('Toca el campo y utiliza el micrófono de tu teclado para dictar.');
+      setVoiceHint(quickTitle.trim() ? '' : 'Toca el campo y utiliza el micrófono de tu teclado para dictar.');
       quickInputRef.current?.focus();
       return;
     }
@@ -149,7 +149,7 @@ export function NotesBoard({ userId }: { userId: string }) {
       const transcript = result.results[0]?.[0]?.transcript?.trim() ?? '';
       if (transcript) {
         setQuickTitle((previous) => [previous.trim(), transcript].filter(Boolean).join(' ').slice(0, TITLE_MAX));
-        setVoiceHint('Dictado agregado. Revisa el texto y pulsa + para guardar.');
+        setVoiceHint('');
         setError('');
       }
       clearVoiceTimeout();
@@ -280,7 +280,7 @@ export function NotesBoard({ userId }: { userId: string }) {
       });
       if (insertError) throw insertError;
     }, 'Pendiente creado.')) {
-      setQuickTitle(''); setQuickReminder(NO_REMINDER); setStatusTab('active');
+      setQuickTitle(''); setVoiceHint(''); setQuickReminder(NO_REMINDER); setStatusTab('active');
     }
   }
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -426,7 +426,7 @@ export function NotesBoard({ userId }: { userId: string }) {
       <div className="quick-capture-main">
         <ListTodo size={20} aria-hidden="true"/>
         <input ref={quickInputRef} aria-label="Título del pendiente rápido" placeholder="¿Qué necesitas recordar?" minLength={2} maxLength={TITLE_MAX}
-          value={quickTitle} onChange={event => setQuickTitle(event.target.value.slice(0, TITLE_MAX))} spellCheck lang="es" required/>
+          value={quickTitle} onChange={event => { setQuickTitle(event.target.value.slice(0, TITLE_MAX)); setVoiceHint(''); }} spellCheck lang="es" required/>
         <button type="button" className={listening ? 'quick-voice is-listening' : 'quick-voice'}
           aria-label={listening ? 'Detener dictado' : 'Dictar pendiente por voz'}
           aria-pressed={listening} onClick={toggleVoice} title={speechAvailable ? 'Dictar en español' : 'Activar dictado del teclado'}>
@@ -435,7 +435,7 @@ export function NotesBoard({ userId }: { userId: string }) {
         <button type="submit" className="quick-create" disabled={busy || quickTitle.trim().length < 2}
           aria-label="Agregar pendiente rápido"><Plus size={19}/></button>
       </div>
-      {voiceHint && <p className="quick-listening" role="status">{voiceHint}</p>}
+      {voiceHint && !quickTitle.trim() && <p className="quick-listening" role="status">{voiceHint}</p>}
       <div className="quick-capture-bottom reminder-capture-bottom">
         <button type="button" className="quick-options-toggle reminder-options-toggle"
           aria-expanded={quickOptionsOpen} aria-controls="quick-reminder-details"
