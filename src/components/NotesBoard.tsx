@@ -26,6 +26,12 @@ type SpeechRecognizer = {
 type SpeechConstructor = new () => SpeechRecognizer;
 type SpeechWindow = Window & { SpeechRecognition?: SpeechConstructor; webkitSpeechRecognition?: SpeechConstructor };
 
+function isAppleMobile(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent)
+    || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+}
+
 function getSpeechConstructor(): SpeechConstructor | undefined {
   if (typeof window === 'undefined') return undefined;
   const browser = window as SpeechWindow;
@@ -78,7 +84,11 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [soundEnabled, setSoundEnabled] = useState(() => window.localStorage.getItem('orbit-completion-sound') !== 'off');
   const [listening, setListening] = useState(false);
   const recognizer = useRef<SpeechRecognizer | null>(null);
-  const speechAvailable = Boolean(getSpeechConstructor());
+  const voiceTimeout = useRef<number | null>(null);
+  const quickInputRef = useRef<HTMLInputElement | null>(null);
+  const [voiceHint, setVoiceHint] = useState('');
+  const appleMobile = isAppleMobile();
+  const speechAvailable = Boolean(getSpeechConstructor()) && !appleMobile;
   const [editId, setEditId] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
@@ -91,7 +101,16 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [historySeriesId, setHistorySeriesId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
 
-  useEffect(() => () => { recognizer.current?.stop(); recognizer.current = null; }, []);
+  useEffect(() => () => {
+    if (voiceTimeout.current !== null) window.clearTimeout(voiceTimeout.current);
+    recognizer.current?.stop();
+    recognizer.current = null;
+  }, []);
+
+  function clearVoiceTimeout() {
+    if (voiceTimeout.current !== null) window.clearTimeout(voiceTimeout.current);
+    voiceTimeout.current = null;
+  }
 
   function toggleSound() {
     setSoundEnabled((previous) => {
@@ -101,7 +120,16 @@ export function NotesBoard({ userId }: { userId: string }) {
   }
 
   function toggleVoice() {
+    setError('');
+    if (appleMobile) {
+      // Safari's SpeechRecognition opens a system recording sheet that may need
+      // manual dismissal. Prefer iOS keyboard dictation for a reliable PWA flow.
+      setVoiceHint('Usa el micrófono del teclado de iPhone para dictar. El texto aparecerá aquí automáticamente.');
+      quickInputRef.current?.focus();
+      return;
+    }
     if (recognizer.current) {
+      clearVoiceTimeout();
       recognizer.current.stop();
       recognizer.current = null;
       setListening(false);
@@ -109,7 +137,8 @@ export function NotesBoard({ userId }: { userId: string }) {
     }
     const Constructor = getSpeechConstructor();
     if (!Constructor) {
-      setError('Este navegador no ofrece dictado desde la app. Usa el micrófono del teclado de tu celular.');
+      setVoiceHint('Toca el campo y utiliza el micrófono de tu teclado para dictar.');
+      quickInputRef.current?.focus();
       return;
     }
     const speech = new Constructor();
@@ -118,18 +147,49 @@ export function NotesBoard({ userId }: { userId: string }) {
     speech.continuous = false;
     speech.onresult = (result) => {
       const transcript = result.results[0]?.[0]?.transcript?.trim() ?? '';
-      if (transcript) setQuickTitle((previous) => [previous.trim(), transcript].filter(Boolean).join(' ').slice(0, TITLE_MAX));
-      setError('');
+      if (transcript) {
+        setQuickTitle((previous) => [previous.trim(), transcript].filter(Boolean).join(' ').slice(0, TITLE_MAX));
+        setVoiceHint('Dictado agregado. Revisa el texto y pulsa + para guardar.');
+        setError('');
+      }
+      clearVoiceTimeout();
+      speech.stop();
     };
     speech.onerror = (result) => {
+      clearVoiceTimeout();
       setListening(false);
-      recognizer.current = null;
-      if (result.error !== 'aborted') setError('No se pudo reconocer la voz. Revisa el permiso de micrófono o usa el dictado del teclado.');
+      if (recognizer.current === speech) recognizer.current = null;
+      if (result.error === 'aborted') return;
+      if (result.error === 'not-allowed' || result.error === 'service-not-allowed') {
+        setError('El micrófono está bloqueado. Habilita el permiso del navegador o usa el dictado del teclado.');
+      } else if (result.error === 'no-speech') {
+        setVoiceHint('No escuché ninguna frase. Puedes intentarlo otra vez.');
+      } else {
+        setError('No se completó el dictado. Puedes escribir o usar el micrófono del teclado.');
+      }
     };
-    speech.onend = () => { setListening(false); recognizer.current = null; };
+    speech.onend = () => {
+      clearVoiceTimeout();
+      setListening(false);
+      if (recognizer.current === speech) recognizer.current = null;
+    };
     recognizer.current = speech;
-    try { speech.start(); setListening(true); setError(''); }
-    catch { recognizer.current = null; setListening(false); setError('El dictado no se pudo iniciar en este navegador.'); }
+    try {
+      speech.start();
+      setListening(true);
+      setVoiceHint('Escuchando… habla ahora. Se detendrá al reconocer la frase.');
+      // Defensive cutoff when the browser never fires onresult/onend.
+      voiceTimeout.current = window.setTimeout(() => {
+        if (recognizer.current !== speech) return;
+        speech.stop();
+        setVoiceHint('Dictado finalizado. Puedes volver a pulsar el micrófono.');
+      }, 15000);
+    } catch {
+      clearVoiceTimeout();
+      recognizer.current = null;
+      setListening(false);
+      setError('No se pudo iniciar el dictado. Usa el micrófono del teclado.');
+    }
   }
 
   const load = useCallback(async () => {
@@ -365,18 +425,17 @@ export function NotesBoard({ userId }: { userId: string }) {
     <form className="card quick-capture" onSubmit={(event) => void quickAdd(event)}>
       <div className="quick-capture-main">
         <ListTodo size={20} aria-hidden="true"/>
-        <input aria-label="Título del pendiente rápido" placeholder="¿Qué necesitas recordar?" minLength={2} maxLength={TITLE_MAX}
+        <input ref={quickInputRef} aria-label="Título del pendiente rápido" placeholder="¿Qué necesitas recordar?" minLength={2} maxLength={TITLE_MAX}
           value={quickTitle} onChange={event => setQuickTitle(event.target.value.slice(0, TITLE_MAX))} spellCheck lang="es" required/>
         <button type="button" className={listening ? 'quick-voice is-listening' : 'quick-voice'}
           aria-label={listening ? 'Detener dictado' : 'Dictar pendiente por voz'}
-          aria-pressed={listening} onClick={toggleVoice} title={speechAvailable ? 'Dictar en español' : 'Usa el micrófono del teclado'}>
+          aria-pressed={listening} onClick={toggleVoice} title={speechAvailable ? 'Dictar en español' : 'Activar dictado del teclado'}>
           {listening ? <MicOff size={19}/> : <Mic size={19}/>}
         </button>
         <button type="submit" className="quick-create" disabled={busy || quickTitle.trim().length < 2}
           aria-label="Agregar pendiente rápido"><Plus size={19}/></button>
       </div>
-      {listening && <p className="quick-listening" role="status">Escuchando… di tu pendiente en voz alta.</p>}
-      {!speechAvailable && <small className="quick-voice-hint">Para dictar, utiliza el micrófono de tu teclado.</small>}
+      {voiceHint && <p className="quick-listening" role="status">{voiceHint}</p>}
       <div className="quick-capture-bottom reminder-capture-bottom">
         <button type="button" className="quick-options-toggle reminder-options-toggle"
           aria-expanded={quickOptionsOpen} aria-controls="quick-reminder-details"
