@@ -976,3 +976,37 @@ button:disabled { cursor:not-allowed; }
   .header .profile-trigger .profile-avatar:not(.large) { width:35px; height:35px; flex-basis:35px; }
   .header .profile-trigger-name { font-size:11px; }
 }
+
+/* Event agenda: compact reminder status, semantic headings and time-aware list filters. */
+.event-page-heading h1 { display:flex; align-items:center; gap:10px; }
+.event-page-heading h1 svg { color:#6540d8; flex-shrink:0; }
+.event-page-heading > button { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.event-reminder-hint { display:flex; align-items:center; gap:9px; border:1px solid #e9e2ff; background:#f7f4ff; border-radius:12px; padding:11px 13px; margin-bottom:16px; color:#65568f; font-size:12px; line-height:1.5; }
+.event-reminder-hint > svg { flex-shrink:0; color:#694dcc; }
+.event-reminder-hint button { background:none; border:0; color:#6040cb; padding:0; display:inline; font:inherit; font-weight:750; text-decoration:underline; }
+.event-list-section { margin-top:18px; }
+.event-list-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:0 0 11px; }
+.event-list-heading h2 { display:flex; align-items:center; gap:8px; font-size:19px; margin:0; color:#202842; }
+.event-list-heading h2 svg { color:#6847d9; }
+.event-list-heading h2 span { display:inline-grid; place-items:center; min-width:25px; height:25px; padding:0 7px; background:#ebe4ff; color:#6444cd; border-radius:15px; font-size:12px; }
+.event-list-filters { display:flex; flex-wrap:wrap; gap:5px; }
+.event-list-filters button { display:inline-flex; align-items:center; gap:5px; background:#fff; border:1px solid #e4ddf4; border-radius:12px; padding:8px 10px; font-size:12px; color:#605577; }
+.event-list-filters button.selected { background:#ece6ff; border-color:#b7a5f4; color:#5634bf; }
+.event-list-filters button span { font-size:11px; opacity:.85; }
+.event-list-card { padding:8px 13px; }
+.event-list-card .event-compact-card { width:100%; }
+.event-date-tile { display:flex; flex:0 0 50px; min-width:50px; min-height:55px; flex-direction:column; justify-content:center; align-items:center; border-radius:12px; background:#f0ebff; color:#6849d4; line-height:1.2; }
+.event-date-tile strong { font-size:21px; }
+.event-date-tile small { font-size:11px; color:#7258c6; text-transform:capitalize; }
+.event-list-card .event-compact-copy { flex:1 1 auto; min-width:0; text-align:left; }
+.event-list-card .event-compact-copy strong { overflow-wrap:anywhere; }
+.event-list-card .event-compact-copy small { display:flex; align-items:center; gap:5px; }
+.event-list-card .event-cancelled-label { color:#af5369; }
+.event-list-empty { padding:24px 12px; display:grid; justify-items:center; gap:6px; color:#776c98; text-align:center; }
+.event-list-empty p { margin:0; }
+@media(max-width:700px) {
+  .event-list-heading { align-items:stretch; }
+  .event-list-filters { width:100%; }
+  .event-list-filters button { flex:1; justify-content:center; padding:9px 4px; font-size:11px; }
+  .event-page-heading > button { min-height:43px; }
+}
