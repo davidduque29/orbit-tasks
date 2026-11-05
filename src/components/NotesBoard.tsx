@@ -69,7 +69,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [section, setSection] = useState<'pending' | 'search' | 'categories'>('pending');
   const [statusTab, setStatusTab] = useState<'active' | 'completed'>('active');
   const [quickOptionsOpen, setQuickOptionsOpen] = useState(false);
   const [quickCategory, setQuickCategory] = useState('');
@@ -81,7 +81,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   const speechAvailable = Boolean(getSpeechConstructor());
   const [editId, setEditId] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [newCategory, setNewCategory] = useState('');
   const [categoryColor, setCategoryColor] = useState('#7658D8');
   const [title, setTitle] = useState('');
@@ -149,14 +149,10 @@ export function NotesBoard({ userId }: { userId: string }) {
     return () => { active = false; };
   }, [load]);
 
-  const filtered = useMemo(() => notes.filter((note) => {
-    if (statusTab === 'active' && note.completed) return false;
-    if (statusTab === 'completed' && !note.completed) return false;
-    if (categoryFilter !== 'all' && (categoryFilter === 'none'
-      ? note.category_id !== null : note.category_id !== categoryFilter)) return false;
-    return [note.title, note.description].join(' ').toLocaleLowerCase('es')
-      .includes(search.toLocaleLowerCase('es').trim());
-  }), [notes, search, categoryFilter, statusTab]);
+  const filtered = useMemo(() => notes.filter(note => {
+    if (section === 'pending') return statusTab === 'active' ? !note.completed : note.completed;
+    return section === 'search' && note.title.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es'));
+  }), [notes, section, statusTab, search]);
   const completedCount = notes.filter((note) => note.completed).length;
   const activeCount = notes.length - completedCount;
 
@@ -232,33 +228,59 @@ export function NotesBoard({ userId }: { userId: string }) {
       if (deleteError) throw deleteError;
     }, 'Registro eliminado.');
   }
-  async function addCategory(event: FormEvent<HTMLFormElement>) {
+  function editCategory(category: Category) {
+    setEditingCategoryId(category.id);
+    setNewCategory(category.name);
+    setCategoryColor(category.color);
+    setError('');
+  }
+  function resetCategory() {
+    setEditingCategoryId(null);
+    setNewCategory('');
+    setCategoryColor('#7658D8');
+  }
+  async function saveCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleaned = newCategory.trim();
-    if (!cleaned || cleaned.length > 35) { setError('El nombre de la categoría admite de 1 a 35 caracteres.'); return; }
-    if (await perform(async () => {
-      const { error: insertError } = await supabase.from('note_categories')
-        .insert({ owner_id: userId, name: cleaned, color: categoryColor });
-      if (insertError) throw insertError;
-    }, 'Categoría creada.')) setNewCategory('');
+    if (!cleaned || cleaned.length > 35) { setError('El nombre admite de 1 a 35 caracteres.'); return; }
+    if (categories.some(category => category.id !== editingCategoryId &&
+      category.name.trim().toLocaleLowerCase('es') === cleaned.toLocaleLowerCase('es'))) {
+      setError('Ya existe una categoría con ese nombre.'); return;
+    }
+    const done = await perform(async () => {
+      const { error: categoryError } = editingCategoryId
+        ? await supabase.from('note_categories').update({ name: cleaned, color: categoryColor })
+            .eq('id', editingCategoryId).eq('owner_id', userId)
+        : await supabase.from('note_categories').insert({ owner_id: userId, name: cleaned, color: categoryColor });
+      if (categoryError) throw categoryError;
+    }, editingCategoryId ? 'Categoría actualizada.' : 'Categoría creada.');
+    if (done) resetCategory();
   }
   async function removeCategory(category: Category) {
-    if (!window.confirm(`¿Eliminar la categoría "${category.name}"? Las notas quedarán sin categoría.`)) return;
-    if (await perform(async () => {
+    const count = notes.filter(note => note.category_id === category.id).length;
+    if (!window.confirm(`¿Eliminar "${category.name}"? ${count} registro(s) quedarán sin categoría.`)) return;
+    const done = await perform(async () => {
       const { error: deleteError } = await supabase.from('note_categories').delete().eq('id', category.id).eq('owner_id', userId);
       if (deleteError) throw deleteError;
-    }, 'Categoría eliminada.')) {
-      if (categoryFilter === category.id) setCategoryFilter('all');
+    }, 'Categoría eliminada.');
+    if (done) {
       if (categoryId === category.id) setCategoryId('');
+      if (quickCategory === category.id) setQuickCategory('');
+      if (editingCategoryId === category.id) resetCategory();
     }
   }
   const categoryName = (id: string | null) => categories.find(category => category.id === id);
 
   return <section className="notes-board">
-    <div className="heading notes-heading">
-      <div><h1>Pendientes</h1><p>Notas rápidas, actividades personales y recordatorios, sin crear un proyecto.</p></div>
-      <button type="button" onClick={() => openEditor()}><Plus size={17} aria-hidden="true"/> Nuevo pendiente</button>
+    <div className="heading notes-heading"><div><h1>Pendientes</h1><p>Captura rápidamente tus actividades personales.</p></div>
+      {section === 'pending' && <button type="button" onClick={() => openEditor()}><Plus size={17}/> Nuevo pendiente</button>}
     </div>
+    <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
+      <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17}/> Pendientes</button>
+      <button type="button" className={section === 'search' ? 'selected' : ''} aria-current={section === 'search' ? 'page' : undefined} onClick={() => setSection('search')}><Search size={17}/> Buscar</button>
+      <button type="button" className={section === 'categories' ? 'selected' : ''} aria-current={section === 'categories' ? 'page' : undefined} onClick={() => setSection('categories')}><FolderPlus size={17}/> Categorías</button>
+    </nav>
+    {section === 'pending' && <>
     <form className="card quick-capture" onSubmit={(event) => void quickAdd(event)}>
       <div className="quick-capture-main">
         <ListTodo size={20} aria-hidden="true"/>
@@ -297,22 +319,11 @@ export function NotesBoard({ userId }: { userId: string }) {
             {reminderSummary(quickReminder)}
           </button>
         </div>
-        <button className="outline quick-category-link" type="button" onClick={() => { setError(''); setCategoriesOpen(true); }}>
+        <button className="outline quick-category-link" type="button" onClick={() => { setError(''); setSection('categories'); }}>
           <FolderPlus size={15}/> Crear categoría
         </button>
       </div>}
     </form>
-    <div className="notes-toolbar">
-      <label className="notes-search"><Search size={17} aria-hidden="true"/><input aria-label="Buscar notas y pendientes"
-        value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar pendientes o notas..."/></label>
-      <button type="button" className="outline" onClick={() => setCategoriesOpen(true)}><FolderPlus size={16}/> Categorías</button>
-    </div>
-    <div className="notes-filters" aria-label="Filtrar por categoría">
-      <button type="button" className={categoryFilter === 'all' ? 'active' : ''} onClick={() => setCategoryFilter('all')}>Todas</button>
-      <button type="button" className={categoryFilter === 'none' ? 'active' : ''} onClick={() => setCategoryFilter('none')}>Sin categoría</button>
-      {categories.map(category => <button key={category.id} type="button" className={categoryFilter === category.id ? 'active' : ''}
-        onClick={() => setCategoryFilter(category.id)}><span className="note-category-dot" style={{background:category.color}}/>{category.name}</button>)}
-    </div>
     <div className="notes-status-row">
       <div className="notes-status-tabs" role="tablist" aria-label="Estado de pendientes">
         <button type="button" role="tab" aria-selected={statusTab === 'active'} className={statusTab === 'active' ? 'selected' : ''}
@@ -352,7 +363,65 @@ export function NotesBoard({ userId }: { userId: string }) {
           <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => void remove(note)} disabled={busy}><Trash2 size={17}/></button>
         </div>
       </article>)}
-      {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/><h2>{statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2><p>{statusTab === 'active' ? 'No hay pendientes activos con estos filtros. Crea uno nuevo para comenzar.' : 'Aquí verás los pendientes que hayas marcado como completados.'}</p></div>}
+      {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/>
+        <h2>{section === 'search' ? 'Sin resultados' : statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2>
+        <p>{section === 'search' ? 'No hay pendientes con ese título.' : 'No hay registros en esta sección.'}</p>
+      </div>}
+    </div>}
+    </>}
+    {section === 'search' && <div className="notes-search-pane">
+      <h2>Buscar</h2>
+      <label className="notes-search"><Search size={19}/><input aria-label="Buscar pendientes por título" placeholder="Buscar pendientes por título..." value={search} onChange={event => setSearch(event.target.value)}/></label>
+    {error && <p className="error" role="alert">{error}</p>}
+    {message && <p className="feedback" role="status">{message}</p>}
+    {loading && <p className="muted">Cargando tus pendientes…</p>}
+    {!loading && <div className="notes-list">
+      {filtered.map(note => <article className="card note-list-item" key={note.id}>
+        <div className="note-check">
+          {note.kind === 'pending'
+            ? <input type="checkbox" aria-label={`Marcar como ${note.completed ? 'pendiente' : 'completado'}: ${note.title}`}
+                checked={note.completed} disabled={busy} onChange={() => void toggle(note)}/>
+            : <NotebookPen size={21} aria-label="Nota" />}
+        </div>
+        <button type="button" className="note-summary" onClick={() => openEditor(note)}>
+          <strong className={note.completed ? 'note-done' : ''}>{note.title}</strong>
+          {note.description && <span>{note.description}</span>}
+          <small>
+            <CalendarClock size={13} aria-hidden="true"/> Creado: {reminderLabel(note.created_at)}
+            {note.category_id && <><span className="note-category-dot" style={{background: categoryName(note.category_id)?.color ?? '#7658D8'}}/>{categoryName(note.category_id)?.name ?? 'Sin categoría'} · </>}
+            {note.reminder_at && <><CalendarClock size={13} aria-hidden="true"/>{reminderLabel(note.reminder_at)}</>}
+            {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
+          </small>
+        </button>
+        <div className="note-actions">
+          <button type="button" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17}/></button>
+          <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => void remove(note)} disabled={busy}><Trash2 size={17}/></button>
+        </div>
+      </article>)}
+      {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/>
+        <h2>{section === 'search' ? 'Sin resultados' : statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2>
+        <p>{section === 'search' ? 'No hay pendientes con ese título.' : 'No hay registros en esta sección.'}</p>
+      </div>}
+    </div>}
+    </div>}
+    {section === 'categories' && <div className="notes-categories-pane">
+      <h2>Categorías</h2>
+      <form className="note-category-form" onSubmit={event => void saveCategory(event)}>
+        <label>Nombre<input required maxLength={35} value={newCategory} placeholder="Ej.: Droguería" onChange={event => setNewCategory(event.target.value)}/></label>
+        <label>Color<input type="color" aria-label="Color de categoría" value={categoryColor} onChange={event => setCategoryColor(event.target.value)}/></label>
+        <button type="submit" disabled={busy || !newCategory.trim()}>{editingCategoryId ? <Check size={17}/> : <Plus size={17}/>}{editingCategoryId ? 'Guardar' : 'Agregar'}</button>
+        {editingCategoryId && <button type="button" className="outline" onClick={resetCategory}>Cancelar</button>}
+      </form>
+          {error && <p className="error" role="alert">{error}</p>}
+    {message && <p className="feedback" role="status">{message}</p>}
+
+      {categories.map(category => <div className="note-category-manager" key={category.id}>
+        <span className="note-category-dot" style={{background:category.color}}/>
+        <span className="notes-category-label">{category.name}<small>{notes.filter(note => note.category_id === category.id).length} registros</small></span>
+        <button type="button" className="outline" disabled={busy} aria-label={`Editar categoría ${category.name}`} onClick={() => editCategory(category)}><Pencil size={16}/></button>
+        <button type="button" className="outline" disabled={busy} aria-label={`Eliminar categoría ${category.name}`} onClick={() => void removeCategory(category)}><Trash2 size={16}/></button>
+      </div>)}
+      {!categories.length && <p className="muted">Aún no hay categorías.</p>}
     </div>}
     {editorOpen && <div className="modal-backdrop" role="presentation" onMouseDown={event => {if(event.target === event.currentTarget) setEditorOpen(false);}}>
       <section className="modal orbit-detail-modal note-modal" role="dialog" aria-modal="true" aria-labelledby="note-editor-title">
@@ -387,24 +456,5 @@ export function NotesBoard({ userId }: { userId: string }) {
         if (reminderTarget === 'quick') setQuickReminder(value); else setReminder(value);
         setReminderTarget(null);
       }}/>}
-    {categoriesOpen && <div className="modal-backdrop" role="presentation" onMouseDown={event => {if(event.target === event.currentTarget) setCategoriesOpen(false);}}>
-      <section className="modal orbit-detail-modal note-modal" role="dialog" aria-modal="true" aria-labelledby="categories-title">
-        <header className="orbit-modal-header"><span className="orbit-modal-icon"><FolderPlus size={22}/></span>
-          <div className="orbit-modal-heading"><small>Organización personal</small><h2 id="categories-title">Mis categorías</h2></div>
-          <button type="button" className="outline orbit-modal-close" aria-label="Cerrar" onClick={() => setCategoriesOpen(false)}><X size={19}/></button>
-        </header>
-        {error && <p role="alert" className="field-error">{error}</p>}
-        <form className="note-category-form" onSubmit={(event) => void addCategory(event)}>
-          <label>Nombre<input required maxLength={35} placeholder="Ej.: Familia" value={newCategory} onChange={event => setNewCategory(event.target.value)}/></label>
-          <label>Color<input type="color" aria-label="Color de categoría" value={categoryColor} onChange={event => setCategoryColor(event.target.value)}/></label>
-          <button type="submit" disabled={busy || !newCategory.trim()}><Plus size={17}/>Agregar</button>
-        </form>
-        {categories.map(category => <div key={category.id} className="note-category-manager">
-          <span className="note-category-dot" style={{background: category.color}}/>{category.name}
-          <button type="button" className="outline" aria-label={`Eliminar categoría ${category.name}`} onClick={() => void removeCategory(category)}><Trash2 size={15}/></button>
-        </div>)}
-        {!categories.length && <p className="muted">Todavía no has creado categorías. Son completamente opcionales.</p>}
-      </section>
-    </div>}
   </section>;
 }
