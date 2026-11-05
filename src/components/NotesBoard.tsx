@@ -90,6 +90,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [reminder, setReminder] = useState<ReminderSchedule>(NO_REMINDER);
   const [quickTitle, setQuickTitle] = useState('');
   const [historySeriesId, setHistorySeriesId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
 
   useEffect(() => () => { recognizer.current?.stop(); recognizer.current = null; }, []);
 
@@ -175,6 +176,11 @@ export function NotesBoard({ userId }: { userId: string }) {
   const recurringSeries = useMemo(() => new Set(notes.filter(note =>
     note.recurrence_rule || note.recurrence_series_id
   ).map(note => note.recurrence_series_id ?? note.id)), [notes]);
+  const activeSeries = useMemo(() => new Set(notes.filter(note =>
+    note.recurrence_rule !== null && !note.recurrence_next_created
+  ).map(note => note.recurrence_series_id ?? note.id)), [notes]);
+  const recurrenceStatus = (note: Note) => !recurringSeries.has(seriesKey(note))
+    ? null : activeSeries.has(seriesKey(note)) ? 'Repetición activa' : 'Repetición detenida';
   const historyRows = useMemo(() => historySeriesId
     ? notes.filter(note => seriesKey(note) === historySeriesId)
       .sort((a, b) => (b.reminder_at ?? '').localeCompare(a.reminder_at ?? ''))
@@ -224,13 +230,13 @@ export function NotesBoard({ userId }: { userId: string }) {
     if (cleaned.length < 2 || cleaned.length > TITLE_MAX) {
       setError('El título debe tener entre 2 y 80 caracteres.'); return;
     }
-    const reminderError = validateReminder(reminder);
-    if (reminderError) { setError(reminderError); return; }
     const previousNote = editId ? notes.find(note => note.id === editId) : undefined;
     const scheduleChanged = previousNote && (
       previousNote.reminder_at !== reminder.at ||
       JSON.stringify(previousNote.recurrence_rule) !== JSON.stringify(reminder.rule)
     );
+    const reminderError = scheduleChanged || !previousNote ? validateReminder(reminder) : null;
+    if (reminderError) { setError(reminderError); return; }
     if (previousNote?.recurrence_next_created && scheduleChanged) {
       setError('Esta ocurrencia ya generó la siguiente. Edita la ocurrencia más reciente para cambiar el horario de repetición.');
       return;
@@ -275,14 +281,34 @@ export function NotesBoard({ userId }: { userId: string }) {
     }, 'Repetición detenida. Se conserva el historial.');
     if (done) setHistorySeriesId(null);
   }
-  async function remove(note: Note) {
-    const isLastScheduled = Boolean(note.recurrence_rule && !note.recurrence_next_created);
-    const warning = isLastScheduled ? ' Al eliminar esta ocurrencia se detendrán las próximas repeticiones.' : '';
-    if (!window.confirm(`¿Eliminar "${note.title}"?${warning}`)) return;
-    await perform(async () => {
-      const { error: deleteError } = await supabase.from('notes').delete().eq('id', note.id).eq('owner_id', userId);
+  async function deleteOccurrence(note: Note) {
+    const done = await perform(async () => {
+      const { error: deleteError } = await supabase.from('notes')
+        .delete().eq('id', note.id).eq('owner_id', userId);
       if (deleteError) throw deleteError;
-    }, 'Registro eliminado.');
+    }, 'Ocurrencia eliminada. Las demás se conservan.');
+    if (done) {
+      setDeleteTarget(null);
+      if (historySeriesId === seriesKey(note)) setHistorySeriesId(null);
+    }
+  }
+  async function deleteEntireSeries(note: Note) {
+    const key = seriesKey(note);
+    const done = await perform(async () => {
+      const { error: deleteError } = await supabase.from('notes').delete()
+        .eq('owner_id', userId)
+        .or(`id.eq.${key},recurrence_series_id.eq.${key}`);
+      if (deleteError) throw deleteError;
+    }, 'Serie completa eliminada.');
+    if (done) {
+      setDeleteTarget(null);
+      if (historySeriesId === key) setHistorySeriesId(null);
+    }
+  }
+  function remove(note: Note) {
+    setMessage('');
+    setError('');
+    setDeleteTarget(note);
   }
   function editCategory(category: Category) {
     setEditingCategoryId(category.id);
@@ -406,14 +432,16 @@ export function NotesBoard({ userId }: { userId: string }) {
         </div>
         <button type="button" className="note-summary" onClick={() => openEditor(note)}>
           <strong className={note.completed ? 'note-done' : ''}>{note.title}</strong>
-          {recurringSeries.has(seriesKey(note)) && <span className="notes-recurrence-indicator">
-            <CalendarClock size={13} aria-hidden="true"/> Recurrente · {note.reminder_at ? reminderLabel(note.reminder_at) : 'Sin fecha'}
+          {recurrenceStatus(note) && <span className={activeSeries.has(seriesKey(note))
+            ? 'notes-recurrence-indicator' : 'notes-recurrence-indicator is-stopped'}>
+            <CalendarClock size={13} aria-hidden="true"/> {recurrenceStatus(note)}
           </span>}
           {note.description && <span>{note.description}</span>}
           <small>
-            <CalendarClock size={13} aria-hidden="true"/> Creado: {reminderLabel(note.created_at)}
-            {note.category_id && <><span className="note-category-dot" style={{background: categoryName(note.category_id)?.color ?? '#7658D8'}}/>{categoryName(note.category_id)?.name ?? 'Sin categoría'} · </>}
-            {note.reminder_at && <><CalendarClock size={13} aria-hidden="true"/>{reminderLabel(note.reminder_at)}</>}
+            {note.reminder_at
+              ? <><CalendarClock size={13} aria-hidden="true"/> Programado: {reminderLabel(note.reminder_at)}</>
+              : <><CalendarClock size={13} aria-hidden="true"/> Creado: {reminderLabel(note.created_at)}</>}
+            {note.category_id && <><span className="note-category-dot" style={{background: categoryName(note.category_id)?.color ?? '#7658D8'}}/>{categoryName(note.category_id)?.name ?? 'Sin categoría'}</>}
             {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
           </small>
         </button>
@@ -422,7 +450,7 @@ export function NotesBoard({ userId }: { userId: string }) {
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
             onClick={() => setHistorySeriesId(seriesKey(note))}><CalendarClock size={17}/></button>}
           <button type="button" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17}/></button>
-          <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => void remove(note)} disabled={busy}><Trash2 size={17}/></button>
+          <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => remove(note)} disabled={busy}><Trash2 size={17}/></button>
         </div>
       </article>)}
       {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/>
@@ -447,14 +475,16 @@ export function NotesBoard({ userId }: { userId: string }) {
         </div>
         <button type="button" className="note-summary" onClick={() => openEditor(note)}>
           <strong className={note.completed ? 'note-done' : ''}>{note.title}</strong>
-          {recurringSeries.has(seriesKey(note)) && <span className="notes-recurrence-indicator">
-            <CalendarClock size={13} aria-hidden="true"/> Recurrente · {note.reminder_at ? reminderLabel(note.reminder_at) : 'Sin fecha'}
+          {recurrenceStatus(note) && <span className={activeSeries.has(seriesKey(note))
+            ? 'notes-recurrence-indicator' : 'notes-recurrence-indicator is-stopped'}>
+            <CalendarClock size={13} aria-hidden="true"/> {recurrenceStatus(note)}
           </span>}
           {note.description && <span>{note.description}</span>}
           <small>
-            <CalendarClock size={13} aria-hidden="true"/> Creado: {reminderLabel(note.created_at)}
-            {note.category_id && <><span className="note-category-dot" style={{background: categoryName(note.category_id)?.color ?? '#7658D8'}}/>{categoryName(note.category_id)?.name ?? 'Sin categoría'} · </>}
-            {note.reminder_at && <><CalendarClock size={13} aria-hidden="true"/>{reminderLabel(note.reminder_at)}</>}
+            {note.reminder_at
+              ? <><CalendarClock size={13} aria-hidden="true"/> Programado: {reminderLabel(note.reminder_at)}</>
+              : <><CalendarClock size={13} aria-hidden="true"/> Creado: {reminderLabel(note.created_at)}</>}
+            {note.category_id && <><span className="note-category-dot" style={{background: categoryName(note.category_id)?.color ?? '#7658D8'}}/>{categoryName(note.category_id)?.name ?? 'Sin categoría'}</>}
             {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
           </small>
         </button>
@@ -463,7 +493,7 @@ export function NotesBoard({ userId }: { userId: string }) {
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
             onClick={() => setHistorySeriesId(seriesKey(note))}><CalendarClock size={17}/></button>}
           <button type="button" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17}/></button>
-          <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => void remove(note)} disabled={busy}><Trash2 size={17}/></button>
+          <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => remove(note)} disabled={busy}><Trash2 size={17}/></button>
         </div>
       </article>)}
       {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/>
@@ -491,6 +521,46 @@ export function NotesBoard({ userId }: { userId: string }) {
       </div>)}
       {!categories.length && <p className="muted">Aún no hay categorías.</p>}
     </div>}
+    {deleteTarget && <div className="modal-backdrop" role="presentation"
+      onMouseDown={event => { if (event.target === event.currentTarget && !busy) setDeleteTarget(null); }}>
+      <section className="modal orbit-detail-modal note-modal notes-delete-modal" role="dialog"
+        aria-modal="true" aria-labelledby="note-delete-title">
+        <header className="orbit-modal-header">
+          <span className="orbit-modal-icon"><Trash2 size={21}/></span>
+          <div className="orbit-modal-heading">
+            <small>Confirmar eliminación</small>
+            <h2 id="note-delete-title">Eliminar pendiente</h2>
+          </div>
+          <button type="button" className="outline orbit-modal-close" disabled={busy}
+            aria-label="Cancelar eliminación" onClick={() => setDeleteTarget(null)}><X size={18}/></button>
+        </header>
+        <p><strong>{deleteTarget.title}</strong></p>
+        <p className="field-help">{deleteTarget.reminder_at
+          ? `Ocurrencia: ${reminderLabel(deleteTarget.reminder_at)}`
+          : 'Pendiente sin recordatorio'}</p>
+        {recurringSeries.has(seriesKey(deleteTarget)) ? <>
+          <p>Elige qué quieres eliminar:</p>
+          <div className="notes-delete-actions">
+            <button type="button" className="outline" disabled={busy}
+              onClick={() => void deleteOccurrence(deleteTarget)}>
+              <Trash2 size={16}/> Solo esta ocurrencia
+            </button>
+            <small>Conserva las demás fechas. Si esta es la última ocurrencia programada, la serie dejará de repetirse.</small>
+            <button type="button" className="notes-delete-all" disabled={busy}
+              onClick={() => void deleteEntireSeries(deleteTarget)}>
+              <Trash2 size={16}/> Toda la serie y su historial
+            </button>
+            <small>Elimina definitivamente todas las ocurrencias de esta serie.</small>
+          </div>
+        </> : <button type="button" className="notes-delete-all" disabled={busy}
+          onClick={() => void deleteOccurrence(deleteTarget)}>
+          <Trash2 size={16}/> Eliminar este pendiente
+        </button>}
+        {error && <p className="error" role="alert">{error}</p>}
+        <button type="button" className="outline notes-delete-cancel" disabled={busy}
+          onClick={() => setDeleteTarget(null)}>Cancelar</button>
+      </section>
+    </div>}
     {historySeriesId && <div className="modal-backdrop" role="presentation"
       onMouseDown={event => { if (event.target === event.currentTarget) setHistorySeriesId(null); }}>
       <section className="modal orbit-detail-modal note-modal notes-history-modal" role="dialog"
@@ -509,6 +579,8 @@ export function NotesBoard({ userId }: { userId: string }) {
           <span><strong>{historyUpcoming}</strong> Próximos</span>
         </div>
         <p className="field-help">Cada fecha es independiente. Los vencidos no se marcan automáticamente como completados.</p>
+        <p className="notes-history-series-status">{historyRows.some(note => note.recurrence_rule && !note.recurrence_next_created)
+          ? 'Repetición activa' : 'Repetición detenida'}</p>
         {error && <p className="error" role="alert">{error}</p>}
         {historyRows.some(note => note.recurrence_rule && !note.recurrence_next_created) &&
           <button type="button" className="outline notes-stop-recurrence" disabled={busy}
