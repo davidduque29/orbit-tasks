@@ -31,6 +31,7 @@ export function ReminderModal({
   const [interval, setInterval] = useState(schedule.rule?.interval ?? 1);
   const [days, setDays] = useState<number[]>(schedule.rule?.days?.length ? [...schedule.rule.days] : [1,2,3,4,5]);
   const [until, setUntil] = useState(schedule.rule?.until ?? '');
+  const [hasEnd, setHasEnd] = useState(Boolean(schedule.rule?.until));
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -42,15 +43,20 @@ export function ReminderModal({
   const repeating = mode !== 'none' && mode !== 'once';
   function save() {
     if (mode === 'none') { onSave(NO_REMINDER); return; }
+    if (repeating && hasEnd && !until) {
+      setError('Selecciona una fecha final o desactiva la opción de finalización.');
+      return;
+    }
     const instant = dateTime ? new Date(dateTime) : new Date(Number.NaN);
     const rule: RecurrenceRule | null = repeating ? {
       frequency: mode, interval: mode === 'weekdays' ? 1 : interval,
       ...(mode === 'weekly' ? { days } : {}),
-      ...(until ? { until } : {}),
+      ...(hasEnd && until ? { until } : {}),
     } : null;
     const next: ReminderSchedule = { at: Number.isFinite(instant.getTime()) ? instant.toISOString() : 'invalid', rule };
     const failure = validateReminder(next);
     if (failure) { setError(failure); return; }
+    setError('');
     onSave(next);
   }
   return <div className="modal-backdrop" role="presentation" onMouseDown={event => {
@@ -110,29 +116,31 @@ export function ReminderModal({
                 previous.filter(d => d !== value) : [...previous, value].sort())}>{day}</button>;
           })}</div>
         </fieldset>}
-        <div className="reminder-field">
-          <span>Repetir hasta (opcional)</span>
+        <label className="reminder-end-toggle">
+          <input type="checkbox" checked={hasEnd} onChange={event => {
+            setHasEnd(event.target.checked);
+            setError('');
+          }}/>
+          <span>Establecer una fecha de finalización (opcional)</span>
+        </label>
+        {hasEnd ? <div className="reminder-field">
+          <span>La repetición termina el</span>
           <div className="reminder-end-fields">
             <label>
               <span>Fecha final</span>
-              <input type="date" min={dateTime.slice(0,10)} value={until}
+              <input type="date" required min={dateTime.slice(0, 10)} value={until}
                 onChange={event => { setUntil(event.target.value); setError(''); }}/>
             </label>
             <label>
               <span>Hora del último aviso</span>
-              <input type="time" value={dateTime.slice(11, 16)} readOnly
-                aria-label="Hora final; igual a la hora del primer aviso"/>
+              <input type="time" readOnly value={dateTime.slice(11, 16)}
+                aria-label="La hora final coincide con la del primer aviso"/>
             </label>
           </div>
-        </div>
-        <p className="field-help">
-          {until && dateTime
-            ? `Último día permitido: ${until.split('-').reverse().join('/')} a las ${new Date(dateTime).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}. `
-            : 'Si eliges una fecha final, la última repetición conservará la hora del primer aviso. '}
-          No se enviarán más avisos después de esa fecha.
-        </p>
+          <p className="field-help">La repetición finalizará en la fecha indicada, manteniendo la misma hora de aviso.</p>
+        </div> : <p className="field-help">Se repetirá indefinidamente hasta que cambies o elimines el recordatorio.</p>}
       </>}
-      {error && <p role="alert" className="field-error">{error}</p>}
+      {error && <p role="alert" aria-live="assertive" className="field-error">{error}</p>}
       {mode !== 'none' && !error && <p className="reminder-preview">
         <Check size={15} aria-hidden="true"/> {reminderSummary({
           at: Number.isFinite(new Date(dateTime).getTime()) ? new Date(dateTime).toISOString() : null,
