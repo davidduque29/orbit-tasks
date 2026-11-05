@@ -240,7 +240,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEventDescription(item.description);
     setEventStart(toLocalInput(new Date(item.starts_at)));
     setEventSchedule({
-      at: item.reminder_override_minutes?.length
+      at: item.recurrence_rule || item.reminder_override_minutes?.length
         ? new Date(item.starts_at).toISOString()
         : null,
       rule: item.recurrence_rule,
