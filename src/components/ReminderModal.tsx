@@ -101,9 +101,14 @@ export function ReminderModal({
         </fieldset>}
         <label className="reminder-field">
           <span>Repetir hasta (opcional)</span>
-          <input type="date" min={dateTime.slice(0,10)} value={until} onChange={event => setUntil(event.target.value)}/>
+          <input type="date" min={dateTime.slice(0,10)} value={until} onChange={event => { setUntil(event.target.value); setError(''); }}/>
         </label>
-        <p className="field-help">Cada repetición utiliza la misma hora seleccionada. Puedes cambiar esta configuración más adelante.</p>
+        <p className="field-help">
+          {until && dateTime
+            ? `Último día permitido: ${until.split('-').reverse().join('/')} a las ${new Date(dateTime).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}. `
+            : 'Si eliges una fecha final, la última repetición conservará la hora del primer aviso. '}
+          No se enviarán más avisos después de esa fecha.
+        </p>
       </>}
       {error && <p role="alert" className="field-error">{error}</p>}
       {mode !== 'none' && !error && <p className="reminder-preview">
