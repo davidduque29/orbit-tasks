@@ -588,7 +588,13 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 <CharacterCounter value={eventDescription} max={FIELD_LIMITS.eventDescription} /></label>
               <label><span className="form-label-icon"><CalendarClock size={16} aria-hidden="true"/>Fecha y hora <small>*</small></span>
                 <input required type="datetime-local" min={toLocalInput(new Date())} value={eventStart}
-                  onChange={(event) => setEventStart(event.target.value)} />
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setEventStart(next);
+                    if (eventSchedule.at && next && Number.isFinite(new Date(next).getTime())) {
+                      setEventSchedule(previous => ({ ...previous, at: new Date(next).toISOString() }));
+                    }
+                  }} />
                 <span className="field-help">Selecciona una fecha futura. Los eventos en sábado o domingo requieren confirmación.</span>
               </label>
               {eventStart && [0, 6].includes(new Date(eventStart).getDay()) && (
