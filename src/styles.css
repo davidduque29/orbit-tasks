@@ -824,6 +824,8 @@ button:disabled { cursor:not-allowed; }
 .event-date-time-controls { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,0.85fr); gap:10px; width:100%; }
 .event-date-time-controls input { min-width:0; width:100%; min-height:44px; margin:0; }
 @media(max-width:360px) { .event-date-time-controls { grid-template-columns:1fr; } }
+.reminder-end-toggle { display:flex; align-items:center; gap:10px; margin:12px 0 4px; font-size:13px; font-weight:650; color:#4c5874; }
+.reminder-end-toggle input[type="checkbox"] { width:18px; height:18px; flex-shrink:0; accent-color:#6c50d5; }
 .reminder-end-fields { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr); gap:10px; }
 .reminder-end-fields label { display:grid; gap:6px; min-width:0; font-size:12px; color:#4c5874; }
 .reminder-end-fields input { width:100%; min-width:0; }
