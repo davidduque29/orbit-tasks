@@ -524,10 +524,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       )}
 
       {eventReminderOpen && (
-        <ReminderModal variant="events" schedule={eventSchedule}
+        <ReminderModal variant="events" schedule={{ ...eventSchedule, at: eventSchedule.at ?? new Date(eventStart).toISOString() }}
           onClose={() => setEventReminderOpen(false)}
           onSave={(next) => {
             setEventSchedule(next);
+            if (next.at) setEventStart(toLocalInput(new Date(next.at)));
             setEventReminderOpen(false);
           }}/>
       )}
