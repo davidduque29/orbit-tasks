@@ -8,7 +8,8 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 type Task = { id: string; owner_id: string; title: string; estimated_due_at: string | null; status: string; reminder_override_minutes: number[] | null };
-type Event = { id: string; owner_id: string; title: string; starts_at: string; status: string; reminder_override_minutes: number[] | null };
+type Event = { id: string; owner_id: string; title: string; starts_at: string; status: string; reminder_override_minutes: number[] | null; recurrence_rule: RecurrenceRule | null };
+type RecurrenceRule = { frequency: 'daily' | 'weekdays' | 'weekly' | 'monthly' | 'yearly'; interval: number; days?: number[]; until?: string };
 type PersonalNote = { id: string; owner_id: string; title: string; kind: 'note' | 'pending'; completed: boolean; reminder_at: string | null };
 type Settings = { user_id: string; task_alerts_enabled?: boolean; event_alerts_enabled?: boolean; note_alerts_enabled?: boolean; task_lead_minutes: number[]; event_lead_minutes: number[]; overdue_enabled: boolean; overdue_repeat_minutes: number; quiet_hours_enabled: boolean; quiet_start: string; quiet_end: string; timezone: string };
 type Device = { id: string; owner_id: string; subscription_data: { endpoint: string; keys?: { p256dh: string; auth: string } } };
@@ -35,6 +36,39 @@ function quiet(now: Date, setting: Settings): boolean {
   const start = setting.quiet_start.slice(0, 5), end = setting.quiet_end.slice(0, 5);
   return start < end ? clock >= start && clock < end : clock >= start || clock < end;
 }
+/** The existing event is the series anchor. Resolve a single occurrence for a push window. */
+function eventOccurrence(event: Event, target: number): number | null {
+  const first = new Date(event.starts_at);
+  if (!Number.isFinite(first.getTime())) return null;
+  if (!event.recurrence_rule) return first.getTime();
+  const rule = event.recurrence_rule;
+  if (!Number.isInteger(rule.interval) || rule.interval < 1 || rule.interval > 12) return null;
+  const candidate = new Date(target);
+  candidate.setUTCHours(first.getUTCHours(), first.getUTCMinutes(), first.getUTCSeconds(), first.getUTCMilliseconds());
+  if (candidate.getTime() < first.getTime() || (rule.until && candidate.toISOString().slice(0,10) > rule.until)) return null;
+  const day = (date: Date) => (date.getUTCDay() + 6) % 7 + 1;
+  const days = Math.round((Date.UTC(candidate.getUTCFullYear(),candidate.getUTCMonth(),candidate.getUTCDate()) -
+    Date.UTC(first.getUTCFullYear(),first.getUTCMonth(),first.getUTCDate())) / 86400000);
+  const months = (candidate.getUTCFullYear() - first.getUTCFullYear()) * 12 + candidate.getUTCMonth() - first.getUTCMonth();
+  const lastDay = (year: number, month: number) => new Date(Date.UTC(year,month+1,0)).getUTCDate();
+  let matches = false;
+  switch (rule.frequency) {
+    case 'daily': matches = days % rule.interval === 0; break;
+    case 'weekdays': matches = day(candidate) <= 5; break;
+    case 'weekly':
+      matches = Math.floor((days + day(first) - 1) / 7) % rule.interval === 0 &&
+        (rule.days ?? [day(first)]).includes(day(candidate)); break;
+    case 'monthly':
+      matches = months % rule.interval === 0 &&
+        candidate.getUTCDate() === Math.min(first.getUTCDate(),lastDay(candidate.getUTCFullYear(),candidate.getUTCMonth())); break;
+    case 'yearly':
+      matches = (candidate.getUTCFullYear()-first.getUTCFullYear()) % rule.interval === 0 &&
+        candidate.getUTCMonth() === first.getUTCMonth() &&
+        candidate.getUTCDate() === Math.min(first.getUTCDate(),lastDay(candidate.getUTCFullYear(),first.getUTCMonth())); break;
+  }
+  return matches ? candidate.getTime() : null;
+}
+
 function dueNotifications(now: Date, tasks: Task[], events: Event[], notes: PersonalNote[], settings: Map<string,Settings>): Notification[] {
   const results: Notification[] = [];
   const timestamp = now.getTime(), minute = 60000;
@@ -67,12 +101,13 @@ function dueNotifications(now: Date, tasks: Task[], events: Event[], notes: Pers
   }
   for (const event of events) {
     if (event.status !== 'Programado') continue;
-    const start = new Date(event.starts_at).getTime();
-    if (!Number.isFinite(start)) continue;
     const s = settings.get(event.owner_id);
     if (s?.event_alerts_enabled === false || (s && quiet(now, s))) continue;
     const intervals = event.reminder_override_minutes ?? s?.event_lead_minutes ?? defaults.event_lead_minutes;
     for (const offset of [...new Set(intervals)]) {
+      if (!Number.isSafeInteger(offset) || offset < 0 || offset > 525600) continue;
+      const start = eventOccurrence(event, timestamp + offset * minute);
+      if (start === null) continue;
       const when = start - offset * minute;
       if (when <= timestamp && timestamp - when < 5 * minute) results.push({
         ownerId: event.owner_id, key: `event:${event.id}:before:${offset}:${start}`,
@@ -113,7 +148,7 @@ Deno.serve(async (request) => {
   const now = new Date();
   const [tasksResult, eventsResult, notesResult, settingsResult, deviceResult] = await Promise.all([
     db.from('tasks').select('id,owner_id,title,status,estimated_due_at,reminder_override_minutes').neq('status','Finalizado').not('estimated_due_at','is',null),
-    db.from('events').select('id,owner_id,title,status,starts_at,reminder_override_minutes').eq('status','Programado'),
+    db.from('events').select('id,owner_id,title,status,starts_at,reminder_override_minutes,recurrence_rule').eq('status','Programado'),
     db.from('notes').select('id,owner_id,title,kind,completed,reminder_at').not('reminder_at','is',null),
     db.from('notification_preferences').select('*'),
     db.from('device_subscriptions').select('id,owner_id,subscription_data').eq('enabled',true),
