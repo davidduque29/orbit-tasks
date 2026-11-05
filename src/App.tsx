@@ -277,22 +277,32 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       <header className="header">
         <div className="wordmark"><img className="brand-logo" src="/orbit-tasks/orbit-approved.webp" alt="" /><span>Orbit <b>Tasks</b></span></div>
         <div className="orbit-header-actions">
-          {space !== 'pick' && <div className="space-switch">
-            <label htmlFor="space-selector" className="space-switch-label">Espacio de trabajo</label>
-            <div className="space-switch-controls">
-              <select id="space-selector" aria-label="Cambiar espacio de trabajo" value={space}
-                onChange={(event) => chooseSpace(event.target.value as Space)}>
-                <option value="notes">Pendientes</option>
-                <option value="projects">Proyectos</option>
-                <option value="events">Eventos</option>
-              </select>
-              <button type="button" className="space-choose-button" onClick={() => chooseSpace('pick')} title="Elegir módulo"
-                aria-label="Volver a elegir el espacio de trabajo"><LayoutDashboard size={18} aria-hidden="true"/></button>
-            </div>
-          </div>}
+
           <UserProfile userId={userId} email={email} onAccountClick={() => { setView('account'); setAccountSection('profile'); }} />
         </div>
       </header>
+      {space !== 'pick' && <nav className="workspace-navigation" aria-label="Cambiar módulo">
+        <div className="workspace-navigation-heading">
+          <span>Espacios de trabajo</span>
+          <button type="button" className="workspace-navigation-home" onClick={() => chooseSpace('pick')} aria-label="Ver todos los espacios de trabajo">
+            <LayoutDashboard size={15} aria-hidden="true" /> Ver todos
+          </button>
+        </div>
+        <div className="workspace-navigation-options">
+          {([
+            ['notes', 'Pendientes', ListChecks],
+            ['projects', 'Proyectos', FolderKanban],
+            ['events', 'Eventos', CalendarDays],
+          ] as const).map(([key, label, Icon]) => (
+            <button key={key} type="button" className={`workspace-navigation-item${space === key ? ' is-active' : ''}`}
+              aria-current={space === key ? 'page' : undefined}
+              onClick={() => { if (space !== key) chooseSpace(key); }}>
+              <Icon size={20} strokeWidth={2.2} aria-hidden="true" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>}
       {space === 'projects' && <nav className="tabs" aria-label="Secciones">
         {([
           ['dashboard', 'Inicio', House], ['projects', 'Proyectos', FolderKanban], ['board', 'Tablero', LayoutDashboard],
