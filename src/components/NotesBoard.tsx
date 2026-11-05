@@ -196,9 +196,15 @@ export function NotesBoard({ userId }: { userId: string }) {
     }
     const reminderError = validateReminder(reminder);
     if (reminderError) { setError(reminderError); return; }
+    const previousNote = editId ? notes.find(note => note.id === editId) : undefined;
+    const scheduleChanged = previousNote && (
+      previousNote.reminder_at !== reminder.at ||
+      JSON.stringify(previousNote.recurrence_rule) !== JSON.stringify(reminder.rule)
+    );
     const payload = {
-      kind: editId ? (notes.find(note => note.id === editId)?.kind ?? 'pending') : 'pending', title: cleaned,
+      kind: previousNote?.kind ?? 'pending', title: cleaned,
       category_id: categoryId || null, reminder_at: reminder.at, recurrence_rule: reminder.rule,
+      ...(scheduleChanged ? { recurrence_next_created: false } : {}),
     };
     const done = await perform(async () => {
       const result = editId
