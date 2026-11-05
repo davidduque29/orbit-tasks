@@ -60,6 +60,24 @@ Es una **PWA modular**, no un conjunto de microservicios independientes. El fron
 - Las políticas RLS de `notes`, `tasks` y `events` restringen operaciones por propietario. Se requiere seguir probando su aplicación en toda ruta nueva.
 - El manifiesto PWA está en `public/manifest.webmanifest` con modo de presentación `standalone`.
 
+## Diagramas de arquitectura y datos
+
+### Arquitectura general de Orbit Tasks
+
+![Arquitectura general de Orbit Tasks](docs/assets/orbit-arquitectura-general.svg)
+
+La arquitectura actual está basada en una PWA con React y Supabase. La integración **Orbit Voice Assistant** se presenta como **propuesta**, no como funcionalidad desplegada. La futura API permitiría recibir instrucciones desde Siri sin duplicar reglas de negocio.
+
+[Ver diagrama de arquitectura en SVG](docs/assets/orbit-arquitectura-general.svg)
+
+### Modelo relacional de la base de datos
+
+![Modelo relacional verificado en Supabase](docs/assets/orbit-modelo-relacional-verificado.svg)
+
+El diagrama se elaboró a partir de las tablas y restricciones verificadas en el proyecto Supabase de Orbit: **12 tablas del esquema `public` y `auth.users`**. Muestra columnas principales y relaciones de claves foráneas reales. Las claves compuestas —por ejemplo `(project_id, owner_id)`— se identifican con `FK*`. El gráfico no representa todas las columnas, índices ni reglas de negocio.
+
+[Ver diagrama relacional en SVG](docs/assets/orbit-modelo-relacional-verificado.svg)
+
 ## Instalación local
 
 Se requiere **Node.js 20+** y acceso a un proyecto Supabase apropiado.
