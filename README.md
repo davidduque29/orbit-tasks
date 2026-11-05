@@ -78,6 +78,27 @@ El diagrama se elaboró a partir de las tablas y restricciones verificadas en el
 
 [Ver diagrama relacional en SVG](docs/assets/orbit-modelo-relacional-verificado.svg)
 
+## Flujo funcional de Orbit Tasks
+
+```mermaid
+flowchart LR
+    A([Usuario]) --> B[Iniciar sesión]
+    B --> C{Espacio de trabajo}
+    C --> D[Pendientes]
+    C --> E[Proyectos y tareas]
+    C --> F[Eventos]
+    D --> G[(Supabase)]
+    E --> G
+    F --> G
+    G --> H[Seguimiento y reportes]
+    G -. Avisos programados .-> I[Motor send-push]
+    I --> J[Intento de notificación]
+```
+
+Al iniciar sesión, el usuario elige entre **Pendientes**, **Proyectos y tareas** o **Eventos**. Orbit valida los cambios y los guarda en Supabase, desde donde se consultan los datos para informes y seguimiento. Cuando existen avisos programados, el motor `send-push` revisa preferencias, horarios y dispositivos antes de intentar enviar una notificación; este proceso se ejecuta por separado de la acción de guardar.
+
+**Documentación completa:** [Flujo funcional de alto nivel: componentes, procesos y notificaciones](docs/flujo-funcional-orbit.md).
+
 ## Instalación local
 
 Se requiere **Node.js 20+** y acceso a un proyecto Supabase apropiado.
