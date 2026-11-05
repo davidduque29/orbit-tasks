@@ -902,3 +902,5 @@ button:disabled { cursor:not-allowed; }
   .notes-history-stats > span { font-size:10px; }
   .notes-history-stats strong { font-size:20px; }
 }
+
+.notes-stop-recurrence { display:flex; align-items:center; justify-content:center; gap:7px; min-height:42px; width:100%; margin:8px 0 13px; color:#a33e5a; border-color:#ead2d9; background:#fff9fb; font-size:13px; }
