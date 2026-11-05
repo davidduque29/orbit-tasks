@@ -364,8 +364,8 @@ export function NotesBoard({ userId }: { userId: string }) {
         </div>
       </article>)}
       {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/>
-        <h2>{section === 'search' ? 'Sin resultados' : statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2>
-        <p>{section === 'search' ? 'No hay pendientes con ese título.' : 'No hay registros en esta sección.'}</p>
+        <h2>{statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2>
+        <p>No hay registros en esta sección.</p>
       </div>}
     </div>}
     </>}
