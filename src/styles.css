@@ -869,3 +869,17 @@ button:disabled { cursor:not-allowed; }
 }
 
 .quick-capture-label { margin:0 0 9px; font-size:13px; line-height:1.4; font-weight:650; color:#655b89; }
+
+/* iOS Safari: prevent automatic viewport zoom when focusing compact inputs. */
+@media (pointer: coarse) and (max-width: 767px) {
+  .notes-board input:not([type="checkbox"]):not([type="color"]),
+  .notes-board textarea,
+  .notes-board select {
+    font-size: 16px;
+  }
+  .notes-categories-pane .note-category-form input[type="text"],
+  .notes-categories-pane .note-category-form input:not([type]) {
+    min-width: 0;
+    width: 100%;
+  }
+}
