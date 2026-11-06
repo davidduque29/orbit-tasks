@@ -210,9 +210,20 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
   async function saveEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const validation = validateEventFields(eventTitle, eventDescription, eventStart, new Date(), allowWeekendEvent);
+    const originalEvent = editingEventId ? events.find(item => item.id === editingEventId) : null;
+    const originalStart = originalEvent ? toLocalInput(new Date(originalEvent.starts_at)) : null;
+    const preservingPastDate = Boolean(originalEvent && eventStart === originalStart);
+    const validation = validateEventFields(eventTitle, eventDescription, eventStart,
+      preservingPastDate ? new Date(0) : new Date(), allowWeekendEvent);
     if (validation) { setFormError(validation); return; }
-    const reminderError = validateReminder(eventSchedule);
+    // Preserve an existing expired schedule when changing only historical event details.
+    // New or modified reminders must always be scheduled in the future.
+    const originalReminderAt = originalEvent && (originalEvent.recurrence_rule || originalEvent.reminder_override_minutes?.length)
+      ? originalEvent.starts_at : null;
+    const preservingExpiredReminder = preservingPastDate
+      && eventSchedule.at === originalReminderAt
+      && JSON.stringify(eventSchedule.rule) === JSON.stringify(originalEvent?.recurrence_rule ?? null);
+    const reminderError = preservingExpiredReminder ? null : validateReminder(eventSchedule);
     if (reminderError) { setFormError(reminderError); return; }
     setFormError('');
     const payload = {
@@ -624,7 +635,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       )}
 
       {eventReminderOpen && (
-        <ReminderModal variant="events" schedule={{ ...eventSchedule, at: eventSchedule.at ?? new Date(eventStart).toISOString() }}
+        <ReminderModal variant="events" schedule={{ ...eventSchedule, at: (() => {
+          const selected = new Date(eventSchedule.at ?? eventStart);
+          return selected.getTime() > Date.now() ? selected.toISOString()
+            : new Date(Date.now() + 3_600_000).toISOString();
+        })() }}
           onClose={() => setEventReminderOpen(false)}
           onSave={(next) => {
             setEventSchedule(next);
@@ -635,12 +650,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
       {editor && (
         <div className="modal-backdrop" role="presentation" onClick={() => setEditor(null)}>
-          <section className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label="Nuevo registro"
+          <section className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label={editor === 'event' && editingEventId ? 'Editar evento' : 'Nuevo registro'}
             onClick={(event) => event.stopPropagation()}>
             <Sparkles className="orbit-modal-watermark" size={175} aria-hidden="true" />
             <header className="orbit-modal-header">
               <span className="orbit-modal-icon">{editor === 'project' ? <FolderKanban size={23} /> : editor === 'task' ? <ClipboardList size={23} /> : <CalendarDays size={23} />}</span>
-              <div className="orbit-modal-heading"><small>Nuevo registro</small>
+              <div className="orbit-modal-heading"><small>{editor === 'event' && editingEventId ? 'Modificar registro' : 'Nuevo registro'}</small>
                 <h2>{editor === 'project' ? 'Nuevo proyecto' : editor === 'task' ? 'Nueva tarea' : editingEventId ? 'Editar evento' : 'Nuevo evento'}</h2></div>
               <button type="button" className="outline orbit-modal-close" aria-label="Cerrar formulario" onClick={() => setEditor(null)}><X size={19} /></button>
             </header>
@@ -688,7 +703,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 <CharacterCounter value={eventDescription} max={FIELD_LIMITS.eventDescription} /></label>
               <label><span className="form-label-icon"><CalendarClock size={16} aria-hidden="true"/>Fecha y hora <small>*</small></span>
                 <div className="event-date-time-controls">
-                  <input aria-label="Fecha del evento" required type="date" min={toLocalInput(new Date()).slice(0, 10)}
+                  <input aria-label="Fecha del evento" required type="date" min={editingEventId ? undefined : toLocalInput(new Date()).slice(0, 10)}
                     value={eventStart.slice(0, 10)}
                     onChange={(event) => {
                       const next = `${event.target.value}T${eventStart.slice(11, 16) || '09:00'}`;
@@ -707,7 +722,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                       }
                     }} />
                 </div>
-                <span className="field-help">Selecciona una fecha futura. Los eventos en sábado o domingo requieren confirmación.</span>
+                <span className="field-help">{editingEventId ? 'Puedes conservar la fecha original; para reprogramar selecciona una fecha futura.' : 'Selecciona una fecha futura.'} Los eventos en sábado o domingo requieren confirmación.</span>
               </label>
               {eventStart && [0, 6].includes(new Date(eventStart).getDay()) && (
                 <label className="event-weekend-confirm">
