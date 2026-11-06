@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell, CalendarClock, Check, Repeat2, X } from 'lucide-react';
 import {
   NO_REMINDER, WEEKDAY_LABELS, reminderSummary, toLocalDateTime,
@@ -59,7 +60,7 @@ export function ReminderModal({
     setError('');
     onSave(next);
   }
-  return <div className="modal-backdrop" role="presentation" onMouseDown={event => {
+  return createPortal(<div className="modal-backdrop" role="presentation" onMouseDown={event => {
     if (event.target === event.currentTarget) onClose();
   }}>
     <section className="modal orbit-detail-modal reminder-modal" role="dialog" aria-modal="true"
@@ -151,5 +152,5 @@ export function ReminderModal({
         <Check size={17} aria-hidden="true"/> Aplicar recordatorio
       </button>
     </section>
-  </div>;
+  </div>, document.body);
 }
