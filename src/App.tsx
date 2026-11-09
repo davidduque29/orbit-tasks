@@ -128,6 +128,14 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [allowWeekendEvent, setAllowWeekendEvent] = useState(false);
   const [eventProjectId, setEventProjectId] = useState('');
   const [formError, setFormError] = useState('');
+  const [editorDirty, setEditorDirty] = useState(false);
+
+  function closeEditor() {
+    if (saving) return;
+    if (editorDirty && !window.confirm('Tienes cambios sin guardar. ¿Quieres descartarlos?')) return;
+    setEditor(null);
+    setEditorDirty(false);
+  }
 
   useEffect(() => {
     const updateNow = () => setEventListNow(Date.now());
@@ -160,6 +168,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       await action();
       await refresh();
       setEditor(null);
+      setEditorDirty(false);
       setFeedback('Cambios guardados y sincronizados.');
       return true;
     } catch (cause) {
@@ -269,12 +278,14 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEventProjectId(item.project_id ?? '');
     setAllowWeekendEvent([0, 6].includes(new Date(item.starts_at).getDay()));
     setFormError('');
+    setEditorDirty(false);
     setSelectedEventId(null);
     setEditor('event');
   }
 
   function openEditor(type: Editor) {
     setFormError('');
+    setEditorDirty(false);
     if (type === 'event') {
       setEditingEventId(null);
       setEventTitle('');
@@ -665,8 +676,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       )}
 
       {editor && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setEditor(null)}>
-          <section className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label={editor === 'event' ? (editingEventId ? 'Editar evento' : 'Nuevo evento') : editor === 'task' ? 'Nueva tarea' : 'Nuevo proyecto'}
+        <div className="modal-backdrop" role="presentation" onClick={closeEditor}>
+          <section onChange={() => setEditorDirty(true)} className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label={editor === 'event' ? (editingEventId ? 'Editar evento' : 'Nuevo evento') : editor === 'task' ? 'Nueva tarea' : 'Nuevo proyecto'}
             onClick={(event) => event.stopPropagation()}>
             <Sparkles className="orbit-modal-watermark" size={175} aria-hidden="true" />
             <header className="orbit-modal-header">
@@ -674,7 +685,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <div className="orbit-modal-heading">
                 {editor !== 'event' && <small>Crear registro</small>}
                 <h2>{editor === 'project' ? 'Nuevo proyecto' : editor === 'task' ? 'Nueva tarea' : editingEventId ? 'Editar evento' : 'Nuevo evento'}</h2></div>
-              <button type="button" className="outline orbit-modal-close" aria-label="Cerrar formulario" onClick={() => setEditor(null)}><X size={19} /></button>
+              <button type="button" className="outline orbit-modal-close" aria-label="Cerrar formulario" onClick={closeEditor}><X size={19} /></button>
             </header>
             {formError && <p className="field-error form-validation-alert" role="alert">{formError}</p>}
             {editor === 'project' && <form onSubmit={(event) => void saveProject(event)} className="orbit-validated-form">
