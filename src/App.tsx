@@ -128,6 +128,14 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [allowWeekendEvent, setAllowWeekendEvent] = useState(false);
   const [eventProjectId, setEventProjectId] = useState('');
   const [formError, setFormError] = useState('');
+  const [editorDirty, setEditorDirty] = useState(false);
+
+  function closeEditor() {
+    if (saving) return;
+    if (editorDirty && !window.confirm('Tienes cambios sin guardar. ¿Quieres descartarlos?')) return;
+    setEditor(null);
+    setEditorDirty(false);
+  }
 
   useEffect(() => {
     const updateNow = () => setEventListNow(Date.now());
@@ -160,6 +168,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       await action();
       await refresh();
       setEditor(null);
+      setEditorDirty(false);
       setFeedback('Cambios guardados y sincronizados.');
       return true;
     } catch (cause) {
@@ -218,7 +227,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     if (validation) { setFormError(validation); return; }
     // Preserve an existing expired schedule when changing only historical event details.
     // New or modified reminders must always be scheduled in the future.
-    const originalReminderAt = originalEvent?.recurrence_rule ? originalEvent.starts_at : null;
+    const originalReminderAt = originalEvent?.reminder_at ?? (originalEvent?.recurrence_rule ? originalEvent.starts_at : null);
     const preservingExpiredReminder = preservingPastDate
       && eventSchedule.at === originalReminderAt
       && JSON.stringify(eventSchedule.rule) === JSON.stringify(originalEvent?.recurrence_rule ?? null);
@@ -232,6 +241,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       project_id: eventProjectId || null,
       reminder_override_minutes: eventAvisos,
       recurrence_rule: eventSchedule.rule,
+      reminder_at: eventSchedule.at,
     };
     const saved = await execute(() => editingEventId
       ? orbitRepository.updateEvent(editingEventId, userId, payload)
@@ -264,17 +274,19 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEventTitle(item.title);
     setEventDescription(item.description);
     setEventStart(toLocalInput(new Date(item.starts_at)));
-    setEventSchedule({ at: item.recurrence_rule ? new Date(item.starts_at).toISOString() : null, rule: item.recurrence_rule });
+    setEventSchedule({ at: item.reminder_at ?? (item.recurrence_rule ? item.starts_at : null), rule: item.recurrence_rule });
     setEventAvisos(item.reminder_override_minutes ?? null);
     setEventProjectId(item.project_id ?? '');
     setAllowWeekendEvent([0, 6].includes(new Date(item.starts_at).getDay()));
     setFormError('');
+    setEditorDirty(false);
     setSelectedEventId(null);
     setEditor('event');
   }
 
   function openEditor(type: Editor) {
     setFormError('');
+    setEditorDirty(false);
     if (type === 'event') {
       setEditingEventId(null);
       setEventTitle('');
@@ -644,7 +656,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               </div>
               <div className="orbit-event-reminder">
                 <span className="orbit-detail-label"><Bell size={16} aria-hidden="true" />Recordatorio</span>
-                <p>{reminderSummary({ at: selectedEvent.recurrence_rule || selectedEvent.reminder_override_minutes?.length ? selectedEvent.starts_at : null, rule: selectedEvent.recurrence_rule })}</p>
+                <p>{reminderSummary({ at: selectedEvent.reminder_at ?? (selectedEvent.recurrence_rule ? selectedEvent.starts_at : null), rule: selectedEvent.recurrence_rule })}</p>
               </div>
             </div>
           </section>
@@ -660,13 +672,14 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           onClose={() => setEventReminderOpen(false)}
           onSave={(next) => {
             setEventSchedule(next);
+            setEditorDirty(true);
             setEventReminderOpen(false);
           }}/>
       )}
 
       {editor && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setEditor(null)}>
-          <section className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label={editor === 'event' ? (editingEventId ? 'Editar evento' : 'Nuevo evento') : editor === 'task' ? 'Nueva tarea' : 'Nuevo proyecto'}
+        <div className="modal-backdrop" role="presentation" onClick={closeEditor}>
+          <section onChange={() => setEditorDirty(true)} className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label={editor === 'event' ? (editingEventId ? 'Editar evento' : 'Nuevo evento') : editor === 'task' ? 'Nueva tarea' : 'Nuevo proyecto'}
             onClick={(event) => event.stopPropagation()}>
             <Sparkles className="orbit-modal-watermark" size={175} aria-hidden="true" />
             <header className="orbit-modal-header">
@@ -674,7 +687,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <div className="orbit-modal-heading">
                 {editor !== 'event' && <small>Crear registro</small>}
                 <h2>{editor === 'project' ? 'Nuevo proyecto' : editor === 'task' ? 'Nueva tarea' : editingEventId ? 'Editar evento' : 'Nuevo evento'}</h2></div>
-              <button type="button" className="outline orbit-modal-close" aria-label="Cerrar formulario" onClick={() => setEditor(null)}><X size={19} /></button>
+              <button type="button" className="outline orbit-modal-close" aria-label="Cerrar formulario" onClick={closeEditor}><X size={19} /></button>
             </header>
             {formError && <p className="field-error form-validation-alert" role="alert">{formError}</p>}
             {editor === 'project' && <form onSubmit={(event) => void saveProject(event)} className="orbit-validated-form">
@@ -686,7 +699,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 <textarea spellCheck={true} lang="es" autoCorrect="on" autoCapitalize="sentences" maxLength={FIELD_LIMITS.projectDescription} placeholder="Describe brevemente el objetivo del proyecto..." value={projectDescription}
                   onChange={(event) => setProjectDescription(event.target.value.slice(0, FIELD_LIMITS.projectDescription))} />
                 <CharacterCounter value={projectDescription} max={FIELD_LIMITS.projectDescription} /></label>
-              <button disabled={saving}>Guardar proyecto</button>
+              <button disabled={saving}>{saving ? 'Guardando…' : 'Guardar proyecto'}</button>
             </form>}
             {editor === 'task' && <form onSubmit={(event) => void saveTask(event)} className="orbit-validated-form">
               <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título de la tarea <small>*</small></span>
@@ -707,7 +720,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 </select></label>
               <label><span className="form-label-icon"><Clock3 size={16} aria-hidden="true"/>Fecha estimada</span>
                 <input type="datetime-local" value={taskDue} onChange={(event) => setTaskDue(event.target.value)} /></label>
-              <button disabled={saving}>Guardar tarea</button>
+              <button disabled={saving}>{saving ? 'Guardando…' : 'Guardar tarea'}</button>
             </form>}
             {editor === 'event' && <form onSubmit={(event) => void saveEvent(event)} className="orbit-validated-form orbit-event-editor-form">
               <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título del evento <small>*</small></span>
@@ -725,18 +738,14 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                     onChange={(event) => {
                       const next = `${event.target.value}T${eventStart.slice(11, 16) || '09:00'}`;
                       setEventStart(next);
-                      if (eventSchedule.at && Number.isFinite(new Date(next).getTime())) {
-                        setEventSchedule(previous => ({ ...previous, at: new Date(next).toISOString() }));
-                      }
+                      // Event date and reminder date are independent; do not move the reminder.
                     }} />
                   <input aria-label="Hora del evento" required type="time"
                     value={eventStart.slice(11, 16)}
                     onChange={(event) => {
                       const next = `${eventStart.slice(0, 10)}T${event.target.value}`;
                       setEventStart(next);
-                      if (eventSchedule.at && Number.isFinite(new Date(next).getTime())) {
-                        setEventSchedule(previous => ({ ...previous, at: new Date(next).toISOString() }));
-                      }
+                      // Event date and reminder date are independent; do not move the reminder.
                     }} />
                 </div>
                 <span className="field-help">{editingEventId ? 'Puedes conservar la fecha original; para reprogramar selecciona una fecha futura.' : 'Selecciona una fecha futura.'} Los eventos en sábado o domingo requieren confirmación.</span>
@@ -761,7 +770,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                   <option value="">Sin proyecto</option>
                   {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                 </select></label>
-              <div className="orbit-event-save-footer"><button type="submit" disabled={saving}><Save size={18} aria-hidden="true"/>{editingEventId ? 'Guardar cambios' : 'Guardar evento'}</button></div>
+              <div className="orbit-event-save-footer"><button type="submit" disabled={saving}><Save size={18} aria-hidden="true"/>{saving ? 'Guardando…' : editingEventId ? 'Guardar cambios' : 'Guardar evento'}</button></div>
             </form>}
           </section>
         </div>

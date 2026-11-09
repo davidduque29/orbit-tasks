@@ -51,6 +51,7 @@ export interface OrbitEvent {
   ends_at: string | null;
   reminder_override_minutes: number[] | null;
   recurrence_rule: RecurrenceRule | null;
+  reminder_at: string | null;
   status: 'Programado' | 'Completado' | 'Cancelado';
   created_at: string;
   updated_at: string;
