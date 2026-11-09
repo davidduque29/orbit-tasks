@@ -103,11 +103,13 @@ function dueNotifications(now: Date, tasks: Task[], events: Event[], notes: Pers
     if (event.status !== 'Programado') continue;
     const s = settings.get(event.owner_id);
     if (s?.event_alerts_enabled === false || (s && quiet(now, s))) continue;
-    // Fire the independent reminder at its configured time; preserve legacy event alerts.
+    // Preserve both notification types, but never send two for the same scheduled instant.
+    let independentReminderInstant: number | null = null;
     if (event.reminder_at) {
       const reminderAnchor = { ...event, starts_at: event.reminder_at };
       const occurrence = eventOccurrence(reminderAnchor, timestamp);
       if (occurrence !== null && occurrence <= timestamp && timestamp - occurrence < 5 * minute) {
+        independentReminderInstant = occurrence;
         results.push({
           ownerId: event.owner_id, key: `event:${event.id}:reminder:${occurrence}`,
           title: 'Recordatorio de evento', body: event.title,
@@ -120,6 +122,7 @@ function dueNotifications(now: Date, tasks: Task[], events: Event[], notes: Pers
       const start = eventOccurrence(event, timestamp + offset * minute);
       if (start === null) continue;
       const when = start - offset * minute;
+      if (when === independentReminderInstant) continue;
       if (when <= timestamp && timestamp - when < 5 * minute) results.push({
         ownerId: event.owner_id, key: `event:${event.id}:before:${offset}:${start}`,
         title: offset === 0 ? 'Tu evento está comenzando' : 'Evento próximo',
