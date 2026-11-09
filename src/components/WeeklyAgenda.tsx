@@ -71,9 +71,11 @@ export function WeeklyAgenda({ events, onEdit, onDelete }: { events: OrbitEvent[
       </button>
       {expanded && <div id="weekly-agenda-event-list" className="week-events-list">
         {dayEvents.length ? dayEvents.map((event) => <div key={event.id} className="week-event">
-          <Clock3 size={15} aria-hidden="true"/>
-          <span>{new Date(event.starts_at).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'})}</span>
-          <strong>{event.title}</strong>
+          <div className="week-event-info">
+            <Clock3 size={15} aria-hidden="true"/>
+            <span>{new Date(event.starts_at).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'})}</span>
+            <strong>{event.title}</strong>
+          </div>
           <div className="orbit-action-pair week-event-actions">
             <button type="button" className="orbit-action-edit" aria-label={`Editar ${event.title}`} onClick={() => onEdit(event)}><Pencil size={17} aria-hidden="true"/></button>
             <button type="button" className="orbit-action-delete" aria-label={`Eliminar ${event.title}`} onClick={() => onDelete(event)}><Trash2 size={17} aria-hidden="true"/></button>
