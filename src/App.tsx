@@ -9,7 +9,6 @@ import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
 import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
-import { REMINDER_OPTIONS, normalizeIntervals } from './infrastructure/notificationSettings';
 import { ReminderModal } from './components/ReminderModal';
 import { reminderSummary, validateReminder, type ReminderSchedule } from './domain/reminders';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
@@ -125,7 +124,6 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [eventStart, setEventStart] = useState(toLocalInput(new Date(Date.now() + 3_600_000)));
   const [eventSchedule, setEventSchedule] = useState<ReminderSchedule>({ at: null, rule: null });
   const [eventReminderOpen, setEventReminderOpen] = useState(false);
-  const [eventOptionsExpanded, setEventOptionsExpanded] = useState(false);
   const [eventAvisos, setEventAvisos] = useState<number[] | null>(null);
   const [allowWeekendEvent, setAllowWeekendEvent] = useState(false);
   const [eventProjectId, setEventProjectId] = useState('');
@@ -268,7 +266,6 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEventStart(toLocalInput(new Date(item.starts_at)));
     setEventSchedule({ at: item.recurrence_rule ? new Date(item.starts_at).toISOString() : null, rule: item.recurrence_rule });
     setEventAvisos(item.reminder_override_minutes ?? null);
-    setEventOptionsExpanded(false);
     setEventProjectId(item.project_id ?? '');
     setAllowWeekendEvent([0, 6].includes(new Date(item.starts_at).getDay()));
     setFormError('');
@@ -286,8 +283,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       setEventStart(toLocalInput(new Date(Date.now() + 3_600_000)));
       setEventSchedule({ at: null, rule: null });
       setEventAvisos(null);
-      setEventOptionsExpanded(false);
-        setAllowWeekendEvent(false);
+          setAllowWeekendEvent(false);
     }
     if (type === 'task' && projects.length === 0) {
       setFeedback('Crea primero un proyecto para registrar tareas.');
@@ -748,29 +744,13 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 </label>
               )}
               <div className="event-reminder-select orbit-event-options">
-                <button type="button" className="orbit-event-options-toggle" aria-expanded={eventOptionsExpanded}
-                  onClick={() => setEventOptionsExpanded(value => !value)}>
-                  <Bell size={19} aria-hidden="true"/>
-                  <span><strong>Recordatorio</strong><small>{reminderSummary(eventSchedule)}</small></span>
-                  {eventOptionsExpanded ? <ChevronUp size={18} aria-hidden="true"/> : <ChevronDown size={18} aria-hidden="true"/>}
+                <button type="button" className="orbit-event-options-toggle" onClick={() => setEventReminderOpen(true)}>
+                  <CalendarClock size={19} aria-hidden="true"/>
+                  <span><strong>Configurar recordatorio</strong>
+                    {eventSchedule.at && <small>{reminderSummary(eventSchedule)}</small>}
+                  </span>
+                  <ChevronDown size={18} aria-hidden="true"/>
                 </button>
-                {eventOptionsExpanded && <div className="orbit-event-options-body">
-                  <button type="button" className="outline event-reminder-configure" onClick={() => setEventReminderOpen(true)}>
-                    <CalendarClock size={17} aria-hidden="true"/>Configurar recordatorio y repetición <ChevronDown size={16} aria-hidden="true"/>
-                  </button>
-                  <label className="orbit-event-radio">
-                    <input type="checkbox" checked={eventAvisos === null} onChange={e => setEventAvisos(e.target.checked ? null : [0])}/>
-                    Usar avisos generales de Mi cuenta
-                  </label>
-                  {eventAvisos !== null && <div className="orbit-event-intervals">
-                    {REMINDER_OPTIONS.map(option => <label key={option.value} className="orbit-event-radio">
-                      <input type="checkbox" checked={eventAvisos.includes(option.value)}
-                        onChange={e => setEventAvisos(previous => normalizeIntervals(e.target.checked
-                          ? [...(previous ?? []), option.value] : (previous ?? []).filter(value => value !== option.value)))}/>
-                      {option.label}
-                    </label>)}
-                  </div>}
-                </div>}
               </div>
               <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto opcional</span>
                 <select value={eventProjectId} onChange={(event) => setEventProjectId(event.target.value)}>
