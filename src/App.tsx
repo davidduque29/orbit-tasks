@@ -9,7 +9,7 @@ import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
 import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
-import { ReminderOverride } from './components/ReminderOverride';
+import { REMINDER_OPTIONS, normalizeIntervals } from './infrastructure/notificationSettings';
 import { ReminderModal } from './components/ReminderModal';
 import { reminderSummary, validateReminder, type ReminderSchedule } from './domain/reminders';
 import { WeeklyAgenda } from './components/WeeklyAgenda';
@@ -125,6 +125,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [eventStart, setEventStart] = useState(toLocalInput(new Date(Date.now() + 3_600_000)));
   const [eventSchedule, setEventSchedule] = useState<ReminderSchedule>({ at: null, rule: null });
   const [eventReminderOpen, setEventReminderOpen] = useState(false);
+  const [eventAvisos, setEventAvisos] = useState<number[] | null>(null);
   const [allowWeekendEvent, setAllowWeekendEvent] = useState(false);
   const [eventProjectId, setEventProjectId] = useState('');
   const [formError, setFormError] = useState('');
@@ -231,9 +232,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       description: eventDescription.trim(),
       starts_at: new Date(eventStart).toISOString(),
       project_id: eventProjectId || null,
-      reminder_override_minutes: editingEventId
-        ? (events.find(item => item.id === editingEventId)?.reminder_override_minutes ?? (eventSchedule.at ? [0] : []))
-        : (eventSchedule.at ? [0] : []),
+      reminder_override_minutes: eventAvisos ?? (editingEventId
+        ? (originalEvent?.reminder_override_minutes ?? (eventSchedule.at ? [0] : []))
+        : (eventSchedule.at ? [0] : [])),
       recurrence_rule: eventSchedule.rule,
     };
     const saved = await execute(() => editingEventId
@@ -243,6 +244,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEventTitle('');
     setEventDescription('');
     setEventSchedule({ at: null, rule: null });
+    setEventAvisos(null);
     setEditingEventId(null);
     setAllowWeekendEvent(false);
   }
@@ -272,6 +274,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         : null,
       rule: item.recurrence_rule,
     });
+    setEventAvisos(item.reminder_override_minutes ?? null);
     setEventProjectId(item.project_id ?? '');
     setAllowWeekendEvent([0, 6].includes(new Date(item.starts_at).getDay()));
     setFormError('');
@@ -288,6 +291,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       setEventProjectId('');
       setEventStart(toLocalInput(new Date(Date.now() + 3_600_000)));
       setEventSchedule({ at: null, rule: null });
+      setEventAvisos(null);
       setAllowWeekendEvent(false);
     }
     if (type === 'task' && projects.length === 0) {
@@ -621,9 +625,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <p className="event-time"><CalendarClock size={16} aria-hidden="true" />{formatDate(selectedEvent.starts_at)}</p>
               <p className="field-help">{reminderSummary({ at: selectedEvent.recurrence_rule || selectedEvent.reminder_override_minutes?.length ? selectedEvent.starts_at : null, rule: selectedEvent.recurrence_rule })}</p>
               <button type="button" className="outline event-edit-primary" onClick={() => editEvent(selectedEvent)}>
-                <Pencil size={16} aria-hidden="true" /> Editar evento, recordatorio y repetición
+                <Pencil size={16} aria-hidden="true" /> Editar evento y avisos
               </button>
-              <ReminderOverride userId={userId} itemId={selectedEvent.id} type="events" initial={selectedEvent.reminder_override_minutes ?? null} />
               <button className="danger" onClick={() => {
                 if (window.confirm('¿Eliminar este evento?')) {
                   void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null));
@@ -701,7 +704,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 <textarea spellCheck={true} lang="es" autoCorrect="on" autoCapitalize="sentences" maxLength={FIELD_LIMITS.eventDescription} placeholder="Agrega el lugar, propósito o detalles del evento..." value={eventDescription}
                   onChange={(event) => setEventDescription(event.target.value.slice(0, FIELD_LIMITS.eventDescription))} />
                 <CharacterCounter value={eventDescription} max={FIELD_LIMITS.eventDescription} /></label>
-              <label><span className="form-label-icon"><CalendarClock size={16} aria-hidden="true"/>Fecha y hora <small>*</small></span>
+              <label><span className="form-label-icon"><CalendarClock size={16} aria-hidden="true"/>Fecha y hora del evento <small>*</small></span>
                 <div className="event-date-time-controls">
                   <input aria-label="Fecha del evento" required type="date" min={editingEventId ? undefined : toLocalInput(new Date()).slice(0, 10)}
                     value={eventStart.slice(0, 10)}
@@ -735,7 +738,29 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 <button type="button" className="outline" onClick={() => setEventReminderOpen(true)}>
                   <CalendarClock size={17} aria-hidden="true"/> {reminderSummary(eventSchedule)} · Configurar
                 </button>
-                <span className="field-help">El aviso se configura con una fecha y hora; los eventos repetidos mantienen ese horario.</span>
+                <span className="field-help">El recordatorio usa la fecha y hora del evento. Para recibir avisos con anticipación, elige cuándo notificarlos abajo.</span>
+                <div className="notification-choice-grid" role="group" aria-label="Avisos del evento">
+                  <label className="notification-check">
+                    <input type="radio" name="event-avisos-mode" checked={eventAvisos === null} onChange={() => setEventAvisos(null)} />
+                    Usar avisos generales de Mi cuenta
+                  </label>
+                  <label className="notification-check">
+                    <input type="radio" name="event-avisos-mode" checked={eventAvisos !== null} onChange={() => setEventAvisos(eventAvisos ?? [0])} />
+                    Personalizar avisos de este evento
+                  </label>
+                  {eventAvisos !== null && <>
+                    <span className="field-help">Puedes seleccionar varios momentos. Si desmarcas todos, no recibirás avisos de este evento.</span>
+                    {REMINDER_OPTIONS.map((option) => (
+                      <label key={option.value} className="notification-check">
+                        <input type="checkbox" checked={eventAvisos.includes(option.value)}
+                          onChange={(e) => setEventAvisos(previous => normalizeIntervals(e.target.checked
+                            ? [...(previous ?? []), option.value]
+                            : (previous ?? []).filter(value => value !== option.value)))} />
+                        {option.label}
+                      </label>
+                    ))}
+                  </>}
+                </div>
               </div>
               <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto opcional</span>
                 <select value={eventProjectId} onChange={(event) => setEventProjectId(event.target.value)}>
