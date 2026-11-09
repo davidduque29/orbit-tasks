@@ -453,7 +453,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                         onClick={() => { setSelectedProject(project.id); setView('board'); }}>
                         <ArrowRight size={15} aria-hidden="true" />Ver tablero
                       </button>
-                      <button className="danger" type="button" onClick={() => {
+                      <button className="orbit-action-delete" type="button" onClick={() => {
                         if (window.confirm('¿Eliminar el proyecto y todas sus tareas?')) {
                           void execute(() => orbitRepository.deleteProject(project.id));
                         }
@@ -619,17 +619,30 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <button className="outline orbit-modal-close" aria-label="Cerrar detalle" onClick={() => setSelectedEventId(null)}><X size={19} /></button>
             </header>
             <div className="orbit-event-details">
-              <p>{selectedEvent.description || 'Sin descripción adicional.'}</p>
-              <p className="event-time"><CalendarClock size={16} aria-hidden="true" />{formatDate(selectedEvent.starts_at)}</p>
-              <p className="field-help">{reminderSummary({ at: selectedEvent.recurrence_rule || selectedEvent.reminder_override_minutes?.length ? selectedEvent.starts_at : null, rule: selectedEvent.recurrence_rule })}</p>
-              <button type="button" className="outline event-edit-primary" onClick={() => editEvent(selectedEvent)}>
-                <Pencil size={16} aria-hidden="true" /> Editar evento y avisos
-              </button>
-              <button className="danger" onClick={() => {
-                if (window.confirm('¿Eliminar este evento?')) {
-                  void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null));
-                }
-              }}><Trash2 size={15} aria-hidden="true" /> Eliminar evento</button>
+              <div className="orbit-event-description">
+                <span className="orbit-detail-label"><AlignLeft size={16} aria-hidden="true" />Descripción</span>
+                <p>{selectedEvent.description || 'Sin descripción adicional.'}</p>
+              </div>
+              <div className="orbit-event-date-actions">
+                <div className="orbit-event-date">
+                  <span className="orbit-detail-label"><CalendarClock size={16} aria-hidden="true" />Fecha y hora del evento</span>
+                  <p>{formatDate(selectedEvent.starts_at)}</p>
+                </div>
+                <div className="orbit-action-pair">
+                  <button type="button" className="orbit-action-edit" onClick={() => editEvent(selectedEvent)}>
+                    <Pencil size={16} aria-hidden="true" /> Editar
+                  </button>
+                  <button type="button" className="orbit-action-delete" onClick={() => {
+                    if (window.confirm('¿Eliminar este evento?')) {
+                      void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null));
+                    }
+                  }}><Trash2 size={16} aria-hidden="true" /> Eliminar</button>
+                </div>
+              </div>
+              <div className="orbit-event-reminder">
+                <span className="orbit-detail-label"><Bell size={16} aria-hidden="true" />Recordatorio</span>
+                <p>{reminderSummary({ at: selectedEvent.recurrence_rule || selectedEvent.reminder_override_minutes?.length ? selectedEvent.starts_at : null, rule: selectedEvent.recurrence_rule })}</p>
+              </div>
             </div>
           </section>
         </div>
