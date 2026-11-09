@@ -1092,3 +1092,17 @@ button:disabled { cursor:not-allowed; }
  .week-event-actions { margin-left:auto; }
  .week-event-actions button { min-width:42px; }
 }
+
+/* Keep event information and actions on the same row at all mobile widths. */
+.week-events-list .week-event { display:flex; flex-wrap:nowrap; align-items:center; gap:10px; }
+.week-event-info { display:flex; flex:1; min-width:0; align-items:center; gap:8px; }
+.week-event-info > svg { flex-shrink:0; }
+.week-event-info > span { flex-shrink:0; white-space:nowrap; }
+.week-event-info > strong { flex:1; min-width:0; overflow-wrap:anywhere; }
+.week-events-list .week-event .week-event-actions { flex-shrink:0; margin-left:auto; }
+@media(max-width:520px) {
+ .week-events-list .week-event { flex-wrap:nowrap; gap:7px; }
+ .week-event-info { flex-wrap:wrap; gap:3px 7px; }
+ .week-event-info > strong { flex-basis:100%; }
+ .week-events-list .week-event .week-event-actions { align-self:center; }
+}
