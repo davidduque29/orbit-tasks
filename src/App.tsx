@@ -227,7 +227,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     if (validation) { setFormError(validation); return; }
     // Preserve an existing expired schedule when changing only historical event details.
     // New or modified reminders must always be scheduled in the future.
-    const originalReminderAt = originalEvent?.recurrence_rule ? originalEvent.starts_at : null;
+    const originalReminderAt = originalEvent?.reminder_at ?? (originalEvent?.recurrence_rule ? originalEvent.starts_at : null);
     const preservingExpiredReminder = preservingPastDate
       && eventSchedule.at === originalReminderAt
       && JSON.stringify(eventSchedule.rule) === JSON.stringify(originalEvent?.recurrence_rule ?? null);
@@ -241,6 +241,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       project_id: eventProjectId || null,
       reminder_override_minutes: eventAvisos,
       recurrence_rule: eventSchedule.rule,
+      reminder_at: eventSchedule.at,
     };
     const saved = await execute(() => editingEventId
       ? orbitRepository.updateEvent(editingEventId, userId, payload)
@@ -273,7 +274,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEventTitle(item.title);
     setEventDescription(item.description);
     setEventStart(toLocalInput(new Date(item.starts_at)));
-    setEventSchedule({ at: item.recurrence_rule ? new Date(item.starts_at).toISOString() : null, rule: item.recurrence_rule });
+    setEventSchedule({ at: item.reminder_at ?? (item.recurrence_rule ? item.starts_at : null), rule: item.recurrence_rule });
     setEventAvisos(item.reminder_override_minutes ?? null);
     setEventProjectId(item.project_id ?? '');
     setAllowWeekendEvent([0, 6].includes(new Date(item.starts_at).getDay()));
@@ -655,7 +656,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               </div>
               <div className="orbit-event-reminder">
                 <span className="orbit-detail-label"><Bell size={16} aria-hidden="true" />Recordatorio</span>
-                <p>{reminderSummary({ at: selectedEvent.recurrence_rule || selectedEvent.reminder_override_minutes?.length ? selectedEvent.starts_at : null, rule: selectedEvent.recurrence_rule })}</p>
+                <p>{reminderSummary({ at: selectedEvent.reminder_at ?? (selectedEvent.recurrence_rule ? selectedEvent.starts_at : null), rule: selectedEvent.recurrence_rule })}</p>
               </div>
             </div>
           </section>
