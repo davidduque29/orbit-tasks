@@ -232,9 +232,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       description: eventDescription.trim(),
       starts_at: new Date(eventStart).toISOString(),
       project_id: eventProjectId || null,
-      reminder_override_minutes: eventAvisos ?? (editingEventId
-        ? (originalEvent?.reminder_override_minutes ?? (eventSchedule.at ? [0] : []))
-        : (eventSchedule.at ? [0] : [])),
+      reminder_override_minutes: eventAvisos,
       recurrence_rule: eventSchedule.rule,
     };
     const saved = await execute(() => editingEventId
