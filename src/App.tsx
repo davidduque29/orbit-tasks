@@ -7,7 +7,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save, Repeat2 } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { REMINDER_OPTIONS, normalizeIntervals } from './infrastructure/notificationSettings';
 import { ReminderModal } from './components/ReminderModal';
@@ -126,7 +126,6 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [eventSchedule, setEventSchedule] = useState<ReminderSchedule>({ at: null, rule: null });
   const [eventReminderOpen, setEventReminderOpen] = useState(false);
   const [eventOptionsExpanded, setEventOptionsExpanded] = useState(false);
-  const [eventAdvancedExpanded, setEventAdvancedExpanded] = useState(false);
   const [eventAvisos, setEventAvisos] = useState<number[] | null>(null);
   const [allowWeekendEvent, setAllowWeekendEvent] = useState(false);
   const [eventProjectId, setEventProjectId] = useState('');
@@ -270,7 +269,6 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEventSchedule({ at: item.recurrence_rule ? new Date(item.starts_at).toISOString() : null, rule: item.recurrence_rule });
     setEventAvisos(item.reminder_override_minutes ?? null);
     setEventOptionsExpanded(false);
-    setEventAdvancedExpanded(false);
     setEventProjectId(item.project_id ?? '');
     setAllowWeekendEvent([0, 6].includes(new Date(item.starts_at).getDay()));
     setFormError('');
@@ -289,8 +287,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       setEventSchedule({ at: null, rule: null });
       setEventAvisos(null);
       setEventOptionsExpanded(false);
-      setEventAdvancedExpanded(false);
-      setAllowWeekendEvent(false);
+        setAllowWeekendEvent(false);
     }
     if (type === 'task' && projects.length === 0) {
       setFeedback('Crea primero un proyecto para registrar tareas.');
