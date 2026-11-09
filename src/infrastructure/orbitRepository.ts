@@ -20,6 +20,7 @@ export interface NewTask {
 export interface NewEvent {
   reminder_override_minutes: number[] | null;
   recurrence_rule: RecurrenceRule | null;
+  reminder_at: string | null;
   title: string;
   description: string;
   starts_at: string;
