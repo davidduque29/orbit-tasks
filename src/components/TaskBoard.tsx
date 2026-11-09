@@ -109,9 +109,9 @@ function TaskDetails({ task, projects, onSave, onDelete, saving, userId }: {
       <ReminderOverride type="tasks" userId={userId} itemId={task.id}
         initial={task.reminder_override_minutes ?? null} />
       <div className="task-actions">
-        <button disabled={saving || (needsResolution && !resolution.trim())} type="submit">Guardar cambios</button>
-        <button type="button" disabled={saving} className="danger"
-          onClick={() => { if (window.confirm('¿Eliminar esta tarea?')) void onDelete(task.id); }}>Eliminar tarea</button>
+        <button className="orbit-action-edit" disabled={saving || (needsResolution && !resolution.trim())} type="submit"><ClipboardList size={16} aria-hidden="true" />Guardar cambios</button>
+        <button type="button" disabled={saving} className="orbit-action-delete"
+          onClick={() => { if (window.confirm('¿Eliminar esta tarea?')) void onDelete(task.id); }}>Eliminar</button>
       </div>
     </form>
   );
