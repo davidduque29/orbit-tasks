@@ -1064,3 +1064,15 @@ button:disabled { cursor:not-allowed; }
  .orbit-event-option-line > button { max-width:100%; }
  .orbit-event-intervals { grid-template-columns:1fr; }
 }
+
+/* Event list uses the same direct action affordances as Pendientes. */
+.event-compact-card { cursor:default; }
+.event-list-actions { display:inline-flex; flex-shrink:0; align-items:center; gap:8px; margin-left:auto; }
+.event-list-actions button { min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+.event-reminder-configure { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; min-height:44px; }
+@media(max-width:440px) {
+ .event-compact-card { gap:9px; }
+ .event-list-actions { gap:5px; }
+ .event-list-actions button { min-width:42px; min-height:44px; padding:8px; }
+ .event-compact-copy { min-width:0; overflow-wrap:anywhere; }
+}
