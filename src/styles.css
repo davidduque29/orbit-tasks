@@ -1010,3 +1010,35 @@ button:disabled { cursor:not-allowed; }
   .event-list-filters button { flex:1; justify-content:center; padding:9px 4px; font-size:11px; }
   .event-page-heading > button { min-height:43px; }
 }
+
+/* Consistent compact edit/delete controls across Orbit workspaces */
+.orbit-action-pair { display:flex; align-items:center; justify-content:flex-end; gap:9px; flex-wrap:wrap; }
+.orbit-action-edit, .orbit-action-delete {
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  min-height:44px; min-width:44px; padding:9px 13px;
+  border-radius:12px; font-weight:700; line-height:1.2;
+  white-space:nowrap; cursor:pointer; flex-shrink:0;
+}
+.orbit-action-edit { color:#6246c8; border:1px solid #b8a6ff; background:#f8f5ff; }
+.orbit-action-delete { color:#c33150; border:1px solid #f1a8b7; background:#fff9fa; }
+.orbit-action-edit:focus-visible, .orbit-action-delete:focus-visible { outline:3px solid #7657de; outline-offset:2px; }
+.orbit-action-edit:disabled, .orbit-action-delete:disabled { opacity:.5; cursor:not-allowed; }
+.orbit-event-description, .orbit-event-reminder { display:grid; gap:5px; min-width:0; }
+.orbit-detail-label { display:inline-flex; align-items:center; gap:7px; color:#6756a7; font-size:13px; font-weight:650; }
+.orbit-event-description > p, .orbit-event-reminder > p { padding-left:23px; overflow-wrap:anywhere; }
+.orbit-event-date-actions { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:12px; border-radius:14px; background:#f7f4ff; }
+.orbit-event-date { flex:1 1 180px; min-width:0; display:grid; gap:5px; }
+.orbit-event-date > p { padding-left:23px; font-weight:650; overflow-wrap:anywhere; }
+.orbit-event-details { gap:14px; }
+.note-actions { gap:6px; }
+.note-actions .orbit-action-edit, .note-actions .orbit-action-delete { padding:8px; min-height:44px; background:#faf8ff; }
+.note-actions .orbit-action-delete { background:#fff9fa; }
+.note-category-manager .orbit-action-edit, .note-category-manager .orbit-action-delete { margin-left:0; }
+.task-actions .orbit-action-edit, .task-actions .orbit-action-delete { min-height:44px; }
+@media(max-width:700px) {
+  .orbit-event-date-actions { align-items:stretch; }
+  .orbit-event-date-actions .orbit-action-pair { width:100%; justify-content:flex-end; }
+  .orbit-event-date-actions .orbit-action-pair button { flex:1 1 0; }
+  .note-actions .orbit-action-edit span, .note-actions .orbit-action-delete span { display:none; }
+  .note-category-manager { flex-wrap:wrap; }
+}
