@@ -130,9 +130,19 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [formError, setFormError] = useState('');
   const [editorDirty, setEditorDirty] = useState(false);
 
+  const [confirmation, setConfirmation] = useState<{ title: string; message: string; action: () => void } | null>(null);
+  function askConfirmation(title: string, message: string, action: () => void) {
+    setConfirmation({ title, message, action });
+  }
   function closeEditor() {
     if (saving) return;
-    if (editorDirty && !window.confirm('Tienes cambios sin guardar. ¿Quieres descartarlos?')) return;
+    if (editorDirty) {
+      askConfirmation('Descartar cambios', 'Tienes cambios sin guardar. ¿Quieres descartarlos?', () => {
+        setEditor(null);
+        setEditorDirty(false);
+      });
+      return;
+    }
     setEditor(null);
     setEditorDirty(false);
   }
@@ -459,9 +469,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                         <ArrowRight size={15} aria-hidden="true" />Ver tablero
                       </button>
                       <button className="orbit-action-delete" type="button" onClick={() => {
-                        if (window.confirm('¿Eliminar el proyecto y todas sus tareas?')) {
-                          void execute(() => orbitRepository.deleteProject(project.id));
-                        }
+                        askConfirmation('Eliminar proyecto', '¿Eliminar el proyecto y todas sus tareas? Esta acción no se puede deshacer.', () => { void execute(() => orbitRepository.deleteProject(project.id)); });
                       }}><Trash2 size={15} aria-hidden="true" />Eliminar</button>
                     </div>
                   </div>}
@@ -480,7 +488,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             onProjectChange={setSelectedProject}
             onNewTask={() => openEditor('task')}
             onSave={changeStatus}
-            onDelete={async (taskId) => { await execute(() => orbitRepository.deleteTask(taskId)); }}
+            onDelete={async (taskId) => { askConfirmation('Eliminar tarea', '¿Eliminar esta tarea? Esta acción no se puede deshacer.', () => { void execute(() => orbitRepository.deleteTask(taskId)); }); }}
             saving={saving}
             userId={userId}
           />
@@ -499,9 +507,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 onClick={() => { setView('account'); setAccountSection('notifications'); }}>Mi cuenta → Avisos</button>.</span>
             </div>
             <WeeklyAgenda events={events} onEdit={editEvent} onDelete={(item) => {
-              if (window.confirm(`¿Eliminar el evento "${item.title}"?`)) {
-                void execute(() => orbitRepository.deleteEvent(item.id));
-              }
+              askConfirmation('Eliminar evento', `¿Eliminar el evento "${item.title}"? Esta acción no se puede deshacer.`, () => { void execute(() => orbitRepository.deleteEvent(item.id)); });
             }} />
             <section className="event-list-section" aria-labelledby="event-list-title">
               <div className="event-list-heading">
@@ -534,9 +540,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                     <span className="orbit-action-pair event-list-actions">
                       <button type="button" className="orbit-action-edit" aria-label={`Editar ${item.title}`} title="Editar evento" onClick={() => editEvent(item)}><Pencil size={17} aria-hidden="true"/></button>
                       <button type="button" className="orbit-action-delete" aria-label={`Eliminar ${item.title}`} title="Eliminar evento" onClick={() => {
-                        if (window.confirm(`¿Eliminar el evento "${item.title}"?`)) {
-                          void execute(() => orbitRepository.deleteEvent(item.id));
-                        }
+                        askConfirmation('Eliminar evento', `¿Eliminar el evento "${item.title}"? Esta acción no se puede deshacer.`, () => { void execute(() => orbitRepository.deleteEvent(item.id)); });
                       }}><Trash2 size={17} aria-hidden="true"/></button>
                     </span>
                   </div>;
@@ -648,9 +652,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                     <Pencil size={16} aria-hidden="true" /> Editar
                   </button>
                   <button type="button" className="orbit-action-delete" onClick={() => {
-                    if (window.confirm('¿Eliminar este evento?')) {
-                      void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null));
-                    }
+                    askConfirmation('Eliminar evento', `¿Eliminar el evento "${selectedEvent.title}"? Esta acción no se puede deshacer.`, () => { void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null)); });
                   }}><Trash2 size={16} aria-hidden="true" /> Eliminar</button>
                 </div>
               </div>
@@ -675,6 +677,19 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             setEditorDirty(true);
             setEventReminderOpen(false);
           }}/>
+      )}
+
+      {confirmation && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setConfirmation(null)}>
+          <section className="modal orbit-detail-modal" role="alertdialog" aria-modal="true" aria-labelledby="orbit-confirm-title" aria-describedby="orbit-confirm-message" onClick={(event) => event.stopPropagation()}>
+            <h2 id="orbit-confirm-title">{confirmation.title}</h2>
+            <p id="orbit-confirm-message">{confirmation.message}</p>
+            <div className="orbit-event-save-footer" style={{ display: 'flex', gap: 12 }}>
+              <button type="button" onClick={() => setConfirmation(null)}>Cancelar</button>
+              <button type="button" onClick={() => { const action = confirmation.action; setConfirmation(null); action(); }}>Confirmar</button>
+            </div>
+          </section>
+        </div>
       )}
 
       {editor && (
