@@ -111,7 +111,7 @@ function TaskDetails({ task, projects, onSave, onDelete, saving, userId }: {
       <div className="task-actions">
         <button className="orbit-action-edit" disabled={saving || (needsResolution && !resolution.trim())} type="submit"><ClipboardList size={16} aria-hidden="true" />Guardar cambios</button>
         <button type="button" disabled={saving} className="orbit-action-delete"
-          onClick={() => { if (window.confirm('¿Eliminar esta tarea?')) void onDelete(task.id); }}>Eliminar</button>
+          onClick={() => { void onDelete(task.id); }}>Eliminar</button>
       </div>
     </form>
   );
