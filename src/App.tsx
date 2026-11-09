@@ -7,7 +7,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save, Repeat2 } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { REMINDER_OPTIONS, normalizeIntervals } from './infrastructure/notificationSettings';
 import { ReminderModal } from './components/ReminderModal';
@@ -126,7 +126,6 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [eventSchedule, setEventSchedule] = useState<ReminderSchedule>({ at: null, rule: null });
   const [eventReminderOpen, setEventReminderOpen] = useState(false);
   const [eventOptionsExpanded, setEventOptionsExpanded] = useState(false);
-  const [eventAdvancedExpanded, setEventAdvancedExpanded] = useState(false);
   const [eventAvisos, setEventAvisos] = useState<number[] | null>(null);
   const [allowWeekendEvent, setAllowWeekendEvent] = useState(false);
   const [eventProjectId, setEventProjectId] = useState('');
@@ -221,8 +220,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     if (validation) { setFormError(validation); return; }
     // Preserve an existing expired schedule when changing only historical event details.
     // New or modified reminders must always be scheduled in the future.
-    const originalReminderAt = originalEvent && (originalEvent.recurrence_rule || originalEvent.reminder_override_minutes?.length)
-      ? originalEvent.starts_at : null;
+    const originalReminderAt = originalEvent?.recurrence_rule ? originalEvent.starts_at : null;
     const preservingExpiredReminder = preservingPastDate
       && eventSchedule.at === originalReminderAt
       && JSON.stringify(eventSchedule.rule) === JSON.stringify(originalEvent?.recurrence_rule ?? null);
@@ -268,15 +266,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setEventTitle(item.title);
     setEventDescription(item.description);
     setEventStart(toLocalInput(new Date(item.starts_at)));
-    setEventSchedule({
-      at: item.recurrence_rule || item.reminder_override_minutes?.length
-        ? new Date(item.starts_at).toISOString()
-        : null,
-      rule: item.recurrence_rule,
-    });
+    setEventSchedule({ at: item.recurrence_rule ? new Date(item.starts_at).toISOString() : null, rule: item.recurrence_rule });
     setEventAvisos(item.reminder_override_minutes ?? null);
     setEventOptionsExpanded(false);
-    setEventAdvancedExpanded(false);
     setEventProjectId(item.project_id ?? '');
     setAllowWeekendEvent([0, 6].includes(new Date(item.starts_at).getDay()));
     setFormError('');
@@ -295,8 +287,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       setEventSchedule({ at: null, rule: null });
       setEventAvisos(null);
       setEventOptionsExpanded(false);
-      setEventAdvancedExpanded(false);
-      setAllowWeekendEvent(false);
+        setAllowWeekendEvent(false);
     }
     if (type === 'task' && projects.length === 0) {
       setFeedback('Crea primero un proyecto para registrar tareas.');
@@ -519,8 +510,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <div className="card event-list-card">
                 {displayedEvents.map((item) => {
                   const date = new Date(item.starts_at);
-                  return <button type="button" className="event-compact-card" key={item.id}
-                    onClick={() => setSelectedEventId(item.id)} aria-label={`Ver detalle de ${item.title}`}>
+                  return <div className="event-compact-card" key={item.id}>
                     <span className="event-date-tile" aria-hidden="true">
                       <strong>{date.getDate()}</strong>
                       <small>{date.toLocaleDateString('es-CO', {month:'short'}).replace('.','')}</small>
@@ -529,8 +519,15 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                       <small><Clock3 size={13} aria-hidden="true" />{formatDate(item.starts_at)}</small>
                       {item.status === 'Cancelado' && <small className="event-cancelled-label">Cancelado</small>}
                     </span>
-                    <ArrowRight size={17} aria-hidden="true" />
-                  </button>;
+                    <span className="orbit-action-pair event-list-actions">
+                      <button type="button" className="orbit-action-edit" aria-label={`Editar ${item.title}`} title="Editar evento" onClick={() => editEvent(item)}><Pencil size={17} aria-hidden="true"/></button>
+                      <button type="button" className="orbit-action-delete" aria-label={`Eliminar ${item.title}`} title="Eliminar evento" onClick={() => {
+                        if (window.confirm(`¿Eliminar el evento "${item.title}"?`)) {
+                          void execute(() => orbitRepository.deleteEvent(item.id));
+                        }
+                      }}><Trash2 size={17} aria-hidden="true"/></button>
+                    </span>
+                  </div>;
                 })}
                 {displayedEvents.length === 0 && <div className="event-list-empty">
                   <CalendarDays size={23} aria-hidden="true"/>
@@ -663,7 +660,6 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           onClose={() => setEventReminderOpen(false)}
           onSave={(next) => {
             setEventSchedule(next);
-            if (next.at) setEventStart(toLocalInput(new Date(next.at)));
             setEventReminderOpen(false);
           }}/>
       )}
@@ -755,33 +751,25 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 <button type="button" className="orbit-event-options-toggle" aria-expanded={eventOptionsExpanded}
                   onClick={() => setEventOptionsExpanded(value => !value)}>
                   <Bell size={19} aria-hidden="true"/>
-                  <span><strong>Avisos y repetición</strong><small>{eventAvisos === null ? 'Avisos de Mi cuenta' : eventAvisos.length ? `${eventAvisos.length} aviso(s)` : 'Sin avisos'} · ${eventSchedule.rule ? reminderSummary(eventSchedule) : 'No se repite'}</small></span>
+                  <span><strong>Recordatorio</strong><small>{reminderSummary(eventSchedule)}</small></span>
                   {eventOptionsExpanded ? <ChevronUp size={18} aria-hidden="true"/> : <ChevronDown size={18} aria-hidden="true"/>}
                 </button>
                 {eventOptionsExpanded && <div className="orbit-event-options-body">
-                  <div className="orbit-event-option-line">
-                    <span><Bell size={16} aria-hidden="true"/>Recordatorio</span>
-                    <button type="button" className="outline" onClick={() => setEventAdvancedExpanded(value => !value)}
-                      aria-expanded={eventAdvancedExpanded}>{eventAvisos === null ? 'Avisos generales' : eventAvisos.length ? `${eventAvisos.length} aviso(s)` : 'No avisar'} <ChevronDown size={15}/></button>
-                  </div>
-                  {eventAdvancedExpanded && <div className="orbit-event-advanced">
-                    <label className="orbit-event-radio"><input type="radio" name="event-avisos-mode" checked={eventAvisos === null} onChange={() => setEventAvisos(null)}/>Usar avisos de Mi cuenta</label>
-                    <label className="orbit-event-radio"><input type="radio" name="event-avisos-mode" checked={eventAvisos !== null} onChange={() => setEventAvisos(eventAvisos ?? [0])}/>Elegir avisos para este evento</label>
-                    {eventAvisos !== null && <div className="orbit-event-intervals">
-                      {REMINDER_OPTIONS.map(option => <label key={option.value} className="orbit-event-radio">
-                        <input type="checkbox" checked={eventAvisos.includes(option.value)}
-                          onChange={e => setEventAvisos(previous => normalizeIntervals(e.target.checked
-                            ? [...(previous ?? []), option.value] : (previous ?? []).filter(value => value !== option.value)))}/>
-                        {option.label}
-                      </label>)}
-                    </div>}
+                  <button type="button" className="outline event-reminder-configure" onClick={() => setEventReminderOpen(true)}>
+                    <CalendarClock size={17} aria-hidden="true"/>Configurar recordatorio y repetición <ChevronDown size={16} aria-hidden="true"/>
+                  </button>
+                  <label className="orbit-event-radio">
+                    <input type="checkbox" checked={eventAvisos === null} onChange={e => setEventAvisos(e.target.checked ? null : [0])}/>
+                    Usar avisos generales de Mi cuenta
+                  </label>
+                  {eventAvisos !== null && <div className="orbit-event-intervals">
+                    {REMINDER_OPTIONS.map(option => <label key={option.value} className="orbit-event-radio">
+                      <input type="checkbox" checked={eventAvisos.includes(option.value)}
+                        onChange={e => setEventAvisos(previous => normalizeIntervals(e.target.checked
+                          ? [...(previous ?? []), option.value] : (previous ?? []).filter(value => value !== option.value)))}/>
+                      {option.label}
+                    </label>)}
                   </div>}
-                  <div className="orbit-event-option-line">
-                    <span><Repeat2 size={16} aria-hidden="true"/>Repetición</span>
-                    <button type="button" className="outline" onClick={() => setEventReminderOpen(true)}>
-                      {eventSchedule.rule ? reminderSummary(eventSchedule) : 'No se repite'} <ChevronDown size={15}/>
-                    </button>
-                  </div>
                 </div>}
               </div>
               <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto opcional</span>
