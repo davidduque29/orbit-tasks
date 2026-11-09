@@ -671,6 +671,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           onClose={() => setEventReminderOpen(false)}
           onSave={(next) => {
             setEventSchedule(next);
+            setEditorDirty(true);
             setEventReminderOpen(false);
           }}/>
       )}
@@ -697,7 +698,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 <textarea spellCheck={true} lang="es" autoCorrect="on" autoCapitalize="sentences" maxLength={FIELD_LIMITS.projectDescription} placeholder="Describe brevemente el objetivo del proyecto..." value={projectDescription}
                   onChange={(event) => setProjectDescription(event.target.value.slice(0, FIELD_LIMITS.projectDescription))} />
                 <CharacterCounter value={projectDescription} max={FIELD_LIMITS.projectDescription} /></label>
-              <button disabled={saving}>Guardar proyecto</button>
+              <button disabled={saving}>{saving ? 'Guardando…' : 'Guardar proyecto'}</button>
             </form>}
             {editor === 'task' && <form onSubmit={(event) => void saveTask(event)} className="orbit-validated-form">
               <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título de la tarea <small>*</small></span>
@@ -718,7 +719,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 </select></label>
               <label><span className="form-label-icon"><Clock3 size={16} aria-hidden="true"/>Fecha estimada</span>
                 <input type="datetime-local" value={taskDue} onChange={(event) => setTaskDue(event.target.value)} /></label>
-              <button disabled={saving}>Guardar tarea</button>
+              <button disabled={saving}>{saving ? 'Guardando…' : 'Guardar tarea'}</button>
             </form>}
             {editor === 'event' && <form onSubmit={(event) => void saveEvent(event)} className="orbit-validated-form orbit-event-editor-form">
               <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título del evento <small>*</small></span>
@@ -736,18 +737,14 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                     onChange={(event) => {
                       const next = `${event.target.value}T${eventStart.slice(11, 16) || '09:00'}`;
                       setEventStart(next);
-                      if (eventSchedule.at && Number.isFinite(new Date(next).getTime())) {
-                        setEventSchedule(previous => ({ ...previous, at: new Date(next).toISOString() }));
-                      }
+                      // Event date and reminder date are independent; do not move the reminder.
                     }} />
                   <input aria-label="Hora del evento" required type="time"
                     value={eventStart.slice(11, 16)}
                     onChange={(event) => {
                       const next = `${eventStart.slice(0, 10)}T${event.target.value}`;
                       setEventStart(next);
-                      if (eventSchedule.at && Number.isFinite(new Date(next).getTime())) {
-                        setEventSchedule(previous => ({ ...previous, at: new Date(next).toISOString() }));
-                      }
+                      // Event date and reminder date are independent; do not move the reminder.
                     }} />
                 </div>
                 <span className="field-help">{editingEventId ? 'Puedes conservar la fecha original; para reprogramar selecciona una fecha futura.' : 'Selecciona una fecha futura.'} Los eventos en sábado o domingo requieren confirmación.</span>
@@ -772,7 +769,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                   <option value="">Sin proyecto</option>
                   {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                 </select></label>
-              <div className="orbit-event-save-footer"><button type="submit" disabled={saving}><Save size={18} aria-hidden="true"/>{editingEventId ? 'Guardar cambios' : 'Guardar evento'}</button></div>
+              <div className="orbit-event-save-footer"><button type="submit" disabled={saving}><Save size={18} aria-hidden="true"/>{saving ? 'Guardando…' : editingEventId ? 'Guardar cambios' : 'Guardar evento'}</button></div>
             </form>}
           </section>
         </div>
