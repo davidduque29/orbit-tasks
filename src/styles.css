@@ -1010,3 +1010,25 @@ button:disabled { cursor:not-allowed; }
   .event-list-filters button { flex:1; justify-content:center; padding:9px 4px; font-size:11px; }
   .event-page-heading > button { min-height:43px; }
 }
+
+/* Minimal event editor: scrollable content and a single persistent save action */
+.orbit-event-editor-form { display:flex; flex-direction:column; min-height:0; }
+.orbit-event-options { padding:0; overflow:hidden; border:1px solid #d9cfff; border-radius:14px; background:#faf8ff; }
+.orbit-event-options-toggle { width:100%; display:flex; align-items:center; gap:12px; text-align:left; padding:13px 14px; color:#6546c6; background:transparent; border:0; cursor:pointer; min-height:58px; }
+.orbit-event-options-toggle > span { flex:1; min-width:0; display:grid; gap:3px; }
+.orbit-event-options-toggle strong { font-size:15px; }
+.orbit-event-options-toggle small { color:#59657b; font-size:12px; overflow-wrap:anywhere; }
+.orbit-event-options-body { display:grid; gap:10px; padding:8px 12px 14px; }
+.orbit-event-option-line { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.orbit-event-option-line > span { display:inline-flex; align-items:center; gap:7px; font-weight:650; color:#27344d; }
+.orbit-event-option-line > button { display:inline-flex; align-items:center; gap:6px; min-height:44px; font-size:13px; }
+.orbit-event-advanced { display:grid; gap:10px; padding:12px; background:white; border:1px solid #e5ddfb; border-radius:12px; }
+.orbit-event-radio { display:flex; align-items:center; gap:10px; min-height:44px; font-size:13px; cursor:pointer; }
+.orbit-event-radio input { flex:0 0 auto; width:18px; height:18px; }
+.orbit-event-intervals { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:2px 12px; }
+.orbit-event-save-footer { position:sticky; bottom:0; z-index:3; padding:12px 0 max(10px,env(safe-area-inset-bottom)); background:linear-gradient(to bottom,rgba(255,255,255,.96),#fff 18%); border-top:1px solid #eee9fa; margin-top:auto; }
+.orbit-event-save-footer > button { width:100%; min-height:48px; display:flex; align-items:center; justify-content:center; gap:9px; }
+@media(max-width:700px) {
+ .orbit-event-option-line > button { max-width:100%; }
+ .orbit-event-intervals { grid-template-columns:1fr; }
+}
