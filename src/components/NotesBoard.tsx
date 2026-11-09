@@ -497,8 +497,8 @@ export function NotesBoard({ userId }: { userId: string }) {
           {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
             onClick={() => setHistorySeriesId(seriesKey(note))}><CalendarClock size={17}/></button>}
-          <button type="button" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17}/></button>
-          <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => remove(note)} disabled={busy}><Trash2 size={17}/></button>
+          <button type="button" className="orbit-action-edit" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17} aria-hidden="true"/><span>Editar</span></button>
+          <button type="button" className="orbit-action-delete" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => remove(note)} disabled={busy}><Trash2 size={17} aria-hidden="true"/><span>Eliminar</span></button>
         </div>
       </article>)}
       {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/>
@@ -540,8 +540,8 @@ export function NotesBoard({ userId }: { userId: string }) {
           {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
             onClick={() => setHistorySeriesId(seriesKey(note))}><CalendarClock size={17}/></button>}
-          <button type="button" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17}/></button>
-          <button type="button" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => remove(note)} disabled={busy}><Trash2 size={17}/></button>
+          <button type="button" className="orbit-action-edit" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17} aria-hidden="true"/><span>Editar</span></button>
+          <button type="button" className="orbit-action-delete" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => remove(note)} disabled={busy}><Trash2 size={17} aria-hidden="true"/><span>Eliminar</span></button>
         </div>
       </article>)}
       {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/>
@@ -564,8 +564,8 @@ export function NotesBoard({ userId }: { userId: string }) {
       {categories.map(category => <div className="note-category-manager" key={category.id}>
         <span className="note-category-dot" style={{background:category.color}}/>
         <span className="notes-category-label">{category.name}<small>{notes.filter(note => note.category_id === category.id).length} registros</small></span>
-        <button type="button" className="outline" disabled={busy} aria-label={`Editar categoría ${category.name}`} onClick={() => editCategory(category)}><Pencil size={16}/></button>
-        <button type="button" className="outline" disabled={busy} aria-label={`Eliminar categoría ${category.name}`} onClick={() => void removeCategory(category)}><Trash2 size={16}/></button>
+        <button type="button" className="orbit-action-edit" disabled={busy} aria-label={`Editar categoría ${category.name}`} onClick={() => editCategory(category)}><Pencil size={16}/></button>
+        <button type="button" className="orbit-action-delete" disabled={busy} aria-label={`Eliminar categoría ${category.name}`} onClick={() => void removeCategory(category)}><Trash2 size={16}/></button>
       </div>)}
       {!categories.length && <p className="muted">Aún no hay categorías.</p>}
     </div>}
