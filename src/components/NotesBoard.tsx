@@ -442,7 +442,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           onClick={() => setQuickOptionsOpen((previous) => !previous)}>
           <CalendarClock size={17} aria-hidden="true"/>
           <strong>Recordatorio</strong>
-          <span className="reminder-inline-summary">{reminderSummary(quickReminder)}</span>
+          <span className="reminder-inline-summary">{quickReminder.at ? reminderSummary(quickReminder) : "Configurar recordatorio"}</span>
           {quickOptionsOpen ? <ChevronUp size={17} aria-hidden="true"/> : <ChevronDown size={17} aria-hidden="true"/>}
         </button>
       </div>
