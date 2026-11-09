@@ -7,7 +7,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderModal } from './components/ReminderModal';
 import { reminderSummary, validateReminder, type ReminderSchedule } from './domain/reminders';
@@ -682,11 +682,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       {confirmation && (
         <div className="modal-backdrop" role="presentation" onClick={() => setConfirmation(null)}>
           <section className="modal orbit-detail-modal" role="alertdialog" aria-modal="true" aria-labelledby="orbit-confirm-title" aria-describedby="orbit-confirm-message" onClick={(event) => event.stopPropagation()}>
-            <h2 id="orbit-confirm-title">{confirmation.title}</h2>
+            <h2 id="orbit-confirm-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{confirmation.title === 'Descartar cambios' ? <AlertTriangle size={22} color="#d97706" aria-hidden="true" /> : <Trash2 size={22} color="#dc2626" aria-hidden="true" />}{confirmation.title}</h2>
             <p id="orbit-confirm-message">{confirmation.message}</p>
             <div className="orbit-event-save-footer" style={{ display: 'flex', gap: 12 }}>
-              <button type="button" onClick={() => setConfirmation(null)}>Cancelar</button>
-              <button type="button" onClick={() => { const action = confirmation.action; setConfirmation(null); action(); }}>Confirmar</button>
+              <button type="button" style={{ background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' }} onClick={() => setConfirmation(null)}>Cancelar</button>
+              <button type="button" style={{ background: confirmation.title === 'Descartar cambios' ? '#b45309' : '#dc2626', color: '#fff', border: 'none' }} onClick={() => { const action = confirmation.action; setConfirmation(null); action(); }}>{confirmation.title === 'Descartar cambios' ? 'Descartar cambios' : confirmation.title}</button>
             </div>
           </section>
         </div>
