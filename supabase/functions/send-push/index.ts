@@ -8,7 +8,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 type Task = { id: string; owner_id: string; title: string; estimated_due_at: string | null; status: string; reminder_override_minutes: number[] | null };
-type Event = { id: string; owner_id: string; title: string; starts_at: string; status: string; reminder_override_minutes: number[] | null; recurrence_rule: RecurrenceRule | null };
+type Event = { id: string; owner_id: string; title: string; starts_at: string; reminder_at: string | null; status: string; reminder_override_minutes: number[] | null; recurrence_rule: RecurrenceRule | null };
 type RecurrenceRule = { frequency: 'daily' | 'weekdays' | 'weekly' | 'monthly' | 'yearly'; interval: number; days?: number[]; until?: string };
 type PersonalNote = { id: string; owner_id: string; title: string; kind: 'note' | 'pending'; completed: boolean; reminder_at: string | null };
 type Settings = { user_id: string; task_alerts_enabled?: boolean; event_alerts_enabled?: boolean; note_alerts_enabled?: boolean; task_lead_minutes: number[]; event_lead_minutes: number[]; overdue_enabled: boolean; overdue_repeat_minutes: number; quiet_hours_enabled: boolean; quiet_start: string; quiet_end: string; timezone: string };
@@ -103,6 +103,17 @@ function dueNotifications(now: Date, tasks: Task[], events: Event[], notes: Pers
     if (event.status !== 'Programado') continue;
     const s = settings.get(event.owner_id);
     if (s?.event_alerts_enabled === false || (s && quiet(now, s))) continue;
+    // Fire the independent reminder at its configured time; preserve legacy event alerts.
+    if (event.reminder_at) {
+      const reminderAnchor = { ...event, starts_at: event.reminder_at };
+      const occurrence = eventOccurrence(reminderAnchor, timestamp);
+      if (occurrence !== null && occurrence <= timestamp && timestamp - occurrence < 5 * minute) {
+        results.push({
+          ownerId: event.owner_id, key: `event:${event.id}:reminder:${occurrence}`,
+          title: 'Recordatorio de evento', body: event.title,
+        });
+      }
+    }
     const intervals = event.reminder_override_minutes ?? s?.event_lead_minutes ?? defaults.event_lead_minutes;
     for (const offset of [...new Set(intervals)]) {
       if (!Number.isSafeInteger(offset) || offset < 0 || offset > 525600) continue;
@@ -148,7 +159,7 @@ Deno.serve(async (request) => {
   const now = new Date();
   const [tasksResult, eventsResult, notesResult, settingsResult, deviceResult] = await Promise.all([
     db.from('tasks').select('id,owner_id,title,status,estimated_due_at,reminder_override_minutes').neq('status','Finalizado').not('estimated_due_at','is',null),
-    db.from('events').select('id,owner_id,title,status,starts_at,reminder_override_minutes,recurrence_rule').eq('status','Programado'),
+    db.from('events').select('id,owner_id,title,status,starts_at,reminder_at,reminder_override_minutes,recurrence_rule').eq('status','Programado'),
     db.from('notes').select('id,owner_id,title,kind,completed,reminder_at').not('reminder_at','is',null),
     db.from('notification_preferences').select('*'),
     db.from('device_subscriptions').select('id,owner_id,subscription_data').eq('enabled',true),
