@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Clock3 } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Clock3, Pencil, Trash2 } from 'lucide-react';
 import type { OrbitEvent } from '../domain/models';
 
 function startOfWeek(date: Date): Date {
@@ -16,8 +16,9 @@ function dateKey(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export function WeeklyAgenda({ events }: { events: OrbitEvent[] }) {
+export function WeeklyAgenda({ events, onEdit, onDelete }: { events: OrbitEvent[]; onEdit: (event: OrbitEvent) => void; onDelete: (event: OrbitEvent) => void }) {
   const [offset, setOffset] = useState(0);
+  const [expanded, setExpanded] = useState(false);
   const [selectedDay, setSelectedDay] = useState(() => dateKey(new Date()));
   const week = useMemo(() => {
     const monday = startOfWeek(new Date());
@@ -34,6 +35,7 @@ export function WeeklyAgenda({ events }: { events: OrbitEvent[] }) {
   const formatter = new Intl.DateTimeFormat('es-CO', { month: 'short', day: 'numeric' });
   const title = `${formatter.format(week[0])} – ${formatter.format(week[6])}`;
   const moveWeek = (direction: number) => {
+    setExpanded(false);
     setOffset((current) => current + direction);
     const next = new Date(week[0]);
     next.setDate(next.getDate() + 7 * direction);
@@ -44,7 +46,7 @@ export function WeeklyAgenda({ events }: { events: OrbitEvent[] }) {
       <div><h2 id="weekly-agenda-title"><CalendarDays size={17} aria-hidden="true"/> Semana en tu agenda</h2><small>{title}</small></div>
       <div className="weekly-controls">
         <button type="button" className="outline" aria-label="Semana anterior" onClick={() => moveWeek(-1)}><ChevronLeft size={18}/></button>
-        <button type="button" className="outline" aria-label="Volver a la semana actual" onClick={() => { setOffset(0); setSelectedDay(dateKey(new Date())); }}>Hoy</button>
+        <button type="button" className="outline" aria-label="Volver a la semana actual" onClick={() => { setExpanded(false); setOffset(0); setSelectedDay(dateKey(new Date())); }}>Hoy</button>
         <button type="button" className="outline" aria-label="Semana siguiente" onClick={() => moveWeek(1)}><ChevronRight size={18}/></button>
       </div>
     </div>
@@ -55,18 +57,29 @@ export function WeeklyAgenda({ events }: { events: OrbitEvent[] }) {
         const selected = key === selectedDay;
         return <button className={selected ? 'week-day selected' : 'week-day'} type="button" key={key}
           aria-pressed={selected} aria-label={`${date.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'})}, ${count} eventos`}
-          onClick={() => setSelectedDay(key)}>
+          onClick={() => { setSelectedDay(key); setExpanded(false); }}>
           <small>{date.toLocaleDateString('es-CO',{weekday:'short'}).replace('.','')}</small>
           <strong>{date.getDate()}</strong><span className={count ? 'week-dot has-event' : 'week-dot'} aria-hidden="true"/>
         </button>;
       })}
     </div>
-    <div className="week-events" aria-live="polite">
-      {dayEvents.length ? dayEvents.map((event) => <div key={event.id} className="week-event">
-        <Clock3 size={15} aria-hidden="true"/>
-        <span>{new Date(event.starts_at).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'})}</span>
-        <strong>{event.title}</strong>
-      </div>) : <p className="week-empty">No hay eventos programados para este día.</p>}
+    <div className="week-events">
+      <button type="button" className="week-events-toggle" aria-expanded={expanded}
+        aria-controls="weekly-agenda-event-list" onClick={() => setExpanded(value => !value)}>
+        <span><CalendarDays size={18} aria-hidden="true"/><strong>{new Date(selectedDay + 'T12:00:00').toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'})}</strong></span>
+        <span className="week-events-toggle-meta">{dayEvents.length} {dayEvents.length === 1 ? 'evento' : 'eventos'} {expanded ? <ChevronUp size={18} aria-hidden="true"/> : <ChevronDown size={18} aria-hidden="true"/>}</span>
+      </button>
+      {expanded && <div id="weekly-agenda-event-list" className="week-events-list">
+        {dayEvents.length ? dayEvents.map((event) => <div key={event.id} className="week-event">
+          <Clock3 size={15} aria-hidden="true"/>
+          <span>{new Date(event.starts_at).toLocaleTimeString('es-CO',{hour:'numeric',minute:'2-digit'})}</span>
+          <strong>{event.title}</strong>
+          <div className="orbit-action-pair week-event-actions">
+            <button type="button" className="orbit-action-edit" aria-label={`Editar ${event.title}`} onClick={() => onEdit(event)}><Pencil size={17} aria-hidden="true"/></button>
+            <button type="button" className="orbit-action-delete" aria-label={`Eliminar ${event.title}`} onClick={() => onDelete(event)}><Trash2 size={17} aria-hidden="true"/></button>
+          </div>
+        </div>) : <p className="week-empty">No hay eventos programados para este día.</p>}
+      </div>}
     </div>
   </section>;
 }

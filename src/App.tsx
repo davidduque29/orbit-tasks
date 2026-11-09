@@ -486,7 +486,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <span>Los recordatorios se gestionan automáticamente. Revisa tus permisos en <button type="button"
                 onClick={() => { setView('account'); setAccountSection('notifications'); }}>Mi cuenta → Avisos</button>.</span>
             </div>
-            <WeeklyAgenda events={events} />
+            <WeeklyAgenda events={events} onEdit={editEvent} onDelete={(item) => {
+              if (window.confirm(`¿Eliminar el evento "${item.title}"?`)) {
+                void execute(() => orbitRepository.deleteEvent(item.id));
+              }
+            }} />
             <section className="event-list-section" aria-labelledby="event-list-title">
               <div className="event-list-heading">
                 <h2 id="event-list-title"><ListChecks size={20} aria-hidden="true"/> Mis eventos <span>{events.length}</span></h2>

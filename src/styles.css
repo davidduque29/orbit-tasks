@@ -1076,3 +1076,19 @@ button:disabled { cursor:not-allowed; }
  .event-list-actions button { min-width:42px; min-height:44px; padding:8px; }
  .event-compact-copy { min-width:0; overflow-wrap:anywhere; }
 }
+
+/* Expandable day detail: compact by default even on busy days. */
+.week-events-toggle { width:100%; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:12px 4px; border:0; background:transparent; text-align:left; cursor:pointer; color:inherit; min-height:48px; }
+.week-events-toggle > span:first-child { display:inline-flex; align-items:center; gap:9px; text-transform:capitalize; }
+.week-events-toggle-meta { display:inline-flex; align-items:center; gap:9px; color:#7051d7; font-weight:650; }
+.week-events-list { display:grid; gap:6px; padding:8px 0 2px; }
+.week-events-list .week-event { display:flex; align-items:center; gap:10px; min-width:0; padding:10px; border:1px solid #e9e1fb; border-radius:12px; }
+.week-events-list .week-event strong { min-width:0; flex:1; overflow-wrap:anywhere; }
+.week-event-actions { display:inline-flex; align-items:center; gap:7px; margin-left:auto; }
+.week-event-actions button { min-height:44px; min-width:44px; display:inline-flex; justify-content:center; align-items:center; }
+@media(max-width:520px) {
+ .week-events-list .week-event { flex-wrap:wrap; gap:7px; }
+ .week-events-list .week-event strong { flex-basis:calc(100% - 145px); }
+ .week-event-actions { margin-left:auto; }
+ .week-event-actions button { min-width:42px; }
+}
