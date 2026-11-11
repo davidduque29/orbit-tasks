@@ -227,8 +227,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setTaskDue('');
   }
 
-  async function saveEvent(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function saveEvent(event?: FormEvent<HTMLFormElement>, skipDuplicateWarning = false) {
+    event?.preventDefault();
     const originalEvent = editingEventId ? events.find(item => item.id === editingEventId) : null;
     const originalStart = originalEvent ? toLocalInput(new Date(originalEvent.starts_at)) : null;
     const preservingPastDate = Boolean(originalEvent && eventStart === originalStart);
@@ -244,6 +244,20 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     const reminderError = preservingExpiredReminder ? null : validateReminder(eventSchedule);
     if (reminderError) { setFormError(reminderError); return; }
     setFormError('');
+    // Warn only for the same normalized title and exact start instant.
+    // Repeated meetings at different times are valid; editing excludes the current event.
+    const normalizedTitle = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('es');
+    const startInstant = new Date(eventStart).getTime();
+    const duplicate = events.find(item => item.id !== editingEventId
+      && item.status !== 'Cancelado'
+      && normalizedTitle(item.title) === normalizedTitle(eventTitle)
+      && new Date(item.starts_at).getTime() === startInstant);
+    if (duplicate && !skipDuplicateWarning) {
+      askConfirmation('Posible evento duplicado',
+        'Ya existe un evento con el mismo título, fecha y hora. ¿Quieres guardarlo de todos modos?',
+        () => { void saveEvent(undefined, true); });
+      return;
+    }
     const payload = {
       title: eventTitle.trim(),
       description: eventDescription.trim(),
@@ -682,11 +696,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       {confirmation && (
         <div className="modal-backdrop" role="presentation" onClick={() => setConfirmation(null)}>
           <section className="modal orbit-detail-modal" role="alertdialog" aria-modal="true" aria-labelledby="orbit-confirm-title" aria-describedby="orbit-confirm-message" onClick={(event) => event.stopPropagation()}>
-            <h2 id="orbit-confirm-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{confirmation.title === 'Descartar cambios' ? <AlertTriangle size={22} color="#d97706" aria-hidden="true" /> : <Trash2 size={22} color="#dc2626" aria-hidden="true" />}{confirmation.title}</h2>
+            <h2 id="orbit-confirm-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{(confirmation.title === 'Descartar cambios' || confirmation.title === 'Posible evento duplicado') ? <AlertTriangle size={22} color="#d97706" aria-hidden="true" /> : <Trash2 size={22} color="#dc2626" aria-hidden="true" />}{confirmation.title}</h2>
             <p id="orbit-confirm-message">{confirmation.message}</p>
             <div className="orbit-event-save-footer" style={{ display: 'flex', gap: 12 }}>
               <button type="button" style={{ background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' }} onClick={() => setConfirmation(null)}>Cancelar</button>
-              <button type="button" style={{ background: confirmation.title === 'Descartar cambios' ? '#b45309' : '#dc2626', color: '#fff', border: 'none' }} onClick={() => { const action = confirmation.action; setConfirmation(null); action(); }}>{confirmation.title === 'Descartar cambios' ? 'Descartar cambios' : confirmation.title}</button>
+              <button type="button" style={{ background: (confirmation.title === 'Descartar cambios' || confirmation.title === 'Posible evento duplicado') ? '#b45309' : '#dc2626', color: '#fff', border: 'none' }} onClick={() => { const action = confirmation.action; setConfirmation(null); action(); }}>{confirmation.title === 'Descartar cambios' ? 'Descartar cambios' : confirmation.title === 'Posible evento duplicado' ? 'Guardar de todos modos' : confirmation.title}</button>
             </div>
           </section>
         </div>
