@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Bell, CalendarClock, Check, CheckCircle2, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, CheckSquare, Circle, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
+import { parsePendingItems } from '../domain/pendingChecklist';
 import { ReminderModal } from './ReminderModal';
 import { NO_REMINDER, reminderSummary, validateReminder, type ReminderSchedule, type RecurrenceRule } from '../domain/reminders';
 
@@ -98,6 +99,8 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [categoryId, setCategoryId] = useState('');
   const [reminder, setReminder] = useState<ReminderSchedule>(NO_REMINDER);
   const [quickTitle, setQuickTitle] = useState('');
+  const quickListPreview = useMemo(() => parsePendingItems(quickTitle), [quickTitle]);
+  const editorListPreview = useMemo(() => parsePendingItems(title), [title]);
   const [historySeriesId, setHistorySeriesId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
 
@@ -436,6 +439,8 @@ export function NotesBoard({ userId }: { userId: string }) {
           aria-label="Agregar pendiente rápido"><Plus size={19}/></button>
       </div>
       {voiceHint && !quickTitle.trim() && <p className="quick-listening" role="status">{voiceHint}</p>}
+      <small className="field-help">Separa varios elementos con comas y los convertiremos automáticamente en una lista.</small>
+      {quickListPreview.length > 0 && <div className="pending-list-preview" role="status"><strong>Vista previa de lista ({quickListPreview.length})</strong><ul>{quickListPreview.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul><small>Vista previa: la lista todavía no se guarda como elementos independientes.</small></div>}
       <div className="quick-capture-bottom reminder-capture-bottom">
         <button type="button" className="quick-options-toggle reminder-options-toggle"
           aria-expanded={quickOptionsOpen} aria-controls="quick-reminder-details"
@@ -658,7 +663,9 @@ export function NotesBoard({ userId }: { userId: string }) {
           <label><span className="form-label-icon"><ListTodo size={16}/>Título *</span>
             <input required minLength={2} maxLength={TITLE_MAX} placeholder="Ej.: Llamar a mamá" value={title} spellCheck lang="es"
               onChange={event => setTitle(event.target.value.slice(0, TITLE_MAX))}/>
-            <span className="field-counter">{title.length}/{TITLE_MAX} caracteres</span></label>
+            <span className="field-counter">{title.length}/{TITLE_MAX} caracteres</span>
+            <small className="field-help">Separa varios elementos con comas y los convertiremos automáticamente en una lista.</small></label>
+          {editorListPreview.length > 0 && <div className="pending-list-preview" role="status"><strong>Vista previa de lista ({editorListPreview.length})</strong><ul>{editorListPreview.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul><small>Vista previa: todavía no se guarda como elementos independientes.</small></div>}
           <label><span className="form-label-icon"><Tag size={16}/>Categoría opcional</span>
             <select value={categoryId} onChange={event => setCategoryId(event.target.value)}>
               <option value="">Sin categoría</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
