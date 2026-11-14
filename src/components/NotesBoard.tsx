@@ -103,6 +103,12 @@ export function NotesBoard({ userId }: { userId: string }) {
   const editorListPreview = useMemo(() => parsePendingItems(title), [title]);
   const [historySeriesId, setHistorySeriesId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
+  const [expandedLists, setExpandedLists] = useState<Set<string>>(() => new Set());
+  const toggleListExpansion = (id: string) => setExpandedLists(previous => {
+    const next = new Set(previous);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   useEffect(() => () => {
     if (voiceTimeout.current !== null) window.clearTimeout(voiceTimeout.current);
@@ -498,6 +504,19 @@ export function NotesBoard({ userId }: { userId: string }) {
             {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
           </small>
         </button>
+        {parsePendingItems(note.title).length >= 2 && <div className="pending-checklist-disclosure">
+          <button type="button" className="outline pending-checklist-toggle"
+            aria-expanded={expandedLists.has(note.id)} aria-controls={`pending-list-${note.id}`}
+            onClick={() => toggleListExpansion(note.id)}>
+            <ListTodo size={15} aria-hidden="true"/>
+            {expandedLists.has(note.id) ? 'Ocultar' : 'Ver lista'}
+            {expandedLists.has(note.id) ? <ChevronUp size={15} aria-hidden="true"/> : <ChevronDown size={15} aria-hidden="true"/>}
+          </button>
+          <small>{parsePendingItems(note.title).length} elementos</small>
+          {expandedLists.has(note.id) && <ul id={`pending-list-${note.id}`} className="pending-checklist-items">
+            {parsePendingItems(note.title).map((item, index) => <li key={`${note.id}-${index}`}>{item}</li>)}
+          </ul>}
+        </div>}
         <div className="note-actions">
           {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
@@ -541,6 +560,19 @@ export function NotesBoard({ userId }: { userId: string }) {
             {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
           </small>
         </button>
+        {parsePendingItems(note.title).length >= 2 && <div className="pending-checklist-disclosure">
+          <button type="button" className="outline pending-checklist-toggle"
+            aria-expanded={expandedLists.has(note.id)} aria-controls={`pending-list-${note.id}`}
+            onClick={() => toggleListExpansion(note.id)}>
+            <ListTodo size={15} aria-hidden="true"/>
+            {expandedLists.has(note.id) ? 'Ocultar' : 'Ver lista'}
+            {expandedLists.has(note.id) ? <ChevronUp size={15} aria-hidden="true"/> : <ChevronDown size={15} aria-hidden="true"/>}
+          </button>
+          <small>{parsePendingItems(note.title).length} elementos</small>
+          {expandedLists.has(note.id) && <ul id={`pending-list-${note.id}`} className="pending-checklist-items">
+            {parsePendingItems(note.title).map((item, index) => <li key={`${note.id}-${index}`}>{item}</li>)}
+          </ul>}
+        </div>}
         <div className="note-actions">
           {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
