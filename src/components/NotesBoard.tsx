@@ -408,6 +408,37 @@ export function NotesBoard({ userId }: { userId: string }) {
       if(updateError) throw updateError;
     }, 'Lista actualizada.');
   }
+  async function addListItem(noteId: string) {
+    const value = window.prompt('Nuevo elemento de la lista:')?.trim();
+    if (!value) return;
+    if (value.length > 500) { setError('El elemento no puede superar 500 caracteres.'); return; }
+    const existing = itemsFor(noteId);
+    await perform(async () => {
+      const {error: insertError} = await supabase.from('note_items').insert({
+        note_id: noteId, owner_id: userId, content: value,
+        position: existing.length ? Math.max(...existing.map(item => item.position)) + 1 : 0,
+      });
+      if (insertError) throw insertError;
+    }, 'Elemento agregado.');
+  }
+  async function editListItem(item: NoteItem) {
+    const value = window.prompt('Editar elemento:', item.content)?.trim();
+    if (!value || value === item.content) return;
+    if (value.length > 500) { setError('El elemento no puede superar 500 caracteres.'); return; }
+    await perform(async () => {
+      const {error: updateError} = await supabase.from('note_items')
+        .update({content: value, updated_at: new Date().toISOString()})
+        .eq('id', item.id).eq('owner_id', userId);
+      if (updateError) throw updateError;
+    }, 'Elemento actualizado.');
+  }
+  async function deleteListItem(item: NoteItem) {
+    if (!window.confirm(`¿Eliminar "${item.content}" de la lista?`)) return;
+    await perform(async () => {
+      const {error: deleteError} = await supabase.from('note_items').delete().eq('id', item.id).eq('owner_id', userId);
+      if (deleteError) throw deleteError;
+    }, 'Elemento eliminado.');
+  }
   function remove(note: Note) {
     setMessage('');
     setError('');
@@ -547,7 +578,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           </button>
           <small>{itemsFor(note.id).filter(item => item.completed).length}/{itemsFor(note.id).length} completados</small>
           {expandedLists.has(note.id) && <ul id={`pending-list-${note.id}`} className="pending-checklist-items">
-            {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/>{item.content}</label></li>)}
+            {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/><span style={{textDecoration:item.completed?'line-through':'none'}}>{item.content}</span></label><button type="button" className="outline" disabled={busy} aria-label={`Editar ${item.content}`} onClick={() => void editListItem(item)}><Pencil size={14}/></button><button type="button" className="outline" disabled={busy} aria-label={`Eliminar ${item.content}`} onClick={() => void deleteListItem(item)}><X size={14}/></button></li>)}<li><button type="button" className="outline" disabled={busy} onClick={() => void addListItem(note.id)}><Plus size={14}/> Agregar elemento</button></li>
           </ul>}
         </div>}
         <div className="note-actions">
@@ -601,7 +632,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           </button>
           <small>{itemsFor(note.id).filter(item => item.completed).length}/{itemsFor(note.id).length} completados</small>
           {expandedLists.has(note.id) && <ul id={`pending-list-${note.id}`} className="pending-checklist-items">
-            {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/>{item.content}</label></li>)}
+            {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/><span style={{textDecoration:item.completed?'line-through':'none'}}>{item.content}</span></label><button type="button" className="outline" disabled={busy} aria-label={`Editar ${item.content}`} onClick={() => void editListItem(item)}><Pencil size={14}/></button><button type="button" className="outline" disabled={busy} aria-label={`Eliminar ${item.content}`} onClick={() => void deleteListItem(item)}><X size={14}/></button></li>)}<li><button type="button" className="outline" disabled={busy} onClick={() => void addListItem(note.id)}><Plus size={14}/> Agregar elemento</button></li>
           </ul>}
         </div>}
         <div className="note-actions">
