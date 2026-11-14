@@ -330,13 +330,13 @@ export function NotesBoard({ userId }: { userId: string }) {
     };
     const done = await perform(async () => {
       const result = editId
-        ? await supabase.from('notes').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId).eq('owner_id', userId)
-        : await supabase.from('notes').insert({ ...payload, owner_id: userId });
+        ? await supabase.from('notes').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId).eq('owner_id', userId).select('id').single()
+        : await supabase.from('notes').insert({ ...payload, owner_id: userId }).select('id').single();
       if (result.error) throw result.error;
-      if (editorListPreview.length && !editId) {
-        const { data: created } = await supabase.from('notes').select('id').eq('owner_id', userId).eq('title', cleaned).order('created_at', {ascending: false}).limit(1).single();
-        if (created) {
-          const {error: itemError} = await supabase.from('note_items').insert(editorListPreview.map((content, position) => ({note_id: created.id, owner_id: userId, content, position})));
+      if (editorListPreview.length && result.data) {
+        const existing = editId ? itemsFor(editId) : [];
+        if (existing.length === 0) {
+          const {error: itemError} = await supabase.from('note_items').insert(editorListPreview.map((content, position) => ({note_id: result.data.id, owner_id: userId, content, position})));
           if (itemError) throw itemError;
         }
       }
