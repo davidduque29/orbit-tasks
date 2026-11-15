@@ -394,6 +394,20 @@ export function NotesBoard({ userId }: { userId: string }) {
       if(updateError) throw updateError;
     }, 'Lista actualizada.');
   }
+  async function convertLegacyList(note: Note) {
+    const entries = parsePendingItems(note.title);
+    if (entries.length < 2 || itemsFor(note.id).length > 0) return;
+    if (!window.confirm(`¿Convertir este pendiente en una lista de ${entries.length} elementos? Se conservarán el título, el recordatorio y la fecha.`)) return;
+    const converted = await perform(async () => {
+      const { error: conversionError } = await supabase.rpc('save_pending_with_items', {
+        p_title: note.title, p_category_id: note.category_id,
+        p_reminder_at: note.reminder_at, p_recurrence_rule: note.recurrence_rule,
+        p_items: entries, p_note_id: note.id, p_reset_recurrence: false,
+      });
+      if (conversionError) throw conversionError;
+    }, 'Lista convertida. Ya puedes marcar cada elemento.');
+    if (converted) setExpandedLists(previous => new Set([...previous, note.id]));
+  }
   async function addListItem(noteId: string) {
     const value = window.prompt('Nuevo elemento de la lista:')?.trim();
     if (!value) return;
@@ -556,6 +570,11 @@ export function NotesBoard({ userId }: { userId: string }) {
             {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
           </small>
         </button>
+        {itemsFor(note.id).length === 0 && !note.completed && parsePendingItems(note.title).length > 1 && <div className="pending-checklist-disclosure">
+          <button type="button" className="outline pending-checklist-toggle" disabled={busy} onClick={() => void convertLegacyList(note)}>
+            <ListTodo size={15}/> Convertir en lista ({parsePendingItems(note.title).length} ítems) <ChevronDown size={15}/>
+          </button>
+        </div>}
         {itemsFor(note.id).length > 0 && <div className="pending-checklist-disclosure">
           <button type="button" className="outline pending-checklist-toggle" aria-expanded={expandedLists.has(note.id)}
             aria-controls={`pending-list-${note.id}`} onClick={() => toggleListExpansion(note.id)}>
