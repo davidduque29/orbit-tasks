@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Bell, CalendarClock, Check, CheckCircle2, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, CheckSquare, Circle, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
+import { parsePendingItems } from '../domain/pendingChecklist';
 import { ReminderModal } from './ReminderModal';
 import { NO_REMINDER, reminderSummary, validateReminder, type ReminderSchedule, type RecurrenceRule } from '../domain/reminders';
 
@@ -11,7 +12,9 @@ type Note = {
   completed_at: string | null; created_at: string; updated_at: string;
   recurrence_rule: RecurrenceRule | null;
   recurrence_series_id: string | null; recurrence_next_created: boolean;
+  deleted_at: string | null;
 };
+type NoteItem = { id: string; note_id: string; owner_id: string; content: string; position: number; completed: boolean };
 type Category = { id: string; name: string; color: string; owner_id: string };
 const TITLE_MAX = 80;
 
@@ -70,6 +73,8 @@ function errorText(error: unknown) {
 
 export function NotesBoard({ userId }: { userId: string }) {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [noteItems, setNoteItems] = useState<NoteItem[]>([]);
+  const [trashOpen, setTrashOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -98,8 +103,16 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [categoryId, setCategoryId] = useState('');
   const [reminder, setReminder] = useState<ReminderSchedule>(NO_REMINDER);
   const [quickTitle, setQuickTitle] = useState('');
+  const quickListPreview = useMemo(() => parsePendingItems(quickTitle), [quickTitle]);
+  const editorListPreview = useMemo(() => parsePendingItems(title), [title]);
   const [historySeriesId, setHistorySeriesId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
+  const [expandedLists, setExpandedLists] = useState<Set<string>>(() => new Set());
+  const toggleListExpansion = (id: string) => setExpandedLists(previous => {
+    const next = new Set(previous);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   useEffect(() => () => {
     if (voiceTimeout.current !== null) window.clearTimeout(voiceTimeout.current);
@@ -193,14 +206,17 @@ export function NotesBoard({ userId }: { userId: string }) {
   }
 
   const load = useCallback(async () => {
-    const [notesResponse, categoriesResponse] = await Promise.all([
+    const [notesResponse, categoriesResponse, itemsResponse] = await Promise.all([
       supabase.from('notes').select('*').eq('owner_id', userId).order('created_at', { ascending: false }),
       supabase.from('note_categories').select('*').eq('owner_id', userId).order('name'),
+      supabase.from('note_items').select('*').eq('owner_id', userId).order('position'),
     ]);
     if (notesResponse.error) throw notesResponse.error;
     if (categoriesResponse.error) throw categoriesResponse.error;
+    if (itemsResponse.error) throw itemsResponse.error;
     setNotes((notesResponse.data || []) as Note[]);
     setCategories((categoriesResponse.data || []) as Category[]);
+    setNoteItems((itemsResponse.data || []) as NoteItem[]);
   }, [userId]);
 
   useEffect(() => {
@@ -227,29 +243,32 @@ export function NotesBoard({ userId }: { userId: string }) {
     };
   }, [load]);
 
-  const filtered = useMemo(() => notes.filter(note => {
+  const visibleNotes = useMemo(() => notes.filter(note => !note.deleted_at), [notes]);
+  const trashedNotes = useMemo(() => notes.filter(note => Boolean(note.deleted_at)), [notes]);
+  const filtered = useMemo(() => visibleNotes.filter(note => {
     if (section === 'pending') return statusTab === 'active' ? !note.completed : note.completed;
     return section === 'search' && note.title.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es'));
-  }), [notes, section, statusTab, search]);
+  }), [visibleNotes, section, statusTab, search]);
+  const itemsFor = (id: string) => noteItems.filter(item => item.note_id === id);
   const seriesKey = (note: Note) => note.recurrence_series_id ?? note.id;
-  const recurringSeries = useMemo(() => new Set(notes.filter(note =>
+  const recurringSeries = useMemo(() => new Set(visibleNotes.filter(note =>
     note.recurrence_rule || note.recurrence_series_id
-  ).map(note => note.recurrence_series_id ?? note.id)), [notes]);
-  const activeSeries = useMemo(() => new Set(notes.filter(note =>
+  ).map(note => note.recurrence_series_id ?? note.id)), [visibleNotes]);
+  const activeSeries = useMemo(() => new Set(visibleNotes.filter(note =>
     note.recurrence_rule !== null && !note.recurrence_next_created
-  ).map(note => note.recurrence_series_id ?? note.id)), [notes]);
+  ).map(note => note.recurrence_series_id ?? note.id)), [visibleNotes]);
   const recurrenceStatus = (note: Note) => !recurringSeries.has(seriesKey(note))
     ? null : activeSeries.has(seriesKey(note)) ? 'Repetición activa' : 'Repetición detenida';
   const historyRows = useMemo(() => historySeriesId
-    ? notes.filter(note => seriesKey(note) === historySeriesId)
+    ? visibleNotes.filter(note => seriesKey(note) === historySeriesId)
       .sort((a, b) => (b.reminder_at ?? '').localeCompare(a.reminder_at ?? ''))
-    : [], [historySeriesId, notes]);
+    : [], [historySeriesId, visibleNotes]);
   const historyCompleted = historyRows.filter(note => note.completed).length;
   const historyOverdue = historyRows.filter(note => !note.completed &&
     note.reminder_at && new Date(note.reminder_at).getTime() < Date.now()).length;
   const historyUpcoming = historyRows.length - historyCompleted - historyOverdue;
-  const completedCount = notes.filter((note) => note.completed).length;
-  const activeCount = notes.length - completedCount;
+  const completedCount = visibleNotes.filter((note) => note.completed).length;
+  const activeCount = visibleNotes.length - completedCount;
 
   const openEditor = (note?: Note) => {
     setError('');
@@ -273,12 +292,11 @@ export function NotesBoard({ userId }: { userId: string }) {
     const reminderError = validateReminder(quickReminder);
     if (reminderError) { setError(reminderError); return; }
     if (await perform(async () => {
-      const { error: insertError } = await supabase.from('notes').insert({
-        owner_id: userId, kind: 'pending', title: cleaned,
-        category_id: null, reminder_at: quickReminder.at,
-        recurrence_rule: quickReminder.rule,
+      const { error: saveError } = await supabase.rpc('save_pending_with_items', {
+        p_title: cleaned, p_category_id: null, p_reminder_at: quickReminder.at,
+        p_recurrence_rule: quickReminder.rule, p_items: quickListPreview,
       });
-      if (insertError) throw insertError;
+      if (saveError) throw saveError;
     }, 'Pendiente creado.')) {
       setQuickTitle(''); setVoiceHint(''); setQuickReminder(NO_REMINDER); setStatusTab('active');
     }
@@ -300,16 +318,14 @@ export function NotesBoard({ userId }: { userId: string }) {
       setError('Esta ocurrencia ya generó la siguiente. Edita la ocurrencia más reciente para cambiar el horario de repetición.');
       return;
     }
-    const payload = {
-      kind: previousNote?.kind ?? 'pending', title: cleaned,
-      category_id: categoryId || null, reminder_at: reminder.at, recurrence_rule: reminder.rule,
-      ...(scheduleChanged ? { recurrence_next_created: false } : {}),
-    };
     const done = await perform(async () => {
-      const result = editId
-        ? await supabase.from('notes').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId).eq('owner_id', userId)
-        : await supabase.from('notes').insert({ ...payload, owner_id: userId });
-      if (result.error) throw result.error;
+      const { error: saveError } = await supabase.rpc('save_pending_with_items', {
+        p_title: cleaned, p_category_id: categoryId || null,
+        p_reminder_at: reminder.at, p_recurrence_rule: reminder.rule,
+        p_items: editorListPreview, p_note_id: editId,
+        p_reset_recurrence: Boolean(scheduleChanged),
+      });
+      if (saveError) throw saveError;
     }, editId ? 'Registro actualizado.' : 'Registro creado.');
     if (done) setEditorOpen(false);
   }
@@ -342,29 +358,72 @@ export function NotesBoard({ userId }: { userId: string }) {
   }
   async function deleteOccurrence(note: Note) {
     const done = await perform(async () => {
-      const { error: deleteError } = await supabase.from('notes')
-        .delete().eq('id', note.id).eq('owner_id', userId);
-      if (deleteError) throw deleteError;
-    }, 'Ocurrencia eliminada. Las demás se conservan.');
-    if (done) {
-      setDeleteTarget(null);
-      if (historySeriesId === seriesKey(note)) setHistorySeriesId(null);
-    }
+      const { error: updateError } = await supabase.from('notes')
+        .update({deleted_at: new Date().toISOString()}).eq('id', note.id).eq('owner_id', userId);
+      if (updateError) throw updateError;
+    }, 'Pendiente enviado a la papelera.');
+    if (done) { setDeleteTarget(null); setHistorySeriesId(null); }
   }
   async function deleteEntireSeries(note: Note) {
     const key = seriesKey(note);
-    const count = notes.filter(item => seriesKey(item) === key).length;
-    if (!window.confirm(`¿Eliminar definitivamente las ${count} ocurrencias de esta serie, incluido su historial? Esta acción no se puede deshacer.`)) return;
+    if (!window.confirm('¿Enviar toda la serie a la papelera?')) return;
     const done = await perform(async () => {
-      const { error: deleteError } = await supabase.from('notes').delete()
-        .eq('owner_id', userId)
+      const {error: updateError} = await supabase.from('notes')
+        .update({deleted_at: new Date().toISOString()}).eq('owner_id', userId)
         .or(`id.eq.${key},recurrence_series_id.eq.${key}`);
+      if (updateError) throw updateError;
+    }, 'Serie enviada a la papelera.');
+    if (done) {setDeleteTarget(null);setHistorySeriesId(null);}
+  }
+  async function restoreNote(note: Note) {
+    await perform(async () => {
+      const {error: updateError} = await supabase.from('notes').update({deleted_at: null}).eq('id',note.id).eq('owner_id',userId);
+      if(updateError) throw updateError;
+    }, 'Pendiente recuperado.');
+  }
+  async function permanentlyDelete(note: Note) {
+    if (!window.confirm(`¿Eliminar definitivamente "${note.title}"? No se podrá recuperar.`)) return;
+    await perform(async () => {
+      const {error: deleteError} = await supabase.from('notes').delete().eq('id',note.id).eq('owner_id',userId).not('deleted_at','is',null);
+      if(deleteError) throw deleteError;
+    }, 'Pendiente eliminado definitivamente.');
+  }
+  async function toggleItem(item: NoteItem) {
+    await perform(async () => {
+      const {error: updateError} = await supabase.from('note_items').update({completed: !item.completed,updated_at:new Date().toISOString()}).eq('id',item.id).eq('owner_id',userId);
+      if(updateError) throw updateError;
+    }, 'Lista actualizada.');
+  }
+  async function addListItem(noteId: string) {
+    const value = window.prompt('Nuevo elemento de la lista:')?.trim();
+    if (!value) return;
+    if (value.length > 500) { setError('El elemento no puede superar 500 caracteres.'); return; }
+    const existing = itemsFor(noteId);
+    await perform(async () => {
+      const {error: insertError} = await supabase.from('note_items').insert({
+        note_id: noteId, owner_id: userId, content: value,
+        position: existing.length ? Math.max(...existing.map(item => item.position)) + 1 : 0,
+      });
+      if (insertError) throw insertError;
+    }, 'Elemento agregado.');
+  }
+  async function editListItem(item: NoteItem) {
+    const value = window.prompt('Editar elemento:', item.content)?.trim();
+    if (!value || value === item.content) return;
+    if (value.length > 500) { setError('El elemento no puede superar 500 caracteres.'); return; }
+    await perform(async () => {
+      const {error: updateError} = await supabase.from('note_items')
+        .update({content: value, updated_at: new Date().toISOString()})
+        .eq('id', item.id).eq('owner_id', userId);
+      if (updateError) throw updateError;
+    }, 'Elemento actualizado.');
+  }
+  async function deleteListItem(item: NoteItem) {
+    if (!window.confirm(`¿Eliminar "${item.content}" de la lista?`)) return;
+    await perform(async () => {
+      const {error: deleteError} = await supabase.from('note_items').delete().eq('id', item.id).eq('owner_id', userId);
       if (deleteError) throw deleteError;
-    }, 'Serie completa eliminada.');
-    if (done) {
-      setDeleteTarget(null);
-      if (historySeriesId === key) setHistorySeriesId(null);
-    }
+    }, 'Elemento eliminado.');
   }
   function remove(note: Note) {
     setMessage('');
@@ -416,6 +475,8 @@ export function NotesBoard({ userId }: { userId: string }) {
   return <section className="notes-board">
     <div className="heading notes-heading"><div><h1>Pendientes</h1><p>Captura rápidamente tus actividades personales.</p></div>
     </div>
+    <button type="button" className="outline" onClick={() => setTrashOpen(v => !v)}><Trash2 size={16}/> {trashOpen ? 'Cerrar papelera' : `Papelera (${trashedNotes.length})`}</button>
+    {trashOpen && <section className="card notes-trash"><h2>Papelera</h2><p>Recupera tus pendientes o elimínalos definitivamente.</p>{trashedNotes.map(note => <div key={note.id} className="notes-trash-item"><strong>{note.title}</strong><button type="button" className="outline" disabled={busy} onClick={() => void restoreNote(note)}>Restaurar</button><button type="button" disabled={busy} onClick={() => void permanentlyDelete(note)}>Eliminar definitivamente</button></div>)}{!trashedNotes.length && <p>No hay pendientes eliminados.</p>}</section>}
     <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
       <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17}/> Pendientes</button>
       <button type="button" className={section === 'search' ? 'selected' : ''} aria-current={section === 'search' ? 'page' : undefined} onClick={() => setSection('search')}><Search size={17}/> Buscar</button>
@@ -436,6 +497,8 @@ export function NotesBoard({ userId }: { userId: string }) {
           aria-label="Agregar pendiente rápido"><Plus size={19}/></button>
       </div>
       {voiceHint && !quickTitle.trim() && <p className="quick-listening" role="status">{voiceHint}</p>}
+      <small className="field-help">Separa varios elementos con comas y los convertiremos automáticamente en una lista.</small>
+      {quickListPreview.length > 0 && <div className="pending-list-preview" role="status"><strong>Vista previa de lista ({quickListPreview.length})</strong><ul>{quickListPreview.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul><small>Vista previa: la lista todavía no se guarda como elementos independientes.</small></div>}
       <div className="quick-capture-bottom reminder-capture-bottom">
         <button type="button" className="quick-options-toggle reminder-options-toggle"
           aria-expanded={quickOptionsOpen} aria-controls="quick-reminder-details"
@@ -493,6 +556,17 @@ export function NotesBoard({ userId }: { userId: string }) {
             {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
           </small>
         </button>
+        {itemsFor(note.id).length > 0 && <div className="pending-checklist-disclosure">
+          <button type="button" className="outline pending-checklist-toggle" aria-expanded={expandedLists.has(note.id)}
+            aria-controls={`pending-list-${note.id}`} onClick={() => toggleListExpansion(note.id)}>
+            <ListTodo size={15}/> {expandedLists.has(note.id) ? 'Ocultar' : 'Ver lista'}
+            {expandedLists.has(note.id) ? <ChevronUp size={15}/> : <ChevronDown size={15}/>}
+          </button>
+          <small>{itemsFor(note.id).filter(item => item.completed).length}/{itemsFor(note.id).length} completados</small>
+          {expandedLists.has(note.id) && <ul id={`pending-list-${note.id}`} className="pending-checklist-items">
+            {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/><span style={{textDecoration:item.completed?'line-through':'none'}}>{item.content}</span></label><button type="button" className="outline" disabled={busy} aria-label={`Editar ${item.content}`} onClick={() => void editListItem(item)}><Pencil size={14}/></button><button type="button" className="outline" disabled={busy} aria-label={`Eliminar ${item.content}`} onClick={() => void deleteListItem(item)}><X size={14}/></button></li>)}<li><button type="button" className="outline" disabled={busy} onClick={() => void addListItem(note.id)}><Plus size={14}/> Agregar elemento</button></li>
+          </ul>}
+        </div>}
         <div className="note-actions">
           {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
@@ -536,6 +610,17 @@ export function NotesBoard({ userId }: { userId: string }) {
             {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
           </small>
         </button>
+        {itemsFor(note.id).length > 0 && <div className="pending-checklist-disclosure">
+          <button type="button" className="outline pending-checklist-toggle" aria-expanded={expandedLists.has(note.id)}
+            aria-controls={`pending-list-${note.id}`} onClick={() => toggleListExpansion(note.id)}>
+            <ListTodo size={15}/> {expandedLists.has(note.id) ? 'Ocultar' : 'Ver lista'}
+            {expandedLists.has(note.id) ? <ChevronUp size={15}/> : <ChevronDown size={15}/>}
+          </button>
+          <small>{itemsFor(note.id).filter(item => item.completed).length}/{itemsFor(note.id).length} completados</small>
+          {expandedLists.has(note.id) && <ul id={`pending-list-${note.id}`} className="pending-checklist-items">
+            {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/><span style={{textDecoration:item.completed?'line-through':'none'}}>{item.content}</span></label><button type="button" className="outline" disabled={busy} aria-label={`Editar ${item.content}`} onClick={() => void editListItem(item)}><Pencil size={14}/></button><button type="button" className="outline" disabled={busy} aria-label={`Eliminar ${item.content}`} onClick={() => void deleteListItem(item)}><X size={14}/></button></li>)}<li><button type="button" className="outline" disabled={busy} onClick={() => void addListItem(note.id)}><Plus size={14}/> Agregar elemento</button></li>
+          </ul>}
+        </div>}
         <div className="note-actions">
           {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
@@ -658,7 +743,9 @@ export function NotesBoard({ userId }: { userId: string }) {
           <label><span className="form-label-icon"><ListTodo size={16}/>Título *</span>
             <input required minLength={2} maxLength={TITLE_MAX} placeholder="Ej.: Llamar a mamá" value={title} spellCheck lang="es"
               onChange={event => setTitle(event.target.value.slice(0, TITLE_MAX))}/>
-            <span className="field-counter">{title.length}/{TITLE_MAX} caracteres</span></label>
+            <span className="field-counter">{title.length}/{TITLE_MAX} caracteres</span>
+            <small className="field-help">Separa varios elementos con comas y los convertiremos automáticamente en una lista.</small></label>
+          {editorListPreview.length > 0 && <div className="pending-list-preview" role="status"><strong>Vista previa de lista ({editorListPreview.length})</strong><ul>{editorListPreview.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul><small>Vista previa: todavía no se guarda como elementos independientes.</small></div>}
           <label><span className="form-label-icon"><Tag size={16}/>Categoría opcional</span>
             <select value={categoryId} onChange={event => setCategoryId(event.target.value)}>
               <option value="">Sin categoría</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
