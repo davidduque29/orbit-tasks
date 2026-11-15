@@ -745,7 +745,7 @@ export function NotesBoard({ userId }: { userId: string }) {
               onChange={event => setTitle(event.target.value.slice(0, TITLE_MAX))}/>
             <span className="field-counter">{title.length}/{TITLE_MAX} caracteres</span>
             <small className="field-help">Separa varios elementos con comas y los convertiremos automáticamente en una lista.</small></label>
-          {editorListPreview.length > 0 && <div className="pending-list-preview" role="status"><strong>Vista previa de lista ({editorListPreview.length})</strong><ul>{editorListPreview.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul><small>Vista previa: todavía no se guarda como elementos independientes.</small></div>}
+          {editorListPreview.length > 0 && <div className="pending-list-preview" role="status"><strong>Vista previa de lista ({editorListPreview.length})</strong><ul>{editorListPreview.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul><small>Al guardar, estos elementos tendrán casillas independientes.</small></div>}
           <label><span className="form-label-icon"><Tag size={16}/>Categoría opcional</span>
             <select value={categoryId} onChange={event => setCategoryId(event.target.value)}>
               <option value="">Sin categoría</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
