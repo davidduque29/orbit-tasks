@@ -1,5 +1,5 @@
 /* Orbit Tasks PWA: cache only public shell assets, never Supabase API or user data. */
-const CACHE_NAME = 'orbit-tasks-static-v2';
+const CACHE_NAME = 'orbit-tasks-static-v3';
 const SCOPE = '/orbit-tasks/';
 const APP_SHELL = SCOPE;
 const STATIC_ASSET = /\.(?:js|css|png|webp|svg|ico|webmanifest)$/i;
