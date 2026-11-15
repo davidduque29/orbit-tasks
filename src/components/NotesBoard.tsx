@@ -572,7 +572,7 @@ export function NotesBoard({ userId }: { userId: string }) {
         </button>
         {itemsFor(note.id).length === 0 && !note.completed && parsePendingItems(note.title).length > 1 && <div className="pending-checklist-disclosure">
           <button type="button" className="outline pending-checklist-toggle" disabled={busy} onClick={() => void convertLegacyList(note)}>
-            <ListTodo size={15}/> Convertir en lista ({parsePendingItems(note.title).length} ítems) <ChevronDown size={15}/>
+            <ListTodo size={15}/> Ver lista ({parsePendingItems(note.title).length} ítems) <ChevronDown size={15}/>
           </button>
         </div>}
         {itemsFor(note.id).length > 0 && <div className="pending-checklist-disclosure">
