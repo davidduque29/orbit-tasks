@@ -1106,3 +1106,34 @@ button:disabled { cursor:not-allowed; }
  .week-event-info > strong { flex-basis:100%; }
  .week-events-list .week-event .week-event-actions { align-self:center; }
 }
+
+
+/* Checklist cards: keep the disclosure below the title and action buttons on mobile. */
+.note-list-item { flex-wrap:wrap; }
+.note-list-item > .note-summary { min-width:0; }
+.note-list-item > .pending-checklist-disclosure {
+  flex:0 0 100%; width:100%; min-width:0; order:4;
+  display:flex; flex-direction:column; gap:8px;
+  margin-top:2px;
+}
+.pending-checklist-toggle {
+  width:100%; min-width:0; display:flex; align-items:center; justify-content:center;
+  gap:8px; padding:10px 12px; border:1px solid #cbbdfb;
+  border-radius:12px; background:#f3eeff; color:#6445c7;
+  font-size:13px; font-weight:700; white-space:normal; overflow-wrap:anywhere;
+}
+.pending-checklist-disclosure > small { color:#6b628a; font-size:12px; }
+.pending-checklist-items { list-style:none; margin:0; padding:0; width:100%; }
+.pending-checklist-items li {
+  display:flex; align-items:center; gap:8px; padding:8px 0;
+  border-bottom:1px solid #eeebf6; min-width:0;
+}
+.pending-checklist-items li label { display:flex; align-items:center; gap:10px; flex:1; min-width:0; overflow-wrap:anywhere; }
+.pending-checklist-items li input { flex-shrink:0; accent-color:#7454e5; }
+.pending-checklist-items li button { flex-shrink:0; }
+@media (max-width: 480px) {
+  .note-list-item { gap:8px; }
+  .note-list-item > .note-summary { flex:1 1 0; }
+  .note-list-item > .note-actions { flex:0 0 auto; }
+  .pending-checklist-toggle { font-size:12px; }
+}
