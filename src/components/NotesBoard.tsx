@@ -318,11 +318,6 @@ export function NotesBoard({ userId }: { userId: string }) {
       setError('Esta ocurrencia ya generó la siguiente. Edita la ocurrencia más reciente para cambiar el horario de repetición.');
       return;
     }
-    const payload = {
-      kind: previousNote?.kind ?? 'pending', title: cleaned,
-      category_id: categoryId || null, reminder_at: reminder.at, recurrence_rule: reminder.rule,
-      ...(scheduleChanged ? { recurrence_next_created: false } : {}),
-    };
     const done = await perform(async () => {
       const { error: saveError } = await supabase.rpc('save_pending_with_items', {
         p_title: cleaned, p_category_id: categoryId || null,
