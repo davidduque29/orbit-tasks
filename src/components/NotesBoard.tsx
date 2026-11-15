@@ -292,16 +292,11 @@ export function NotesBoard({ userId }: { userId: string }) {
     const reminderError = validateReminder(quickReminder);
     if (reminderError) { setError(reminderError); return; }
     if (await perform(async () => {
-      const { data: created, error: insertError } = await supabase.from('notes').insert({
-        owner_id: userId, kind: 'pending', title: cleaned,
-        category_id: null, reminder_at: quickReminder.at,
-        recurrence_rule: quickReminder.rule,
-      }).select('id').single();
-      if (insertError) throw insertError;
-      if (quickListPreview.length && created) {
-        const { error: itemsError } = await supabase.from('note_items').insert(quickListPreview.map((content, position) => ({note_id: created.id, owner_id: userId, content, position})));
-        if (itemsError) throw itemsError;
-      }
+      const { error: saveError } = await supabase.rpc('save_pending_with_items', {
+        p_title: cleaned, p_category_id: null, p_reminder_at: quickReminder.at,
+        p_recurrence_rule: quickReminder.rule, p_items: quickListPreview,
+      });
+      if (saveError) throw saveError;
     }, 'Pendiente creado.')) {
       setQuickTitle(''); setVoiceHint(''); setQuickReminder(NO_REMINDER); setStatusTab('active');
     }
@@ -329,17 +324,13 @@ export function NotesBoard({ userId }: { userId: string }) {
       ...(scheduleChanged ? { recurrence_next_created: false } : {}),
     };
     const done = await perform(async () => {
-      const result = editId
-        ? await supabase.from('notes').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId).eq('owner_id', userId).select('id').single()
-        : await supabase.from('notes').insert({ ...payload, owner_id: userId }).select('id').single();
-      if (result.error) throw result.error;
-      if (editorListPreview.length && result.data) {
-        const existing = editId ? itemsFor(editId) : [];
-        if (existing.length === 0) {
-          const {error: itemError} = await supabase.from('note_items').insert(editorListPreview.map((content, position) => ({note_id: result.data.id, owner_id: userId, content, position})));
-          if (itemError) throw itemError;
-        }
-      }
+      const { error: saveError } = await supabase.rpc('save_pending_with_items', {
+        p_title: cleaned, p_category_id: categoryId || null,
+        p_reminder_at: reminder.at, p_recurrence_rule: reminder.rule,
+        p_items: editorListPreview, p_note_id: editId,
+        p_reset_recurrence: Boolean(scheduleChanged),
+      });
+      if (saveError) throw saveError;
     }, editId ? 'Registro actualizado.' : 'Registro creado.');
     if (done) setEditorOpen(false);
   }
