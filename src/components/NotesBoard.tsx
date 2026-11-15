@@ -498,7 +498,7 @@ export function NotesBoard({ userId }: { userId: string }) {
       </div>
       {voiceHint && !quickTitle.trim() && <p className="quick-listening" role="status">{voiceHint}</p>}
       <small className="field-help">Separa varios elementos con comas y los convertiremos automáticamente en una lista.</small>
-      {quickListPreview.length > 0 && <div className="pending-list-preview" role="status"><strong>Vista previa de lista ({quickListPreview.length})</strong><ul>{quickListPreview.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul><small>Vista previa: la lista todavía no se guarda como elementos independientes.</small></div>}
+      {quickListPreview.length > 0 && <div className="pending-list-preview" role="status"><strong>Vista previa de lista ({quickListPreview.length})</strong><ul>{quickListPreview.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul><small>Al guardar, cada elemento tendrá su propia casilla para marcarlo.</small></div>}
       <div className="quick-capture-bottom reminder-capture-bottom">
         <button type="button" className="quick-options-toggle reminder-options-toggle"
           aria-expanded={quickOptionsOpen} aria-controls="quick-reminder-details"
