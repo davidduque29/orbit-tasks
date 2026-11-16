@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Camera, UploadCloud, MoreVertical, UserRound } from 'lucide-react';
+import { Camera, UploadCloud, MoreVertical } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { DeviceManager } from './DeviceManager';
 
@@ -151,7 +151,7 @@ export function UserProfile({ userId, email, embedded = false, onAccountClick }:
       {!embedded && <button type="button" className="profile-trigger" aria-label={`Abrir menú de cuenta de ${displayName}`} aria-haspopup="true" aria-expanded={menuOpen}
         onClick={() => setMenuOpen((current) => !current)}>
         {avatar(false)}
-        <span className="profile-trigger-identity"><strong className="profile-trigger-name" title={displayName}>{displayName}</strong><small><UserRound size={13} aria-hidden="true"/> Mi cuenta</small></span>
+        <span className="profile-trigger-identity"><strong className="profile-trigger-name" title={displayName}><span className="profile-trigger-name-full">{displayName}</span><span className="profile-trigger-name-short">{displayName.trim().split(/\s+/)[0]}</span></strong></span>
         <MoreVertical size={19} className="profile-trigger-chevron" aria-hidden="true"/>
       </button>}
       {(embedded || menuOpen) && (
