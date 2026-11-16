@@ -1326,3 +1326,43 @@ button:disabled { cursor:not-allowed; }
   .notes-board .notes-section-tabs { grid-template-columns:1fr 1fr; }
   .notes-board .notes-section-tabs > .notes-trash-tab { grid-column:1/-1; }
 }
+
+
+/* Voice entry: consistent Orbit purple outline and high-contrast microphone */
+.quick-capture-main .quick-voice {
+  color:#e11d48;
+  background:#fff;
+  border:2px solid #7c2aed;
+  transition:background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.quick-capture-main .quick-voice:hover,
+.quick-capture-main .quick-voice:focus-visible {
+  background:#fff4f7;
+  box-shadow:0 0 0 3px #7c2aed22;
+}
+.quick-capture-main .quick-voice.is-listening {
+  background:#e11d48;
+  color:#fff;
+  border:2px solid #e11d48;
+  animation:orbit-voice-pulse 1.6s ease-in-out infinite;
+}
+.quick-capture-main .quick-voice.is-listening:hover,
+.quick-capture-main .quick-voice.is-listening:focus-visible {
+  background:#be123c;
+  border-color:#be123c;
+}
+.quick-listening.is-active {
+  display:flex; align-items:center; gap:8px;
+  color:#a11237; font-weight:700; font-size:13px;
+}
+.voice-live-dot {
+  display:inline-block; flex:none; width:8px; height:8px;
+  border-radius:50%; background:#e11d48;
+}
+@keyframes orbit-voice-pulse {
+  0%,100% { box-shadow:0 0 0 0 #e11d4840; }
+  50% { box-shadow:0 0 0 6px #e11d4800; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .quick-capture-main .quick-voice.is-listening { animation:none; }
+}
