@@ -212,3 +212,23 @@
 [data-theme="dark"] .notes-board .quick-capture-bottom .reminder-options-toggle:focus-visible {
  outline:3px solid #c4b5fd;outline-offset:2px;
 }
+
+/* Project progress and lower navigation contrast, rebased after reminder fix. */
+[data-theme="dark"] .project-card-redesign .project-compact-metrics,
+[data-theme="dark"] .project-card-redesign .project-compact-metrics *,
+[data-theme="dark"] .project-card-redesign .project-compact-details > p {color:#d5ddef!important;opacity:1!important;}
+[data-theme="dark"] .project-card-redesign .project-compact-totals > span {background:#f8f7ff!important;color:#30364e!important;}
+[data-theme="dark"] .project-card-redesign .project-compact-totals > span strong {color:#222c43!important;}
+[data-theme="dark"] .project-card-redesign .project-compact-totals > span svg {color:#7056d0!important;}
+[data-theme="dark"] .project-card-redesign .project-compact-percent {color:#d8b4fe!important;}
+[data-theme="dark"] .workspace-navigation-home,
+[data-theme="dark"] .workspace-navigation-home svg,
+[data-theme="dark"] .workspace-navigation .workspace-navigation-item:not(.is-active),
+[data-theme="dark"] .workspace-navigation .workspace-navigation-item:not(.is-active) svg,
+[data-theme="dark"] .workspace-navigation-heading {color:#d8c9f9!important;opacity:1!important;}
+[data-theme="dark"] .workspace-navigation .workspace-navigation-item.is-active,
+[data-theme="dark"] .workspace-navigation .workspace-navigation-item.is-active svg {color:#fff!important;opacity:1!important;}
+[data-theme="dark"] .event-list-card h2,
+[data-theme="dark"] .event-list-card h3,
+[data-theme="dark"] .event-list-card .list-row,
+[data-theme="dark"] .event-list-card .list-row strong {color:#f1f5f9!important;opacity:1!important;}
