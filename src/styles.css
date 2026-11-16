@@ -1194,3 +1194,49 @@ button:disabled { cursor:not-allowed; }
   .quick-capture-highlight .quick-capture-main { gap:6px; }
   .quick-capture-highlight .quick-capture-main > button { flex-basis:37px; width:37px; height:39px; }
 }
+
+
+/* Checklist mobile layout: explicit columns prevent iOS flex min-content collapse. */
+.notes-board .note-list-item > .pending-checklist-disclosure {
+  align-self:stretch; box-sizing:border-box; min-width:0; max-width:100%;
+}
+.notes-board .pending-checklist-items {
+  display:flex; flex-direction:column; gap:0; width:100%;
+  max-width:100%; min-width:0; margin:0; padding:0; list-style:none;
+}
+.notes-board .pending-checklist-items > li {
+  display:grid; grid-template-columns:minmax(0,1fr) 36px 36px;
+  align-items:center; column-gap:8px; width:100%; min-width:0;
+  box-sizing:border-box; padding:11px 0; margin:0;
+  border-bottom:1px solid #eeebf6;
+}
+.notes-board .pending-checklist-items > li > label {
+  display:flex; align-items:center; gap:10px;
+  width:auto; min-width:0; max-width:100%; margin:0;
+  padding:0; font-size:14px; font-weight:500; line-height:1.45;
+  overflow:hidden; overflow-wrap:normal; word-break:normal;
+}
+.notes-board .pending-checklist-items > li > label > input[type="checkbox"] {
+  flex:0 0 20px; width:20px; height:20px; margin:0;
+}
+.notes-board .pending-checklist-items > li > label > span {
+  display:block; flex:1 1 auto; width:auto; min-width:0; max-width:100%;
+  white-space:normal; overflow-wrap:break-word; word-break:normal;
+  line-height:1.45; text-align:left;
+}
+.notes-board .pending-checklist-items > li > button {
+  width:36px; height:36px; min-width:0; margin:0; padding:7px;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.notes-board .pending-checklist-items > li:last-child {
+  display:block; padding:12px 0 2px;
+}
+.notes-board .pending-checklist-items > li:last-child > button {
+  display:inline-flex; width:auto; max-width:100%; height:auto;
+  min-height:38px; padding:8px 12px; gap:7px;
+  white-space:normal; text-align:left; overflow-wrap:normal;
+}
+@media (max-width:380px) {
+  .notes-board .pending-checklist-items > li { grid-template-columns:minmax(0,1fr) 32px 32px; column-gap:5px; }
+  .notes-board .pending-checklist-items > li > button { width:32px; height:34px; }
+}
