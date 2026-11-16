@@ -1281,3 +1281,48 @@ button:disabled { cursor:not-allowed; }
   .notes-board .notes-search-body { padding:11px 10px; }
   .notes-board .notes-list > .note-list-item { border-left-width:4px; }
 }
+
+
+/* Unified Pendientes / Buscar layout, November 2026 */
+.notes-board .notes-section-tabs {
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;
+  align-items:stretch; gap:8px; width:100%;
+}
+.notes-board .notes-section-tabs > button { min-width:0; }
+.notes-board .notes-section-tabs > .notes-trash-tab {
+  width:auto; white-space:nowrap; padding-inline:12px; font-size:13px;
+  background:#fff; border:1.5px solid #cdbbf5; color:#6639bd;
+}
+.notes-board .notes-section-tabs > .notes-trash-tab.selected {
+  background:#f0e9ff; border-color:#9560f5;
+}
+.notes-board .notes-list-heading {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 14px; margin:14px 0 12px;
+  border:1px solid #dfd1ff; border-radius:14px;
+  background:#efe7ff; color:#5130a8; font-size:17px; font-weight:750;
+}
+.notes-board .notes-list > .note-list-item {
+  border:2.5px solid #9560f5; border-left:3px solid #9560f5;
+  border-radius:17px; background:#fff;
+  box-shadow:0 3px 11px #5b2ec61c;
+}
+.notes-board .notes-list > .note-list-item:has(.note-done) {
+  border:2px solid #d6d1e3; box-shadow:0 2px 7px #5b2ec60d;
+}
+.notes-board .notes-list > .note-list-item:focus-within {
+  border-color:#7034db; box-shadow:0 0 0 3px #7848ef25;
+}
+@media (max-width:480px) {
+  .notes-board .notes-section-tabs { gap:6px; }
+  .notes-board .notes-section-tabs > button { padding:10px 5px; font-size:12px; }
+  .notes-board .notes-section-tabs > .notes-trash-tab {
+    padding-inline:8px; font-size:12px;
+  }
+  .notes-board .notes-list-heading { font-size:15px; }
+  .notes-board .notes-list > .note-list-item { border-left-width:3px; }
+}
+@media (max-width:350px) {
+  .notes-board .notes-section-tabs { grid-template-columns:1fr 1fr; }
+  .notes-board .notes-section-tabs > .notes-trash-tab { grid-column:1/-1; }
+}
