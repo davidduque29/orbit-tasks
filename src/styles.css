@@ -1471,3 +1471,21 @@ button:disabled { cursor:not-allowed; }
  .task-board .heading { gap:10px; }
  .board-list-intro { margin-top:17px; }
 }
+
+/* Project tasks: consistent tabs and card hierarchy */
+.orbit-brand-stack{display:flex;flex-direction:column;gap:2px;min-width:0}
+.orbit-header-clock{font-size:clamp(10px,2.6vw,12px);font-weight:400;color:var(--muted,#777);white-space:nowrap}
+.orbit-board-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:14px 0}
+.orbit-board-tabs button{min-width:0;display:flex;align-items:center;justify-content:center;gap:5px;padding:11px 5px;font-size:12px;border:1px solid #d9d1eb;border-radius:12px;background:var(--card,#fff);color:inherit}
+.orbit-board-tabs button.active{background:#ede5ff;color:#6722c7;border-color:#9565e5;font-weight:700}
+.orbit-board-panel{border:2px solid #7925e8;border-radius:16px;overflow:hidden;margin:12px 0 22px;min-width:0}
+.orbit-board-panel-title{display:flex;align-items:center;gap:9px;margin:0!important;padding:13px 15px;background:#7925e8;color:#fff!important;font-size:16px!important}
+.orbit-board-panel-body{padding:14px;min-width:0}
+.orbit-board-primary-actions,.orbit-task-card-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.orbit-board-primary-actions{margin-bottom:16px}
+.orbit-task-card-actions{padding:8px 12px 12px}
+.orbit-task-card-actions button{display:inline-flex;gap:5px;align-items:center;font-size:12px;padding:7px 10px}
+.orbit-board-panel .board-toolbar{margin:0 0 14px}
+.orbit-board-panel .board-switch{margin:0 0 12px}
+.orbit-board-panel .task-compact-card{min-width:0}
+@media(max-width:420px){.orbit-board-primary-actions button{font-size:12px;padding:9px}.orbit-board-tabs button{font-size:11px;gap:3px}}
