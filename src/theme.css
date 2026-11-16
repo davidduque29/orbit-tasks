@@ -274,3 +274,19 @@
  .header .orbit-header-actions .profile-root:not(.profile-embedded) { max-width:42vw; }
  .header .orbit-theme-toggle { flex-basis:32px; width:32px; height:32px; }
 }
+
+/* Compact header profile: no redundant subtitle; first name on narrow screens. */
+.header .profile-trigger-name-short { display:none; }
+.header .profile-trigger-identity { min-width:0; }
+.header .profile-trigger-chevron { flex-shrink:0; }
+@media(max-width:700px) {
+ .header .orbit-header-actions .profile-root:not(.profile-embedded) { max-width:min(215px,48vw); }
+ .header .profile-trigger { gap:6px; padding-right:7px; }
+ .header .profile-trigger-name-full { display:none; }
+ .header .profile-trigger-name-short { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ .header .profile-trigger-identity { min-width:0; }
+}
+@media(max-width:390px) {
+ .header .orbit-header-actions .profile-root:not(.profile-embedded) { max-width:45vw; }
+ .header .profile-trigger .profile-avatar:not(.large) { width:32px; height:32px; flex-basis:32px; }
+}
