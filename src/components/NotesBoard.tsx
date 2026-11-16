@@ -75,6 +75,9 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [noteItems, setNoteItems] = useState<NoteItem[]>([]);
   const [trashOpen, setTrashOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [trashPage, setTrashPage] = useState(1);
+  const pageSize = 5;
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -274,6 +277,14 @@ export function NotesBoard({ userId }: { userId: string }) {
     if (section === 'pending') return statusTab === 'active' ? !note.completed : note.completed;
     return section === 'search' && note.title.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es'));
   }), [visibleNotes, section, statusTab, search]);
+  useEffect(() => { setPage(1); }, [section, statusTab, search]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pagedNotes = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const trashPages = Math.max(1, Math.ceil(trashedNotes.length / pageSize));
+  const currentTrashPage = Math.min(trashPage, trashPages);
+  const pagedTrash = trashedNotes.slice((currentTrashPage - 1) * pageSize, currentTrashPage * pageSize);
+  const pagination = (current: number, total: number, count: number, change: (value: number) => void) => total > 1 ? <nav className="orbit-pagination" aria-label="Páginas de registros"><small>Mostrando {(current - 1) * pageSize + 1}–{Math.min(current * pageSize, count)} de {count}</small><div><button type="button" className="outline" disabled={current === 1} onClick={() => change(current - 1)}>Anterior</button><span>Página {current} de {total}</span><button type="button" className="outline" disabled={current === total} onClick={() => change(current + 1)}>Siguiente</button></div></nav> : null;
   const itemsFor = (id: string) => noteItems.filter(item => item.note_id === id);
   const seriesKey = (note: Note) => note.recurrence_series_id ?? note.id;
   const recurringSeries = useMemo(() => new Set(visibleNotes.filter(note =>
@@ -500,7 +511,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   return <section className="notes-board">
     <div className="heading notes-heading"><div><h1>Pendientes</h1><p>Captura rápidamente tus actividades personales.</p></div>
     </div>
-    {trashOpen && <section className="card notes-trash"><h2>Papelera</h2><p>Recupera tus pendientes o elimínalos definitivamente.</p>{trashedNotes.map(note => <div key={note.id} className="notes-trash-item"><strong>{note.title}</strong><button type="button" className="outline" disabled={busy} onClick={() => void restoreNote(note)}>Restaurar</button><button type="button" disabled={busy} onClick={() => void permanentlyDelete(note)}>Eliminar definitivamente</button></div>)}{!trashedNotes.length && <p>No hay pendientes eliminados.</p>}</section>}
+    {trashOpen && <section className="card notes-trash"><h2>Papelera</h2><p>Recupera tus pendientes o elimínalos definitivamente.</p>{pagedTrash.map(note => <div key={note.id} className="notes-trash-item"><strong>{note.title}</strong><button type="button" className="outline" disabled={busy} onClick={() => void restoreNote(note)}>Restaurar</button><button type="button" disabled={busy} onClick={() => void permanentlyDelete(note)}>Eliminar definitivamente</button></div>)}{!trashedNotes.length && <p>No hay pendientes eliminados.</p>}{pagination(currentTrashPage, trashPages, trashedNotes.length, setTrashPage)}</section>}
     <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
       <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17}/> Pendientes</button>
       <button type="button" className={section === 'search' ? 'selected' : ''} aria-current={section === 'search' ? 'page' : undefined} onClick={() => setSection('search')}><Search size={17}/> Buscar</button>
@@ -567,7 +578,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     {!loading && <>
     <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> Listado de pendientes ({filtered.length})</h2>
     <div className="notes-list">
-      {filtered.map(note => <article className="card note-list-item" key={note.id}>
+      {pagedNotes.map(note => <article className="card note-list-item" key={note.id}>
         <div className="note-check">
           {note.kind === 'pending'
             ? <input type="checkbox" aria-label={`Marcar como ${note.completed ? 'pendiente' : 'completado'}: ${note.title}`}
@@ -612,7 +623,7 @@ export function NotesBoard({ userId }: { userId: string }) {
         <h2>{statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2>
         <p>No hay registros en esta sección.</p>
       </div>}
-    </div></>}
+    </div>{pagination(currentPage, totalPages, filtered.length, setPage)}</>}
     </>}
     {section === 'search' && <div className="notes-search-pane">
       <div className="notes-search-highlight">
@@ -630,7 +641,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     {!loading && <>
     <h2 className="notes-list-heading"><Search size={19} aria-hidden="true"/> Resultados de búsqueda ({filtered.length})</h2>
     <div className="notes-list">
-      {filtered.map(note => <article className="card note-list-item" key={note.id}>
+      {pagedNotes.map(note => <article className="card note-list-item" key={note.id}>
         <div className="note-check">
           {note.kind === 'pending'
             ? <input type="checkbox" aria-label={`Marcar como ${note.completed ? 'pendiente' : 'completado'}: ${note.title}`}
@@ -675,9 +686,9 @@ export function NotesBoard({ userId }: { userId: string }) {
         <h2>{section === 'search' ? 'Sin resultados' : statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2>
         <p>{section === 'search' ? 'No hay pendientes con ese título.' : 'No hay registros en esta sección.'}</p>
       </div>}
-    </div></>}
+    </div>{pagination(currentPage, totalPages, filtered.length, setPage)}</>}
     </div>}
-    {section === 'categories' && <div className="notes-categories-pane">
+{section === 'categories' && <div className="notes-categories-pane">
       <h2>Categorías</h2>
       <form className="note-category-form" onSubmit={event => void saveCategory(event)}>
         <label>Nombre<input required maxLength={35} value={newCategory} placeholder="Ej.: Droguería" onChange={event => setNewCategory(event.target.value)}/></label>
