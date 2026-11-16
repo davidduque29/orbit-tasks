@@ -375,7 +375,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             </button>
           ))}
         </nav>
-      </details>}}
+      </details>}
       <main className="workspace">
         {feedback && <p role="status" className="feedback">{feedback}</p>}
         {error && <p role="alert" className="error">{error}</p>}
