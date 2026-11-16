@@ -1498,3 +1498,18 @@ button:disabled { cursor:not-allowed; }
 .orbit-pagination>div{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
 .orbit-pagination button{padding:8px 12px;font-size:12px;min-width:75px}
 .orbit-pagination button:disabled{opacity:.4;cursor:not-allowed}
+
+/* Papelera de Pendientes: mobile-safe card layout */
+.notes-trash{min-width:0;overflow:hidden}
+.notes-trash-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;min-width:0;padding:12px 0;border-bottom:1px solid #eee8fa}
+.notes-trash-item>strong{min-width:0;overflow-wrap:anywhere;word-break:normal}
+.notes-trash-item>button{min-width:0;width:auto;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.25;padding:9px 11px;font-size:12px}
+@media(max-width:600px){
+ .notes-trash-item{grid-template-columns:minmax(0,1fr) auto auto;gap:6px}
+ .notes-trash-item>button{padding:9px 7px;font-size:11px}
+}
+@media(max-width:430px){
+ .notes-trash-item{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .notes-trash-item>strong{grid-column:1/-1;font-size:14px}
+ .notes-trash-item>button{width:100%;font-size:12px;padding:10px 7px}
+}
