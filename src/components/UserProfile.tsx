@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Camera, UploadCloud, ChevronDown, UserRound } from 'lucide-react';
+import { Camera, UploadCloud, MoreVertical, UserRound } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { DeviceManager } from './DeviceManager';
 
@@ -148,11 +148,11 @@ export function UserProfile({ userId, email, embedded = false, onAccountClick }:
 
   return (
     <div ref={menuRef} className={embedded ? "profile-root profile-embedded" : "profile-root"}>
-      {!embedded && <button type="button" className="profile-trigger" aria-label={`Perfil de ${displayName}`} aria-haspopup="true" aria-expanded={menuOpen}
+      {!embedded && <button type="button" className="profile-trigger" aria-label={`Abrir menú de cuenta de ${displayName}`} aria-haspopup="true" aria-expanded={menuOpen}
         onClick={() => setMenuOpen((current) => !current)}>
         {avatar(false)}
         <span className="profile-trigger-identity"><strong className="profile-trigger-name" title={displayName}>{displayName}</strong><small><UserRound size={13} aria-hidden="true"/> Mi cuenta</small></span>
-        <ChevronDown size={16} className="profile-trigger-chevron" aria-hidden="true"/>
+        <MoreVertical size={19} className="profile-trigger-chevron" aria-hidden="true"/>
       </button>}
       {(embedded || menuOpen) && (
         <div className={embedded ? "profile-dropdown profile-inline" : "profile-dropdown"}>
