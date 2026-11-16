@@ -361,21 +361,6 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           ))}
         </div>
       </nav>}
-      {space === 'projects' && view !== 'projects' && <details className="project-section-menu">
-        <summary><LayoutDashboard size={17} aria-hidden="true" /> Secciones de proyectos <ChevronDown size={16} aria-hidden="true" /></summary>
-        <nav aria-label="Secciones de proyectos">
-          {([
-            ['dashboard', 'Inicio', House], ['projects', 'Mis proyectos', FolderKanban],
-            ['board', 'Tablero', LayoutDashboard], ['reports', 'Reportes', ChartNoAxesCombined],
-          ] as const).map(([key, title, Icon]) => (
-            <button type="button" key={key} aria-current={view === key ? 'page' : undefined}
-              className={view === key ? 'active' : ''}
-              onClick={(event) => { setView(key); event.currentTarget.closest('details')?.removeAttribute('open'); }}>
-              <Icon size={17} aria-hidden="true" />{title}
-            </button>
-          ))}
-        </nav>
-      </details>}
       <main className="workspace">
         {feedback && <p role="status" className="feedback">{feedback}</p>}
         {error && <p role="alert" className="error">{error}</p>}
@@ -435,18 +420,6 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           <>
             <div className="heading project-list-heading"><div><h1>Mis proyectos</h1><p>{projects.length} {projects.length === 1 ? "proyecto registrado" : "proyectos registrados"}</p></div>
               <div className="project-heading-actions">
-                <details className="project-section-menu project-section-menu-inline">
-                  <summary aria-label="Abrir Inicio, Tablero y Reportes" title="Más secciones"><LayoutDashboard size={18} aria-hidden="true" /><ChevronDown size={14} aria-hidden="true" /></summary>
-                  <nav aria-label="Otras secciones de proyectos">
-                    {([
-                      ['dashboard', 'Inicio', House], ['board', 'Tablero', LayoutDashboard], ['reports', 'Reportes', ChartNoAxesCombined],
-                    ] as const).map(([key, title, Icon]) => (
-                      <button type="button" key={key} onClick={(event) => { setView(key); event.currentTarget.closest('details')?.removeAttribute('open'); }}>
-                        <Icon size={17} aria-hidden="true" />{title}
-                      </button>
-                    ))}
-                  </nav>
-                </details>
                 <button onClick={() => openEditor('project')}><Plus size={17} aria-hidden="true" /> Nuevo proyecto</button>
               </div></div>
             <div className="project-search"><Search size={18} aria-hidden="true" />
@@ -515,6 +488,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               })}
             </div>
             {projects.length === 0 && <Empty message="Aún no tienes proyectos." />}
+            <nav className="project-utility-links" aria-label="Otras vistas de proyectos">
+              <button type="button" onClick={() => setView('dashboard')}><House size={16} aria-hidden="true" /> Inicio</button>
+              <button type="button" onClick={() => { setSelectedProject(''); setView('board'); }}><LayoutDashboard size={16} aria-hidden="true" /> Tablero general</button>
+              <button type="button" onClick={() => setView('reports')}><ChartNoAxesCombined size={16} aria-hidden="true" /> Reportes</button>
+            </nav>
           </>
         )}
 
