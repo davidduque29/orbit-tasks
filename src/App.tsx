@@ -114,6 +114,9 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [projectSearch, setProjectSearch] = useState('');
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [clockNow, setClockNow] = useState(() => new Date());
+  useEffect(() => { const timer = window.setInterval(() => setClockNow(new Date()), 30000); return () => window.clearInterval(timer); }, []);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskProjectId, setTaskProjectId] = useState('');
@@ -213,15 +216,19 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       ?? validateOptionalText(taskDescription, 'descripción de tarea', FIELD_LIMITS.taskDescription);
     if (validation) { setFormError(validation); return; }
     setFormError('');
-    const saved = await execute(() => orbitRepository.createTask(userId, {
+    const saved = await execute(() => editingTaskId ? orbitRepository.updateTask(editingTaskId, {
       project_id: taskProjectId,
       title: taskTitle.trim(),
       description: taskDescription.trim(),
       priority: taskPriority,
       status: 'Por hacer',
       estimated_due_at: taskDue ? new Date(taskDue).toISOString() : null,
+    }) : orbitRepository.createTask(userId, {
+      project_id: taskProjectId, title: taskTitle.trim(), description: taskDescription.trim(), priority: taskPriority,
+      status: 'Por hacer', estimated_due_at: taskDue ? new Date(taskDue).toISOString() : null,
     }));
     if (!saved) return;
+    setEditingTaskId(null);
     setTaskTitle('');
     setTaskDescription('');
     setTaskDue('');
@@ -283,7 +290,20 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     await execute(() => orbitRepository.updateTaskStatus(taskId, status, resolution));
   }
 
+  function editTask(item: Task) {
+    setEditingTaskId(item.id);
+    setTaskTitle(item.title);
+    setTaskDescription(item.description);
+    setTaskProjectId(item.project_id);
+    setTaskPriority(item.priority);
+    setTaskDue(item.estimated_due_at ? toLocalInput(new Date(item.estimated_due_at)) : '');
+    setFormError('');
+    setEditorDirty(false);
+    setEditor('task');
+  }
+
   function openTaskForProject(projectId: string) {
+    setEditingTaskId(null);
     setSelectedProject(projectId);
     setFormError('');
     setTaskProjectId(projectId);
@@ -321,6 +341,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       setEventAvisos(null);
           setAllowWeekendEvent(false);
     }
+    if (type === 'task') { setEditingTaskId(null); setTaskTitle(''); setTaskDescription(''); setTaskDue(''); }
     if (type === 'task' && projects.length === 0) {
       setFeedback('Crea primero un proyecto para registrar tareas.');
       setEditor('project');
@@ -333,7 +354,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   return (
     <div className="shell">
       <header className="header">
-        <div className="wordmark"><img className="brand-logo" src="/orbit-tasks/orbit-approved.webp" alt="" /><span>Orbit <b>Tasks</b></span></div>
+        <div className="wordmark"><img className="brand-logo" src="/orbit-tasks/orbit-approved.webp" alt="" /><span className="orbit-brand-stack"><span>Orbit <b>Tasks</b></span><small className="orbit-header-clock">{clockNow.toLocaleString("es-CO", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })}</small></span></div>
         <div className="orbit-header-actions">
 
           <UserProfile userId={userId} email={email} onAccountClick={() => { setView('account'); setAccountSection('profile'); }} />
@@ -509,8 +530,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             selectedProject={selectedProject}
             onProjectChange={setSelectedProject}
             onNewTask={() => openEditor('task')}
+            onEdit={editTask}
+            onRestore={async id => { await execute(() => orbitRepository.restoreTask(id)); }}
+            onPermanentDelete={async id => { askConfirmation('Eliminar definitivamente', 'Esta tarea no podrá recuperarse. ¿Continuar?', () => { void execute(() => orbitRepository.deleteTaskPermanently(id)); }); }}
+            onDeleteAll={async () => { if (!selectedProject) return; askConfirmation('Eliminar todas las tareas', 'Las tareas de este proyecto pasarán a la papelera. ¿Continuar?', () => { void execute(() => orbitRepository.deleteTasks(selectedProject)); }); }}
             onSave={changeStatus}
-            onDelete={async (taskId) => { askConfirmation('Eliminar tarea', '¿Eliminar esta tarea? Esta acción no se puede deshacer.', () => { void execute(() => orbitRepository.deleteTask(taskId)); }); }}
+            onDelete={async (taskId) => { askConfirmation('Eliminar tarea', '¿Mover esta tarea a la papelera? Podrás recuperarla.', () => { void execute(() => orbitRepository.deleteTask(taskId)); }); }}
             saving={saving}
             userId={userId}
           />
@@ -717,7 +742,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
       {editor && (
         <div className="modal-backdrop" role="presentation" onClick={closeEditor}>
-          <section onChange={() => setEditorDirty(true)} className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label={editor === 'event' ? (editingEventId ? 'Editar evento' : 'Nuevo evento') : editor === 'task' ? 'Nueva tarea' : 'Nuevo proyecto'}
+          <section onChange={() => setEditorDirty(true)} className="modal orbit-detail-modal orbit-create-modal" role="dialog" aria-modal="true" aria-label={editor === 'event' ? (editingEventId ? 'Editar evento' : 'Nuevo evento') : editor === 'task' ? (editingTaskId ? 'Editar tarea' : 'Nueva tarea') : 'Nuevo proyecto'}
             onClick={(event) => event.stopPropagation()}>
             <Sparkles className="orbit-modal-watermark" size={175} aria-hidden="true" />
             <header className="orbit-modal-header">
@@ -758,7 +783,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 </select></label>
               <label><span className="form-label-icon"><Clock3 size={16} aria-hidden="true"/>Fecha estimada</span>
                 <input type="datetime-local" value={taskDue} onChange={(event) => setTaskDue(event.target.value)} /></label>
-              <button disabled={saving}>{saving ? 'Guardando…' : 'Guardar tarea'}</button>
+              <button disabled={saving}>{saving ? 'Guardando…' : editingTaskId ? 'Guardar cambios' : 'Guardar tarea'}</button>
             </form>}
             {editor === 'event' && <form onSubmit={(event) => void saveEvent(event)} className="orbit-validated-form orbit-event-editor-form">
               <label><span className="form-label-icon"><Type size={16} aria-hidden="true"/>Título del evento <small>*</small></span>
