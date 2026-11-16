@@ -169,7 +169,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
   return (
     <section className="task-board">
       <div className="heading">
-        <div><h1>Tablero de tareas</h1><p>Busca, filtra y consulta las resoluciones.</p></div>
+        <div><h2 className="task-board-subheading">Gestión de tareas</h2><p>Busca, filtra y consulta las tareas y sus resoluciones.</p></div>
         <button type="button" onClick={onNewTask}><Plus size={16} aria-hidden="true" /> Nueva tarea</button>
       </div>
       <div className="board-toolbar">
@@ -205,6 +205,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
           </select>
         </label>
       </div>
+      <div className="board-list-intro"><h2>Tareas del proyecto</h2><p>Consulta y organiza las tareas en lista o tablero Kanban.</p></div>
       <div className="board-switch">
         <div className="board-view-controls">
           <button type="button" className={view === 'list' ? '' : 'outline'} onClick={() => setView('list')}><List size={16} aria-hidden="true" /> Lista</button>
