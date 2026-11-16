@@ -1404,3 +1404,17 @@ button:disabled { cursor:not-allowed; }
  .project-card-redesign .project-compact-totals > span { padding:9px 4px; }
  .project-card-primary-actions button { font-size:12px; }
 }
+
+
+/* Projects: show list as default; secondary navigation stays discreet in header */
+.project-list-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.project-heading-actions { display:flex; align-items:center; gap:8px; }
+.project-heading-actions > button { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+.project-section-menu-inline { margin:0; padding:0; max-width:none; }
+.project-section-menu-inline > summary { min-width:42px; min-height:42px; padding:10px; justify-content:center; }
+.project-section-menu-inline > nav { left:auto; right:0; top:calc(100% + 5px); grid-template-columns:1fr; min-width:165px; }
+@media(max-width:520px) {
+ .project-list-heading { flex-wrap:wrap; align-items:flex-start; }
+ .project-heading-actions { width:100%; justify-content:space-between; }
+ .project-heading-actions > button { flex:1; }
+}
