@@ -519,13 +519,14 @@ export function NotesBoard({ userId }: { userId: string }) {
           value={quickTitle} onChange={event => { setQuickTitle(event.target.value.slice(0, TITLE_MAX)); setVoiceHint(''); }} spellCheck lang="es" required/>
         <button type="button" className={listening ? 'quick-voice is-listening' : 'quick-voice'}
           aria-label={listening ? 'Detener dictado' : 'Dictar pendiente por voz'}
-          aria-pressed={listening} onClick={toggleVoice} title={speechAvailable ? 'Dictar en español' : 'Activar dictado del teclado'}>
+          aria-pressed={listening} onClick={toggleVoice} title={listening ? 'Detener dictado' : speechAvailable ? 'Dictar en español' : 'Activar dictado del teclado'}>
           {listening ? <MicOff size={19}/> : <Mic size={19}/>}
         </button>
         <button type="submit" className="quick-create" disabled={busy || quickTitle.trim().length < 2}
           aria-label="Agregar pendiente rápido"><Plus size={19}/></button>
       </div>
-      {voiceHint && !quickTitle.trim() && <p className="quick-listening" role="status">{voiceHint}</p>}
+      {listening && <p className="quick-listening is-active" role="status" aria-live="polite"><span className="voice-live-dot" aria-hidden="true"/> Escuchando… Toca el micrófono para detener.</p>}
+      {!listening && voiceHint && <p className="quick-listening" role="status">{voiceHint}</p>}
       <small className="field-help">Separa varios elementos con comas y los convertiremos automáticamente en una lista.</small>
       {quickListPreview.length > 0 && <div className="pending-list-preview" role="status"><strong>Vista previa de lista ({quickListPreview.length})</strong><ul>{quickListPreview.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul><small>Al guardar, cada elemento tendrá su propia casilla para marcarlo.</small></div>}
       <div className="quick-capture-bottom reminder-capture-bottom">
