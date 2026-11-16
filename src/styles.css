@@ -1366,3 +1366,41 @@ button:disabled { cursor:not-allowed; }
 @media (prefers-reduced-motion:reduce) {
   .quick-capture-main .quick-voice.is-listening { animation:none; }
 }
+
+
+/* Projects redesign: one module selector, compact project cards, accessible overflow menus */
+.project-section-menu { position:relative; margin:8px auto 0; max-width:1100px; padding:0 20px; }
+.project-section-menu > summary { display:inline-flex; align-items:center; gap:8px; cursor:pointer; list-style:none; padding:9px 13px; border-radius:12px; color:#6545bf; font-size:13px; font-weight:700; background:#f4f0ff; }
+.project-section-menu > summary::-webkit-details-marker, .project-card-options > summary::-webkit-details-marker { display:none; }
+.project-section-menu > nav { position:absolute; top:100%; left:20px; z-index:15; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; padding:9px; background:white; border:1px solid #ddd3f9; border-radius:14px; box-shadow:0 10px 30px #36207126; min-width:min(320px,calc(100vw - 40px)); }
+.project-section-menu > nav button { display:flex; align-items:center; gap:8px; padding:11px; border-radius:9px; color:#554a78; background:transparent; font-size:13px; }
+.project-section-menu > nav button.active { background:#f0ebff; color:#673ed2; }
+.project-card-redesign { position:relative; padding:17px; border:1px solid #c9b9f3; border-radius:19px; box-shadow:0 7px 22px #4934a013; overflow:visible; }
+.project-card-top { display:flex; align-items:center; gap:8px; }
+.project-card-redesign .project-compact-summary { flex:1; min-width:0; padding:0; }
+.project-card-redesign .project-compact-copy { gap:4px; }
+.project-card-redesign .project-compact-copy strong { font-size:17px; }
+.project-card-description { font-size:12px; color:#788097; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.project-card-options { position:relative; flex:none; }
+.project-card-options > summary { display:grid; place-items:center; width:42px; height:42px; border-radius:50%; background:#f1ecff; color:#6b42d5; cursor:pointer; list-style:none; }
+.project-card-options-list { position:absolute; z-index:12; right:0; top:calc(100% + 5px); min-width:160px; background:#fff; border:1px solid #ddd2f7; border-radius:12px; box-shadow:0 10px 28px #30205c2a; padding:6px; }
+.project-card-options-list button { width:100%; display:flex; align-items:center; gap:9px; padding:11px 9px; background:transparent; color:#38314e; font-size:13px; text-align:left; border-radius:8px; }
+.project-card-options-list button:hover { background:#f5f1ff; }
+.project-card-options-list .project-option-danger { color:#c02b50; }
+.project-card-progress-label { display:flex; justify-content:space-between; margin:14px 0 7px; font-size:12px; color:#6c748b; }
+.project-card-progress-label strong { color:#7045d8; font-size:15px; }
+.project-card-redesign .project-progress-track { margin:0 0 13px; }
+.project-card-redesign .project-compact-totals { margin:0 0 14px; }
+.project-card-primary-actions { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.project-card-primary-actions button { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-radius:12px; padding:9px 7px; font-size:13px; font-weight:700; white-space:nowrap; }
+.project-card-primary-actions .project-open-board { color:white; background:linear-gradient(110deg,#7650e6,#632bd4); }
+.project-card-primary-actions .project-create-task { color:#6739d5; background:#faf8ff; border:1.5px solid #9e7af4; }
+.project-card-extra { margin-top:12px; padding:10px 0 0; border-top:1px solid #eee9fa; font-size:12px; color:#788097; }
+.project-card-extra p { margin:0; }
+@media(max-width:520px) {
+ .project-section-menu { padding:0 16px; }
+ .project-section-menu > nav { left:16px; }
+ .project-card-redesign { padding:13px; }
+ .project-card-redesign .project-compact-totals > span { padding:9px 4px; }
+ .project-card-primary-actions button { font-size:12px; }
+}
