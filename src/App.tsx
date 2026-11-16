@@ -221,7 +221,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       title: taskTitle.trim(),
       description: taskDescription.trim(),
       priority: taskPriority,
-      status: 'Por hacer',
+      status: tasks.find(item => item.id === editingTaskId)?.status ?? 'Por hacer',
       estimated_due_at: taskDue ? new Date(taskDue).toISOString() : null,
     }) : orbitRepository.createTask(userId, {
       project_id: taskProjectId, title: taskTitle.trim(), description: taskDescription.trim(), priority: taskPriority,
