@@ -35,6 +35,10 @@ export interface OrbitRepository {
   createTask(userId: string, input: NewTask): Promise<Task>;
   updateTaskStatus(taskId: string, status: TaskStatus, resolution: string): Promise<void>;
   deleteTask(taskId: string): Promise<void>;
+  restoreTask(taskId: string): Promise<void>;
+  deleteTaskPermanently(taskId: string): Promise<void>;
+  updateTask(taskId: string, input: NewTask): Promise<void>;
+  deleteTasks(projectId: string): Promise<void>;
   listEvents(): Promise<OrbitEvent[]>;
   createEvent(userId: string, input: NewEvent): Promise<OrbitEvent>;
   updateEvent(eventId: string, userId: string, input: NewEvent): Promise<OrbitEvent>;
@@ -96,7 +100,27 @@ export const orbitRepository: OrbitRepository = {
   },
 
   async deleteTask(taskId) {
-    const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+    const { error } = await supabase.from('tasks').update({ deleted_at: new Date().toISOString() }).eq('id', taskId);
+    throwOnError(error);
+  },
+
+  async restoreTask(taskId) {
+    const { error } = await supabase.from('tasks').update({ deleted_at: null }).eq('id', taskId);
+    throwOnError(error);
+  },
+
+  async deleteTaskPermanently(taskId) {
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId).not('deleted_at', 'is', null);
+    throwOnError(error);
+  },
+
+  async updateTask(taskId, input) {
+    const { error } = await supabase.from('tasks').update({ ...input, updated_at: new Date().toISOString() }).eq('id', taskId).is('deleted_at', null);
+    throwOnError(error);
+  },
+
+  async deleteTasks(projectId) {
+    const { error } = await supabase.from('tasks').update({ deleted_at: new Date().toISOString() }).eq('project_id', projectId).is('deleted_at', null);
     throwOnError(error);
   },
 
