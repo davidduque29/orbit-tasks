@@ -232,3 +232,26 @@
 [data-theme="dark"] .event-list-card h3,
 [data-theme="dark"] .event-list-card .list-row,
 [data-theme="dark"] .event-list-card .list-row strong {color:#f1f5f9!important;opacity:1!important;}
+
+/* Verified against actual JSX: previous rules targeted unused class names. */
+[data-theme="dark"] .project-card-redesign .project-card-progress-label,
+[data-theme="dark"] .project-card-redesign .project-card-progress-label span {
+ color:#e2e8f0!important;opacity:1!important;
+}
+[data-theme="dark"] .project-card-redesign .project-card-progress-label strong {
+ color:#d8b4fe!important;opacity:1!important;
+}
+[data-theme="dark"] .project-utility-links button,
+[data-theme="dark"] .project-utility-links button svg {
+ color:#d8c9f9!important;opacity:1!important;
+}
+[data-theme="dark"] .project-utility-links button:hover,
+[data-theme="dark"] .project-utility-links button:focus-visible {
+ color:#ffffff!important;
+}
+[data-theme="dark"] .event-list-heading h2 {
+ color:#f1f5f9!important;opacity:1!important;
+}
+[data-theme="dark"] .event-list-heading h2 span {
+ color:#5533ad!important;opacity:1!important;
+}
