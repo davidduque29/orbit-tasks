@@ -1154,3 +1154,43 @@ button:disabled { cursor:not-allowed; }
   width:34px; height:34px; min-width:34px; padding:6px;
   display:inline-flex; align-items:center; justify-content:center;
 }
+
+
+/* High-visibility quick capture, approved mobile-first Orbit Tasks design. */
+.notes-board .quick-capture.quick-capture-highlight {
+  padding:0; overflow:hidden; border:2px solid #7538ed; border-radius:19px;
+  background:#fff; box-shadow:0 0 0 3px #7540ed12, 0 8px 24px #5d25d52c;
+  margin-bottom:18px;
+}
+.quick-capture-heading {
+  display:flex; align-items:center; gap:11px; padding:12px 16px;
+  color:#fff; background:linear-gradient(110deg,#6123d7 0%,#8228f1 100%);
+  font-size:17px; line-height:1.35; font-weight:750;
+}
+.quick-capture-heading strong { color:inherit; }
+.quick-capture-heading-icon {
+  display:grid; place-items:center; width:30px; height:30px; flex:0 0 30px;
+  border-radius:50%; background:#fff; color:#6324da;
+}
+.quick-capture-body { padding:13px 14px 12px; }
+.quick-capture-highlight .quick-capture-main {
+  border:2px solid #dcd4f6; border-radius:13px; padding:5px 7px;
+  background:#fff; transition:border-color .15s, box-shadow .15s;
+}
+.quick-capture-highlight .quick-capture-main:focus-within {
+  border-color:#6935e4; box-shadow:0 0 0 4px #7848ef2a;
+}
+.quick-capture-highlight .quick-capture-main > input {
+  font-size:16px; color:#202a48; background:transparent;
+}
+.quick-capture-highlight .quick-capture-main > input:focus-visible { outline:none; }
+.quick-capture-highlight .quick-capture-main .quick-create:not(:disabled) {
+  background:#6b27e9; color:#fff;
+}
+.quick-capture-highlight .field-help { display:block; margin:10px 3px 0; line-height:1.5; }
+@media(max-width:480px) {
+  .quick-capture-heading { font-size:16px; padding:11px 13px; }
+  .quick-capture-body { padding:11px 10px; }
+  .quick-capture-highlight .quick-capture-main { gap:6px; }
+  .quick-capture-highlight .quick-capture-main > button { flex-basis:37px; width:37px; height:39px; }
+}
