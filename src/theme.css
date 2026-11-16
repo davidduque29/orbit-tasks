@@ -255,3 +255,22 @@
 [data-theme="dark"] .event-list-heading h2 span {
  color:#5533ad!important;opacity:1!important;
 }
+
+/* Approved mobile header: profile first, compact theme control at far right. */
+.header .orbit-header-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; min-width:0; }
+.header .orbit-header-actions .profile-root:not(.profile-embedded) { min-width:0; flex:0 1 auto; }
+.header .orbit-header-actions .profile-trigger { min-width:0; }
+.header .orbit-header-actions .profile-trigger-chevron { flex:0 0 19px; width:19px; height:19px; color:#6c43ca; }
+.header .orbit-theme-toggle { order:2; flex:0 0 36px; width:36px; height:36px; border-radius:11px; }
+@media(max-width:700px) {
+ .header .orbit-header-actions { flex:0 1 auto; gap:7px; }
+ .header .orbit-header-actions .profile-root:not(.profile-embedded) { flex:0 1 auto; max-width:min(205px,44vw); }
+ .header .orbit-header-actions .profile-trigger { width:100%; max-width:100%; }
+ .header .orbit-header-actions .profile-trigger-identity { overflow:hidden; }
+ .header .orbit-header-actions .profile-trigger-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+}
+@media(max-width:390px) {
+ .header .orbit-header-actions { flex-basis:auto; gap:5px; }
+ .header .orbit-header-actions .profile-root:not(.profile-embedded) { max-width:42vw; }
+ .header .orbit-theme-toggle { flex-basis:32px; width:32px; height:32px; }
+}
