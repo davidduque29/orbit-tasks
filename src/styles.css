@@ -1439,3 +1439,19 @@ button:disabled { cursor:not-allowed; }
  .project-section-menu-inline > nav { left:0; right:auto; }
  .project-board-return { align-items:flex-start; flex-direction:column; }
 }
+
+
+/* Remove redundant project navigation from the header; keep utility views secondary */
+.project-list-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.project-heading-actions { width:auto; }
+.project-utility-links { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin:24px 0 8px; }
+.project-utility-links button { display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border:0; background:transparent; color:#766995; font-size:12px; font-weight:600; }
+.project-utility-links button:hover, .project-utility-links button:focus-visible { color:#6334c8; text-decoration:underline; }
+@media(max-width:520px) {
+ .project-list-heading { flex-direction:row; flex-wrap:nowrap; align-items:center; }
+ .project-list-heading > div:first-child { min-width:0; flex:1; }
+ .project-list-heading h1 { font-size:clamp(22px,5vw,28px); white-space:nowrap; }
+ .project-list-heading p { font-size:12px; white-space:nowrap; }
+ .project-heading-actions { width:auto; flex:none; }
+ .project-heading-actions > button { min-height:44px; padding:9px 11px; font-size:12px; white-space:nowrap; }
+}
