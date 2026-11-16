@@ -40,3 +40,36 @@
 [data-theme="dark"] .notes-board small, [data-theme="dark"] .note-card small { color:#e2e8f0; }
 [data-theme="dark"] .quick-note-form input::placeholder { color:#cbd5e1; opacity:1; }
 [data-theme="dark"] .space-choice:focus-visible { outline:3px solid #d8b4fe; outline-offset:3px; }
+
+/* Targeted dark-mode accessibility fixes, November 2026. */
+[data-theme="dark"] .brand-logo,
+[data-theme="dark"] .header .brand-logo {
+  background-color:#ffffff !important;
+  mix-blend-mode:normal !important;
+  filter:none !important;
+  border:1px solid #e7def7 !important;
+  border-radius:12px !important;
+  padding:5px !important;
+  box-shadow:0 1px 8px #0003 !important;
+}
+[data-theme="dark"] .profile-trigger {
+  background:linear-gradient(125deg,#fff,#f7f3ff) !important;
+  color:#253047 !important;
+}
+[data-theme="dark"] .profile-trigger-name,
+[data-theme="dark"] .profile-trigger-identity small,
+[data-theme="dark"] .profile-trigger-identity small svg,
+[data-theme="dark"] .profile-trigger-chevron {
+  color:#4b5563 !important;
+  opacity:1 !important;
+}
+[data-theme="dark"] .profile-trigger-name { color:#202b42 !important; }
+[data-theme="dark"] .quick-reminder-details,
+[data-theme="dark"] .quick-reminder-details button,
+[data-theme="dark"] .quick-reminder-details label,
+[data-theme="dark"] .quick-reminder-details svg,
+[data-theme="dark"] .quick-reminder-configure {
+  color:#e9ddff !important;
+  opacity:1 !important;
+}
+[data-theme="dark"] .quick-reminder-details p { color:#e2e8f0 !important; }
