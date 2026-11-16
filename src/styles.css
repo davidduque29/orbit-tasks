@@ -1489,3 +1489,12 @@ button:disabled { cursor:not-allowed; }
 .orbit-board-panel .board-switch{margin:0 0 12px}
 .orbit-board-panel .task-compact-card{min-width:0}
 @media(max-width:420px){.orbit-board-primary-actions button{font-size:12px;padding:9px}.orbit-board-tabs button{font-size:11px;gap:3px}}
+
+/* Compact project task controls and five-record pagination */
+.orbit-board-panel .orbit-task-card-actions{justify-content:flex-end;padding:4px 10px 10px;gap:7px}
+.orbit-board-panel .orbit-task-card-actions button{width:36px;height:36px;min-width:36px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:0;gap:0;border-radius:10px}
+.orbit-board-panel .orbit-task-card-actions button svg{width:17px;height:17px;flex-shrink:0}
+.orbit-pagination{display:flex;flex-direction:column;align-items:center;gap:10px;margin:16px 0 8px;padding:12px 6px;color:var(--muted,#777);font-size:12px}
+.orbit-pagination>div{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.orbit-pagination button{padding:8px 12px;font-size:12px;min-width:75px}
+.orbit-pagination button:disabled{opacity:.4;cursor:not-allowed}
