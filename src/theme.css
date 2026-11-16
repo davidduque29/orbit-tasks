@@ -117,3 +117,22 @@
 [data-theme="dark"] .workspace-navigation-home svg { color:#d8b4fe !important; }
 [data-theme="dark"] .quick-reminder-details button { color:#e9ddff !important; }
 [data-theme="dark"] button:focus-visible { outline:3px solid #c4b5fd; outline-offset:2px; }
+
+/* Readable pending titles and reminder controls on dark cards. */
+[data-theme="dark"] .notes-board .note-list-item .note-summary,
+[data-theme="dark"] .notes-board .note-list-item .note-summary strong,
+[data-theme="dark"] .notes-board .note-list-item .note-title-compact {
+  color:#f1f5f9 !important;
+  opacity:1 !important;
+}
+[data-theme="dark"] .notes-board .note-list-item .note-summary > span,
+[data-theme="dark"] .notes-board .note-list-item .note-summary small { color:#cbd5e1 !important; }
+[data-theme="dark"] .notes-board .note-list-item .note-summary .note-done { color:#cbd5e1 !important; }
+[data-theme="dark"] .notes-board .note-list-item .note-summary:hover { background:#293453; }
+[data-theme="dark"] .notes-board .quick-reminder-details,
+[data-theme="dark"] .notes-board .quick-reminder-details *,
+[data-theme="dark"] .notes-board .quick-capture-highlight .quick-reminder-details,
+[data-theme="dark"] .notes-board .quick-capture-highlight .quick-reminder-details * {
+  color:#e9ddff !important;
+  opacity:1 !important;
+}
