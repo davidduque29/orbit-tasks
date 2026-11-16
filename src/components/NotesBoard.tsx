@@ -500,11 +500,11 @@ export function NotesBoard({ userId }: { userId: string }) {
   return <section className="notes-board">
     <div className="heading notes-heading"><div><h1>Pendientes</h1><p>Captura rápidamente tus actividades personales.</p></div>
     </div>
-    <button type="button" className="outline" onClick={() => setTrashOpen(v => !v)}><Trash2 size={16}/> {trashOpen ? 'Cerrar papelera' : `Papelera (${trashedNotes.length})`}</button>
     {trashOpen && <section className="card notes-trash"><h2>Papelera</h2><p>Recupera tus pendientes o elimínalos definitivamente.</p>{trashedNotes.map(note => <div key={note.id} className="notes-trash-item"><strong>{note.title}</strong><button type="button" className="outline" disabled={busy} onClick={() => void restoreNote(note)}>Restaurar</button><button type="button" disabled={busy} onClick={() => void permanentlyDelete(note)}>Eliminar definitivamente</button></div>)}{!trashedNotes.length && <p>No hay pendientes eliminados.</p>}</section>}
     <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
       <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17}/> Pendientes</button>
       <button type="button" className={section === 'search' ? 'selected' : ''} aria-current={section === 'search' ? 'page' : undefined} onClick={() => setSection('search')}><Search size={17}/> Buscar</button>
+      <button type="button" className={trashOpen ? 'selected notes-trash-tab' : 'notes-trash-tab'} aria-expanded={trashOpen} onClick={() => setTrashOpen(v => !v)}><Trash2 size={17}/> {trashOpen ? 'Cerrar papelera' : `Papelera (${trashedNotes.length})`}</button>
     </nav>
     {section === 'pending' && <>
     <form className="card quick-capture quick-capture-highlight" onSubmit={(event) => void quickAdd(event)}>
@@ -563,7 +563,9 @@ export function NotesBoard({ userId }: { userId: string }) {
     {error && <p className="error" role="alert">{error}</p>}
     {message && <p className="feedback" role="status">{message}</p>}
     {loading && <p className="muted">Cargando tus pendientes…</p>}
-    {!loading && <div className="notes-list">
+    {!loading && <>
+    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> Listado de pendientes ({filtered.length})</h2>
+    <div className="notes-list">
       {filtered.map(note => <article className="card note-list-item" key={note.id}>
         <div className="note-check">
           {note.kind === 'pending'
@@ -609,7 +611,7 @@ export function NotesBoard({ userId }: { userId: string }) {
         <h2>{statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2>
         <p>No hay registros en esta sección.</p>
       </div>}
-    </div>}
+    </div></>}
     </>}
     {section === 'search' && <div className="notes-search-pane">
       <div className="notes-search-highlight">
@@ -624,7 +626,9 @@ export function NotesBoard({ userId }: { userId: string }) {
     {error && <p className="error" role="alert">{error}</p>}
     {message && <p className="feedback" role="status">{message}</p>}
     {loading && <p className="muted">Cargando tus pendientes…</p>}
-    {!loading && <div className="notes-list">
+    {!loading && <>
+    <h2 className="notes-list-heading"><Search size={19} aria-hidden="true"/> Resultados de búsqueda ({filtered.length})</h2>
+    <div className="notes-list">
       {filtered.map(note => <article className="card note-list-item" key={note.id}>
         <div className="note-check">
           {note.kind === 'pending'
@@ -670,7 +674,7 @@ export function NotesBoard({ userId }: { userId: string }) {
         <h2>{section === 'search' ? 'Sin resultados' : statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2>
         <p>{section === 'search' ? 'No hay pendientes con ese título.' : 'No hay registros en esta sección.'}</p>
       </div>}
-    </div>}
+    </div></>}
     </div>}
     {section === 'categories' && <div className="notes-categories-pane">
       <h2>Categorías</h2>
