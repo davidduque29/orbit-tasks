@@ -16,7 +16,7 @@ type Note = {
 };
 type NoteItem = { id: string; note_id: string; owner_id: string; content: string; position: number; completed: boolean };
 type Category = { id: string; name: string; color: string; owner_id: string };
-const TITLE_MAX = 80;
+const TITLE_MAX = 120;
 
 type SpeechResult = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
 type SpeechRecognizer = {
@@ -214,9 +214,34 @@ export function NotesBoard({ userId }: { userId: string }) {
     if (notesResponse.error) throw notesResponse.error;
     if (categoriesResponse.error) throw categoriesResponse.error;
     if (itemsResponse.error) throw itemsResponse.error;
-    setNotes((notesResponse.data || []) as Note[]);
+    const loadedNotes = (notesResponse.data || []) as Note[];
+    let loadedItems = (itemsResponse.data || []) as NoteItem[];
+    // One-time, automatic conversion of existing comma-separated pending titles.
+    // The RPC inserts items only when the note has no checklist yet.
+    const existingChecklistIds = new Set(loadedItems.map(item => item.note_id));
+    const legacyLists = loadedNotes.filter(note =>
+      note.kind === 'pending' && !note.deleted_at &&
+      !existingChecklistIds.has(note.id) && parsePendingItems(note.title).length >= 2
+    );
+    if (legacyLists.length) {
+      let changed = false;
+      for (const note of legacyLists) {
+        const { error: conversionError } = await supabase.rpc('save_pending_with_items', {
+          p_title: note.title, p_category_id: note.category_id,
+          p_reminder_at: note.reminder_at, p_recurrence_rule: note.recurrence_rule,
+          p_items: parsePendingItems(note.title), p_note_id: note.id,
+          p_reset_recurrence: false,
+        });
+        if (!conversionError) changed = true;
+      }
+      if (changed) {
+        const refreshed = await supabase.from('note_items').select('*').eq('owner_id', userId).order('position');
+        if (!refreshed.error) loadedItems = (refreshed.data || []) as NoteItem[];
+      }
+    }
+    setNotes(loadedNotes);
     setCategories((categoriesResponse.data || []) as Category[]);
-    setNoteItems((itemsResponse.data || []) as NoteItem[]);
+    setNoteItems(loadedItems);
   }, [userId]);
 
   useEffect(() => {
@@ -288,7 +313,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   async function quickAdd(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleaned = quickTitle.trim();
-    if (cleaned.length < 2 || cleaned.length > TITLE_MAX) { setError('El título debe tener entre 2 y 80 caracteres.'); return; }
+    if (cleaned.length < 2 || cleaned.length > TITLE_MAX) { setError('El título debe tener entre 2 y 120 caracteres.'); return; }
     const reminderError = validateReminder(quickReminder);
     if (reminderError) { setError(reminderError); return; }
     if (await perform(async () => {
@@ -305,7 +330,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     event.preventDefault();
     const cleaned = title.trim();
     if (cleaned.length < 2 || cleaned.length > TITLE_MAX) {
-      setError('El título debe tener entre 2 y 80 caracteres.'); return;
+      setError('El título debe tener entre 2 y 120 caracteres.'); return;
     }
     const previousNote = editId ? notes.find(note => note.id === editId) : undefined;
     const scheduleChanged = previousNote && (
@@ -556,7 +581,7 @@ export function NotesBoard({ userId }: { userId: string }) {
             : <NotebookPen size={21} aria-label="Nota" />}
         </div>
         <button type="button" className="note-summary" onClick={() => openEditor(note)}>
-          <strong className={note.completed ? 'note-done' : ''}>{note.title}</strong>
+          <strong className={note.completed ? 'note-done note-title-compact' : 'note-title-compact'} title={note.title}>{note.title}</strong>
           {recurrenceStatus(note) && <span className={activeSeries.has(seriesKey(note))
             ? 'notes-recurrence-indicator' : 'notes-recurrence-indicator is-stopped'}>
             <CalendarClock size={13} aria-hidden="true"/> {recurrenceStatus(note)}
@@ -570,18 +595,13 @@ export function NotesBoard({ userId }: { userId: string }) {
             {note.completed && <><CheckCircle2 size={13} aria-hidden="true"/> Completado</>}
           </small>
         </button>
-        {itemsFor(note.id).length === 0 && !note.completed && parsePendingItems(note.title).length > 1 && <div className="pending-checklist-disclosure">
-          <button type="button" className="outline pending-checklist-toggle" disabled={busy} onClick={() => void convertLegacyList(note)}>
-            <ListTodo size={15}/> Ver lista ({parsePendingItems(note.title).length} ítems) <ChevronDown size={15}/>
-          </button>
-        </div>}
         {itemsFor(note.id).length > 0 && <div className="pending-checklist-disclosure">
           <button type="button" className="outline pending-checklist-toggle" aria-expanded={expandedLists.has(note.id)}
             aria-controls={`pending-list-${note.id}`} onClick={() => toggleListExpansion(note.id)}>
             <ListTodo size={15}/> {expandedLists.has(note.id) ? 'Ocultar' : 'Ver lista'}
             {expandedLists.has(note.id) ? <ChevronUp size={15}/> : <ChevronDown size={15}/>}
           </button>
-          <small>{itemsFor(note.id).filter(item => item.completed).length}/{itemsFor(note.id).length} completados</small>
+          <small>{itemsFor(note.id).filter(item => item.completed).length} de {itemsFor(note.id).length} completados</small>
           {expandedLists.has(note.id) && <ul id={`pending-list-${note.id}`} className="pending-checklist-items">
             {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/><span style={{textDecoration:item.completed?'line-through':'none'}}>{item.content}</span></label><button type="button" className="outline" disabled={busy} aria-label={`Editar ${item.content}`} onClick={() => void editListItem(item)}><Pencil size={14}/></button><button type="button" className="outline" disabled={busy} aria-label={`Eliminar ${item.content}`} onClick={() => void deleteListItem(item)}><X size={14}/></button></li>)}<li><button type="button" className="outline" disabled={busy} onClick={() => void addListItem(note.id)}><Plus size={14}/> Agregar elemento</button></li>
           </ul>}
@@ -615,7 +635,7 @@ export function NotesBoard({ userId }: { userId: string }) {
             : <NotebookPen size={21} aria-label="Nota" />}
         </div>
         <button type="button" className="note-summary" onClick={() => openEditor(note)}>
-          <strong className={note.completed ? 'note-done' : ''}>{note.title}</strong>
+          <strong className={note.completed ? 'note-done note-title-compact' : 'note-title-compact'} title={note.title}>{note.title}</strong>
           {recurrenceStatus(note) && <span className={activeSeries.has(seriesKey(note))
             ? 'notes-recurrence-indicator' : 'notes-recurrence-indicator is-stopped'}>
             <CalendarClock size={13} aria-hidden="true"/> {recurrenceStatus(note)}
@@ -635,7 +655,7 @@ export function NotesBoard({ userId }: { userId: string }) {
             <ListTodo size={15}/> {expandedLists.has(note.id) ? 'Ocultar' : 'Ver lista'}
             {expandedLists.has(note.id) ? <ChevronUp size={15}/> : <ChevronDown size={15}/>}
           </button>
-          <small>{itemsFor(note.id).filter(item => item.completed).length}/{itemsFor(note.id).length} completados</small>
+          <small>{itemsFor(note.id).filter(item => item.completed).length} de {itemsFor(note.id).length} completados</small>
           {expandedLists.has(note.id) && <ul id={`pending-list-${note.id}`} className="pending-checklist-items">
             {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/><span style={{textDecoration:item.completed?'line-through':'none'}}>{item.content}</span></label><button type="button" className="outline" disabled={busy} aria-label={`Editar ${item.content}`} onClick={() => void editListItem(item)}><Pencil size={14}/></button><button type="button" className="outline" disabled={busy} aria-label={`Eliminar ${item.content}`} onClick={() => void deleteListItem(item)}><X size={14}/></button></li>)}<li><button type="button" className="outline" disabled={busy} onClick={() => void addListItem(note.id)}><Plus size={14}/> Agregar elemento</button></li>
           </ul>}
