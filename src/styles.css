@@ -1240,3 +1240,44 @@ button:disabled { cursor:not-allowed; }
   .notes-board .pending-checklist-items > li { grid-template-columns:minmax(0,1fr) 32px 32px; column-gap:5px; }
   .notes-board .pending-checklist-items > li > button { width:32px; height:34px; }
 }
+
+
+/* Strong but restrained distinction for each personal pending card. */
+.notes-board .notes-list > .note-list-item {
+  border:1.5px solid #b9a5f5; border-left:4px solid #7b40e9;
+  border-radius:17px; background:#fff;
+  box-shadow:0 3px 12px #5931c313;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.notes-board .notes-list > .note-list-item:focus-within {
+  border-color:#6f34e9; box-shadow:0 0 0 3px #7848ef20;
+}
+.notes-board .notes-list > .note-list-item:has(.note-done) {
+  border-left-color:#a8a3b7; border-color:#ddd9eb;
+}
+.notes-board .notes-search-highlight {
+  overflow:hidden; border:2px solid #7538ed; border-radius:19px;
+  background:#fff; margin-bottom:16px;
+  box-shadow:0 0 0 3px #7540ed12,0 8px 24px #5d25d520;
+}
+.notes-board .notes-search-body { padding:13px 14px 14px; }
+.notes-board .notes-search-body .notes-search {
+  display:block; position:relative; width:100%; margin:0;
+}
+.notes-board .notes-search-body .notes-search > svg {
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  color:#6a35d8; pointer-events:none;
+}
+.notes-board .notes-search-body .notes-search > input {
+  display:block; width:100%; min-width:0; height:49px; padding:10px 12px 10px 43px;
+  border:2px solid #d8ccf6; border-radius:13px;
+  background:#fff; color:#202a48; font-size:16px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.notes-board .notes-search-body .notes-search > input:focus {
+  outline:none; border-color:#6935e4; box-shadow:0 0 0 4px #7848ef2a;
+}
+@media(max-width:480px) {
+  .notes-board .notes-search-body { padding:11px 10px; }
+  .notes-board .notes-list > .note-list-item { border-left-width:4px; }
+}
