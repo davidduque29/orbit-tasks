@@ -39,6 +39,7 @@ export interface Task {
   reminder_override_minutes: number[] | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
 export interface OrbitEvent {
