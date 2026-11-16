@@ -521,8 +521,12 @@ export function NotesBoard({ userId }: { userId: string }) {
       <button type="button" className={section === 'search' ? 'selected' : ''} aria-current={section === 'search' ? 'page' : undefined} onClick={() => setSection('search')}><Search size={17}/> Buscar</button>
     </nav>
     {section === 'pending' && <>
-    <p className="quick-capture-label">Registra aquí tu pendiente o tarea</p>
-    <form className="card quick-capture" onSubmit={(event) => void quickAdd(event)}>
+    <form className="card quick-capture quick-capture-highlight" onSubmit={(event) => void quickAdd(event)}>
+      <div className="quick-capture-heading" id="quick-capture-heading">
+        <span className="quick-capture-heading-icon"><Plus size={20} aria-hidden="true"/></span>
+        <strong>Registrar nuevo pendiente</strong>
+      </div>
+      <div className="quick-capture-body">
       <div className="quick-capture-main">
         <ListTodo size={20} aria-hidden="true"/>
         <input ref={quickInputRef} aria-label="Título del pendiente rápido" placeholder="¿Qué necesitas recordar?" minLength={2} maxLength={TITLE_MAX}
@@ -555,6 +559,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           {quickReminder.at ? 'Modificar recordatorio' : 'Configurar recordatorio'}
         </button>
       </div>}
+      </div>
     </form>
     <div className="notes-status-row">
       <div className="notes-status-tabs" role="tablist" aria-label="Estado de pendientes">
