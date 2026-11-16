@@ -121,7 +121,7 @@ function TaskDetails({ task, projects, onSave, onDelete, saving, userId }: {
   );
 }
 
-export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, onSave, onDelete, onNewTask, onEdit, onRestore, onPermanentDelete, onDeleteAll, saving, userId }: BoardProps) {
+export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, onNewTask, onEdit, onRestore, onPermanentDelete, onDeleteAll, saving, userId }: BoardProps) {
   const [view, setView] = useState<BoardView>('list');
   const [section, setSection] = useState<'tasks' | 'search' | 'trash'>('tasks');
   const [keyword, setKeyword] = useState('');
