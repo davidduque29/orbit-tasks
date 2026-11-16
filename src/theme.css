@@ -1,0 +1,25 @@
+
+/* Accessible theme controls: overrides are intentionally isolated from legacy styles. */
+.orbit-header-clock { color: #4b5563 !important; font-size: max(14px, .875rem); font-weight: 500; }
+.orbit-theme-toggle { display: inline-grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; padding: 0; border: 1px solid #c8b9f0; border-radius: 12px; background: #f7f3ff; color: #5033a2; }
+.orbit-theme-toggle:focus-visible { outline: 3px solid #7c3aed; outline-offset: 3px; }
+.orbit-header-actions { display: flex; align-items: center; gap: 8px; }
+[data-theme="dark"] { color-scheme: dark; background: #0f172a; color: #f1f5ff; }
+[data-theme="dark"] body, [data-theme="dark"] .shell { background: #0f172a; color: #f1f5ff; }
+[data-theme="dark"] .header, [data-theme="dark"] .tabs, [data-theme="dark"] .card, [data-theme="dark"] .ticket, [data-theme="dark"] .outline,
+[data-theme="dark"] .workspace-navigation, [data-theme="dark"] .workspace-navigation-options,
+[data-theme="dark"] .notes-board, [data-theme="dark"] .note-card,
+[data-theme="dark"] .modal, [data-theme="dark"] .modal-content { background: #19223a; color: #f1f5ff; border-color: #525579; }
+[data-theme="dark"] .orbit-header-clock { color: #e2e8f0 !important; }
+[data-theme="dark"] .orbit-theme-toggle { background: #303653; color: #f4eaff; border-color: #7970b3; }
+[data-theme="dark"] .workspace-navigation-item:not(.is-active), [data-theme="dark"] .workspace-navigation-heading,
+[data-theme="dark"] .heading, [data-theme="dark"] .list-row, [data-theme="dark"] .user-menu { color: #e2e8f0; }
+[data-theme="dark"] small, [data-theme="dark"] p { color: #d1d8e9; }
+[data-theme="dark"] input, [data-theme="dark"] textarea, [data-theme="dark"] select { background: #242d46; color: #f8fafc; border-color: #777e9e; }
+[data-theme="dark"] input::placeholder, [data-theme="dark"] textarea::placeholder { color: #c0c7d9; }
+[data-theme="dark"] .lane, [data-theme="dark"] .progress { background: #28314a; }
+[data-theme="dark"] .pill, [data-theme="dark"] .notice { background: #353055; color: #e7d9ff; }
+[data-theme="dark"] .feedback { background: #164734; color: #d1fae5; }
+[data-theme="dark"] .error { background: #54263b; color: #ffe4e6; }
+[data-theme="dark"] .workspace-navigation-item.is-active { color: #fff; }
+@media (max-width: 420px) { .orbit-header-actions { gap: 5px; } .orbit-theme-toggle { width: 36px; height: 36px; } }
