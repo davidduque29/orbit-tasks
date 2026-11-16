@@ -73,3 +73,47 @@
   opacity:1 !important;
 }
 [data-theme="dark"] .quick-reminder-details p { color:#e2e8f0 !important; }
+
+/* Dark mode contrast audit: text on light and dark surfaces. */
+[data-theme="dark"] .profile-dropdown,
+[data-theme="dark"] .profile-dropdown .profile-heading,
+[data-theme="dark"] .profile-dropdown .profile-heading strong,
+[data-theme="dark"] .profile-dropdown .profile-heading small {
+  color:#263247 !important;
+}
+[data-theme="dark"] .profile-dropdown small { color:#4b5563 !important; opacity:1 !important; }
+[data-theme="dark"] .profile-dropdown { background:#fff !important; }
+[data-theme="dark"] .profile-trigger-identity small { color:#4b5563 !important; }
+[data-theme="dark"] .project-overview h2,
+[data-theme="dark"] .project-text h2,
+[data-theme="dark"] .project-list h2,
+[data-theme="dark"] .event-list-card h2,
+[data-theme="dark"] .event-list-card h3 { color:#f8fafc !important; }
+[data-theme="dark"] .project-overview p,
+[data-theme="dark"] .project-text p,
+[data-theme="dark"] .project-list p { color:#d4dcec !important; }
+[data-theme="dark"] .project-list .card,
+[data-theme="dark"] .project-list article { color:#f1f5ff; }
+[data-theme="dark"] .project-list .card small,
+[data-theme="dark"] .project-list article small { color:#d1d9eb; }
+[data-theme="dark"] .project-list .pill,
+[data-theme="dark"] .project-list .stat,
+[data-theme="dark"] .project-list .metric { color:#29334b; }
+[data-theme="dark"] .project-list .pill small,
+[data-theme="dark"] .project-list .stat small,
+[data-theme="dark"] .project-list .metric small { color:#4b5563; }
+[data-theme="dark"] .project-section-menu > summary,
+[data-theme="dark"] .project-section-menu > nav button { color:#e9ddff; }
+[data-theme="dark"] .project-section-menu > nav { background:#202943; border-color:#6b648e; }
+[data-theme="dark"] .week-day:not(.selected) { background:#f7f6fc; color:#26334b; }
+[data-theme="dark"] .week-day:not(.selected) small { color:#4b5563 !important; }
+[data-theme="dark"] .week-day.selected,
+[data-theme="dark"] .week-day.selected small { color:#fff !important; }
+[data-theme="dark"] .event-list-card h2,
+[data-theme="dark"] .event-list-card h3,
+[data-theme="dark"] .event-list-card .list-row { color:#f1f5ff; }
+[data-theme="dark"] .event-list-card small { color:#d5dcec; }
+[data-theme="dark"] .workspace-navigation-home,
+[data-theme="dark"] .workspace-navigation-home svg { color:#d8b4fe !important; }
+[data-theme="dark"] .quick-reminder-details button { color:#e9ddff !important; }
+[data-theme="dark"] button:focus-visible { outline:3px solid #c4b5fd; outline-offset:2px; }
