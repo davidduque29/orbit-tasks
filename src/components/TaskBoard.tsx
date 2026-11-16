@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Project, Task, TaskStatus } from '../domain/models';
 import { ReminderOverride } from './ReminderOverride';
-import { Search, List, Columns3, Plus, X, ClipboardList, CalendarDays, Flag, Bell } from 'lucide-react';
+import { Search, List, Columns3, Plus, X, ClipboardList, CalendarDays, Flag, Bell, Pencil, Trash2, RotateCcw } from 'lucide-react';
 
 type DisplayStatus = 'Activa' | 'En progreso' | 'Impedimento' | 'Finalizado';
 type TimeFilter = 'all' | 'overdue' | 'today' | 'week' | 'closed';
@@ -47,6 +47,10 @@ interface BoardProps {
   onSave(taskId: string, status: TaskStatus, resolution: string): Promise<void>;
   onDelete(taskId: string): Promise<void>;
   onNewTask(): void;
+  onEdit(task: Task): void;
+  onRestore(taskId: string): Promise<void>;
+  onPermanentDelete(taskId: string): Promise<void>;
+  onDeleteAll(): Promise<void>;
   saving: boolean;
   userId: string;
 }
@@ -117,14 +121,17 @@ function TaskDetails({ task, projects, onSave, onDelete, saving, userId }: {
   );
 }
 
-export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, onSave, onDelete, onNewTask, saving, userId }: BoardProps) {
+export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, onSave, onDelete, onNewTask, onEdit, onRestore, onPermanentDelete, onDeleteAll, saving, userId }: BoardProps) {
   const [view, setView] = useState<BoardView>('list');
+  const [section, setSection] = useState<'tasks' | 'search' | 'trash'>('tasks');
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const selectedTask = tasks.find((task) => task.id === selectedTaskId);
+  const selectedTask = tasks.find((task) => task.id === selectedTaskId && !task.deleted_at);
+  const activeTasks = tasks.filter(task => !task.deleted_at && (!selectedProject || task.project_id === selectedProject));
+  const trashedTasks = tasks.filter(task => !!task.deleted_at && (!selectedProject || task.project_id === selectedProject));
   useEffect(() => {
     if (!selectedTaskId) return;
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelectedTaskId(null); };
@@ -133,7 +140,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
   }, [selectedTaskId]);
 
   const now = new Date();
-  const filtered = useMemo(() => tasks.filter((task) => {
+  const filtered = useMemo(() => activeTasks.filter((task) => {
     const project = projects.find((p) => p.id === task.project_id);
     const searchable = [task.title, task.description, task.resolution, project?.name]
       .filter(Boolean).join(' ').toLocaleLowerCase();
@@ -162,26 +169,23 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
           </span>
           <StatusDot status={displayStatus(task.status)} />
         </button>
+        <div className="orbit-task-card-actions"><button type="button" className="outline" onClick={() => onEdit(task)}><Pencil size={15} /> Editar</button><button type="button" className="outline orbit-action-delete" onClick={() => { void onDelete(task.id); }}><Trash2 size={15} /> Eliminar</button></div>
       </article>
     );
   }
 
   return (
     <section className="task-board">
-      <div className="heading">
-        <div><h2 className="task-board-subheading">Gestión de tareas</h2><p>Busca, filtra y consulta las tareas y sus resoluciones.</p></div>
-        <button type="button" onClick={onNewTask}><Plus size={16} aria-hidden="true" /> Nueva tarea</button>
-      </div>
-      <div className="board-toolbar">
+      <nav className="orbit-board-tabs" aria-label="Secciones de tareas">
+        <button type="button" className={section === 'tasks' ? 'active' : ''} onClick={() => setSection('tasks')}><List size={17} /> Tareas</button>
+        <button type="button" className={section === 'search' ? 'active' : ''} onClick={() => setSection('search')}><Search size={17} /> Buscar</button>
+        <button type="button" className={section === 'trash' ? 'active' : ''} onClick={() => setSection('trash')}><Trash2 size={17} /> Papelera ({trashedTasks.length})</button>
+      </nav>
+      {section === 'search' && <section className="orbit-board-panel"><h2 className="orbit-board-panel-title"><Search size={19} /> Buscar tareas</h2><div className="orbit-board-panel-body">
+              <div className="board-toolbar">
         <label htmlFor="task-keyword">Buscar por palabra clave
           <div className="board-search"><Search size={17} aria-hidden="true" /><input id="task-keyword" type="search" placeholder="Buscar tareas, proyectos y resoluciones..." value={keyword}
             onChange={(event) => setKeyword(event.target.value)} /></div>
-        </label>
-        <label htmlFor="board-project">Proyecto
-          <select id="board-project" value={selectedProject} onChange={(event) => onProjectChange(event.target.value)}>
-            <option value="">Todos los proyectos</option>
-            {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-          </select>
         </label>
         <label htmlFor="board-status">Estado
           <select id="board-status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
@@ -205,30 +209,42 @@ export function TaskBoard({ projects, tasks, selectedProject, onProjectChange, o
           </select>
         </label>
       </div>
-      <div className="board-list-intro"><h2>Tareas del proyecto</h2><p>Consulta y organiza las tareas en lista o tablero Kanban.</p></div>
-      <div className="board-switch">
+
+        <p>{filtered.length} resultados encontrados</p>
+        <div className="task-list">{filtered.map(taskItem)}{filtered.length === 0 && <p className="empty">No se encontraron tareas.</p>}</div>
+      </div></section>}
+      {section === 'tasks' && <section className="orbit-board-panel"><h2 className="orbit-board-panel-title"><ClipboardList size={19} /> Tareas del proyecto</h2><div className="orbit-board-panel-body">
+        <div className="orbit-board-primary-actions"><button type="button" onClick={onNewTask}><Plus size={16} /> Nueva tarea</button><button type="button" className="outline orbit-action-delete" disabled={!selectedProject || activeTasks.length === 0 || saving} onClick={() => { void onDeleteAll(); }}><Trash2 size={15} /> Eliminar todas</button></div>
+              <div className="board-switch">
         <div className="board-view-controls">
           <button type="button" className={view === 'list' ? '' : 'outline'} onClick={() => setView('list')}><List size={16} aria-hidden="true" /> Lista</button>
           <button type="button" className={view === 'kanban' ? '' : 'outline'} onClick={() => setView('kanban')}><Columns3 size={16} aria-hidden="true" /> Kanban</button>
         </div>
-        <span>{filtered.length} tareas · {overdue} vencidas</span>
+        <span>{activeTasks.length} tareas · {overdue} vencidas</span>
       </div>
       {view === 'list' && (
         <div className="task-list">
-          {filtered.map(taskItem)}
-          {filtered.length === 0 && <p className="empty">No encontramos tareas con esos filtros.</p>}
+          {activeTasks.map(taskItem)}
+          {activeTasks.length === 0 && <p className="empty">No encontramos tareas con esos filtros.</p>}
         </div>
       )}
       {view === 'kanban' && (
         <div className="kanban">
           {STATUS_LABELS.map((status) => (
             <section className="lane" key={status}>
-              <h2><StatusDot status={status} /> <span>{filtered.filter((task) => displayStatus(task.status) === status).length}</span></h2>
-              {filtered.filter((task) => displayStatus(task.status) === status).map(taskItem)}
+              <h2><StatusDot status={status} /> <span>{activeTasks.filter((task) => displayStatus(task.status) === status).length}</span></h2>
+              {activeTasks.filter((task) => displayStatus(task.status) === status).map(taskItem)}
             </section>
           ))}
         </div>
       )}
+
+      </div></section>}
+      {section === 'trash' && <section className="orbit-board-panel"><h2 className="orbit-board-panel-title"><Trash2 size={19} /> Papelera del proyecto</h2><div className="orbit-board-panel-body">
+        <p>Recupera las tareas eliminadas o elimínalas definitivamente.</p>
+        {trashedTasks.map(task => <article className="task-list-item task-compact-card" key={task.id}><strong>{task.title}</strong><small>Eliminada: {dateLabel(task.deleted_at)}</small><div className="orbit-task-card-actions"><button type="button" className="outline" disabled={saving} onClick={() => { void onRestore(task.id); }}><RotateCcw size={15} /> Recuperar</button><button type="button" className="outline orbit-action-delete" disabled={saving} onClick={() => { void onPermanentDelete(task.id); }}><Trash2 size={15} /> Eliminar definitivamente</button></div></article>)}
+        {trashedTasks.length === 0 && <p className="empty">La papelera está vacía.</p>}
+      </div></section>}
       {selectedTask && (
         <div className="modal-backdrop" role="presentation"
           onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedTaskId(null); }}>
