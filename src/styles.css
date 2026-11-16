@@ -1137,3 +1137,20 @@ button:disabled { cursor:not-allowed; }
   .note-list-item > .note-actions { flex:0 0 auto; }
   .pending-checklist-toggle { font-size:12px; }
 }
+
+
+/* Compact pending titles: ellipsis instead of multiline overflow on iPhone. */
+.note-list-item .note-summary { overflow:hidden; }
+.note-list-item .note-title-compact {
+  display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; overflow-wrap:normal; word-break:normal;
+}
+.pending-checklist-items li > label { flex:1 1 0; width:0; min-width:0; }
+.pending-checklist-items li > label > span {
+  display:block; flex:1 1 0; min-width:0; overflow-wrap:break-word;
+  word-break:normal; white-space:normal; line-height:1.4;
+}
+.pending-checklist-items li > button {
+  width:34px; height:34px; min-width:34px; padding:6px;
+  display:inline-flex; align-items:center; justify-content:center;
+}
