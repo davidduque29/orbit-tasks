@@ -1513,3 +1513,9 @@ button:disabled { cursor:not-allowed; }
  .notes-trash-item>strong{grid-column:1/-1;font-size:14px}
  .notes-trash-item>button{width:100%;font-size:12px;padding:10px 7px}
 }
+
+/* Project bulk-delete is secondary, compact and non-dominant */
+.orbit-board-primary-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.orbit-board-primary-actions>.orbit-action-delete{font-size:12px!important;font-weight:600;padding:8px 11px!important;min-height:36px;width:auto;max-width:100%;border-radius:10px;gap:6px}
+.orbit-board-primary-actions>.orbit-action-delete svg{width:14px;height:14px}
+.project-card-options-list .project-option-danger{white-space:nowrap}
