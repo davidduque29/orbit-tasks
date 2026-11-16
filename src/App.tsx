@@ -7,7 +7,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, MoreVertical, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, MoreVertical, ArrowLeft, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderModal } from './components/ReminderModal';
 import { reminderSummary, validateReminder, type ReminderSchedule } from './domain/reminders';
@@ -519,6 +519,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         )}
 
         {space === 'projects' && view === 'board' && (
+          <>
+          <div className="project-board-return">
+            <button type="button" onClick={() => setView('projects')}><ArrowLeft size={18} aria-hidden="true" /> Volver a Mis proyectos</button>
+            {selectedProject && <span>Proyecto: {projects.find((item) => item.id === selectedProject)?.name ?? 'Seleccionado'}</span>}
+          </div>
           <TaskBoard
             projects={projects}
             tasks={tasks}
@@ -530,6 +535,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             saving={saving}
             userId={userId}
           />
+          </>
         )}
 
         {space === 'events' && view === 'events' && (
