@@ -199,3 +199,16 @@
 [data-theme="dark"] .profile-dropdown strong,
 [data-theme="dark"] .profile-dropdown small {color:var(--orbit-light-text)!important;}
 [data-theme="dark"] .profile-dropdown small {color:var(--orbit-light-muted)!important;}
+
+/* Reminder toggle is outside .quick-reminder-details; target its real DOM classes. */
+[data-theme="dark"] .notes-board .quick-capture-bottom .reminder-options-toggle,
+[data-theme="dark"] .notes-board .quick-capture-bottom .reminder-options-toggle strong,
+[data-theme="dark"] .notes-board .quick-capture-bottom .reminder-options-toggle svg {
+ color:#e9ddff!important;opacity:1!important;
+}
+[data-theme="dark"] .notes-board .quick-capture-bottom .reminder-inline-summary {
+ color:#cbd5e1!important;opacity:1!important;
+}
+[data-theme="dark"] .notes-board .quick-capture-bottom .reminder-options-toggle:focus-visible {
+ outline:3px solid #c4b5fd;outline-offset:2px;
+}
