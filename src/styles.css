@@ -1455,3 +1455,19 @@ button:disabled { cursor:not-allowed; }
  .project-heading-actions { width:auto; flex:none; }
  .project-heading-actions > button { min-height:44px; padding:9px 11px; font-size:12px; white-space:nowrap; }
 }
+
+
+/* Project-scoped board hierarchy: clear identity, back navigation and task list */
+.project-board-context { display:flex; flex-direction:column; align-items:flex-start; gap:6px; margin:0 0 18px; }
+.project-board-back { display:inline-flex; align-items:center; gap:7px; border:0; background:transparent; color:#6b44cc; font-size:13px; font-weight:700; padding:6px 0; min-height:36px; }
+.project-board-context h1 { margin:3px 0 0; color:#1e2541; font-size:clamp(25px,5vw,34px); line-height:1.15; }
+.project-board-context p { margin:0; color:#757d94; font-size:13px; }
+.task-board-subheading { margin:0; font-size:19px; color:#252c48; }
+.board-list-intro { margin:20px 0 9px; }
+.board-list-intro h2 { margin:0 0 4px; font-size:19px; color:#252c48; }
+.board-list-intro p { margin:0; color:#777e91; font-size:13px; }
+@media(max-width:520px) {
+ .project-board-context { margin-bottom:14px; }
+ .task-board .heading { gap:10px; }
+ .board-list-intro { margin-top:17px; }
+}
