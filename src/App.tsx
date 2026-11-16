@@ -41,6 +41,19 @@ function getErrorMessage(cause: unknown): string {
 }
 
 export function App() {
+  useEffect(() => {
+    const dismissProjectMenus = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element) || target.closest('.project-card-options')) return;
+      document.querySelectorAll<HTMLDetailsElement>('.project-card-options[open]').forEach(menu => menu.removeAttribute('open'));
+    };
+    const dismissWithEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') document.querySelectorAll<HTMLDetailsElement>('.project-card-options[open]').forEach(menu => menu.removeAttribute('open'));
+    };
+    document.addEventListener('pointerdown', dismissProjectMenus);
+    document.addEventListener('keydown', dismissWithEscape);
+    return () => { document.removeEventListener('pointerdown', dismissProjectMenus); document.removeEventListener('keydown', dismissWithEscape); };
+  }, []);
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
@@ -479,7 +492,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                         <button className="project-option-danger" type="button" onClick={(event) => {
                           event.currentTarget.closest('details')?.removeAttribute('open');
                           askConfirmation('Eliminar proyecto', '¿Eliminar el proyecto y todas sus tareas? Esta acción no se puede deshacer.', () => { void execute(() => orbitRepository.deleteProject(project.id)); });
-                        }}><Trash2 size={16} aria-hidden="true" /> Eliminar</button>
+                        }}><Trash2 size={16} aria-hidden="true" /> Eliminar proyecto</button>
                       </div>
                     </details>
                   </div>
