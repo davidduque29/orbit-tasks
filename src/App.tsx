@@ -498,9 +498,10 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
         {space === 'projects' && view === 'board' && (
           <>
-          <div className="project-board-return">
-            <button type="button" onClick={() => setView('projects')}><ArrowLeft size={18} aria-hidden="true" /> Volver a Mis proyectos</button>
-            {selectedProject && <span>Proyecto: {projects.find((item) => item.id === selectedProject)?.name ?? 'Seleccionado'}</span>}
+          <div className="project-board-context">
+            <button className="project-board-back" type="button" onClick={() => setView('projects')}><ArrowLeft size={17} aria-hidden="true" /> Mis proyectos</button>
+            <h1>{selectedProject ? (projects.find((item) => item.id === selectedProject)?.name ?? 'Proyecto') : 'Todos los proyectos'}</h1>
+            <p>Tablero del proyecto · {tasks.filter((task) => !selectedProject || task.project_id === selectedProject).length} tareas registradas</p>
           </div>
           <TaskBoard
             projects={projects}
