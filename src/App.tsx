@@ -86,7 +86,7 @@ export function App() {
 
 function Workspace({ userId, email }: { userId: string; email: string }) {
   const { projects, tasks, events, loading, error, refresh } = useOrbitData(userId);
-  const [view, setView] = useState<View>('dashboard');
+  const [view, setView] = useState<View>('projects');
   const [space, setSpace] = useState<Space>(() => {
     const choice = window.sessionStorage.getItem(`orbit-session-space:${userId}`);
     return choice === 'notes' || choice === 'projects' || choice === 'events' ? choice : 'pick';
@@ -95,7 +95,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     if (target === 'pick') window.sessionStorage.removeItem(`orbit-session-space:${userId}`);
     else window.sessionStorage.setItem(`orbit-session-space:${userId}`, target);
     setSpace(target);
-    setView(target === 'events' ? 'events' : 'dashboard');
+    setView(target === 'events' ? 'events' : target === 'projects' ? 'projects' : 'dashboard');
     setFeedback('');
   }
 
@@ -361,7 +361,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           ))}
         </div>
       </nav>}
-      {space === 'projects' && <details className="project-section-menu">
+      {space === 'projects' && view !== 'projects' && <details className="project-section-menu">
         <summary><LayoutDashboard size={17} aria-hidden="true" /> Secciones de proyectos <ChevronDown size={16} aria-hidden="true" /></summary>
         <nav aria-label="Secciones de proyectos">
           {([
@@ -375,7 +375,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             </button>
           ))}
         </nav>
-      </details>}
+      </details>}}
       <main className="workspace">
         {feedback && <p role="status" className="feedback">{feedback}</p>}
         {error && <p role="alert" className="error">{error}</p>}
@@ -433,8 +433,22 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
         {space === 'projects' && view === 'projects' && (
           <>
-            <div className="heading"><div><h1>Mis proyectos</h1><p>{projects.length} {projects.length === 1 ? "proyecto registrado" : "proyectos registrados"}</p></div>
-              <button onClick={() => openEditor('project')}>＋ Nuevo proyecto</button></div>
+            <div className="heading project-list-heading"><div><h1>Mis proyectos</h1><p>{projects.length} {projects.length === 1 ? "proyecto registrado" : "proyectos registrados"}</p></div>
+              <div className="project-heading-actions">
+                <details className="project-section-menu project-section-menu-inline">
+                  <summary aria-label="Abrir Inicio, Tablero y Reportes" title="Más secciones"><LayoutDashboard size={18} aria-hidden="true" /><ChevronDown size={14} aria-hidden="true" /></summary>
+                  <nav aria-label="Otras secciones de proyectos">
+                    {([
+                      ['dashboard', 'Inicio', House], ['board', 'Tablero', LayoutDashboard], ['reports', 'Reportes', ChartNoAxesCombined],
+                    ] as const).map(([key, title, Icon]) => (
+                      <button type="button" key={key} onClick={(event) => { setView(key); event.currentTarget.closest('details')?.removeAttribute('open'); }}>
+                        <Icon size={17} aria-hidden="true" />{title}
+                      </button>
+                    ))}
+                  </nav>
+                </details>
+                <button onClick={() => openEditor('project')}><Plus size={17} aria-hidden="true" /> Nuevo proyecto</button>
+              </div></div>
             <div className="project-search"><Search size={18} aria-hidden="true" />
               <input type="search" aria-label="Buscar proyectos" placeholder="Buscar proyectos..."
                 value={projectSearch} onChange={(event) => setProjectSearch(event.target.value)} />
