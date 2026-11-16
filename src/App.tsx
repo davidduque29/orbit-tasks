@@ -15,7 +15,7 @@ import { WeeklyAgenda } from './components/WeeklyAgenda';
 import { TrendSparkline } from './components/TrendSparkline';
 import { ProjectProgressReport } from './components/ProjectProgressReport';
 import { calculateAverageCycleDays, calculateCompletionRate, countClosuresByDay } from './domain/metrics';
-import { TASK_PRIORITIES, type TaskStatus } from './domain/models';
+import { TASK_PRIORITIES, type TaskStatus, type Task } from './domain/models';
 import { FIELD_LIMITS, validateEventFields, validateRequiredText, validateOptionalText } from './domain/formValidation';
 import { useOrbitData } from './hooks/useOrbitData';
 import { orbitRepository } from './infrastructure/orbitRepository';
