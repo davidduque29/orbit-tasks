@@ -7,7 +7,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, MoreVertical, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderModal } from './components/ReminderModal';
 import { reminderSummary, validateReminder, type ReminderSchedule } from './domain/reminders';
@@ -361,16 +361,21 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           ))}
         </div>
       </nav>}
-      {space === 'projects' && <nav className="tabs" aria-label="Secciones">
-        {([
-          ['dashboard', 'Inicio', House], ['projects', 'Proyectos', FolderKanban], ['board', 'Tablero', LayoutDashboard],
-          ['reports', 'Reportes', ChartNoAxesCombined],
-        ] as const).map(([key, title, Icon]) => (
-          <button type="button" aria-current={view === key ? 'page' : undefined} className={view === key ? 'active' : ''} key={key} onClick={() => setView(key)}>
-            <Icon size={15} aria-hidden="true" />{title}
-          </button>
-        ))}
-      </nav>}
+      {space === 'projects' && <details className="project-section-menu">
+        <summary><LayoutDashboard size={17} aria-hidden="true" /> Secciones de proyectos <ChevronDown size={16} aria-hidden="true" /></summary>
+        <nav aria-label="Secciones de proyectos">
+          {([
+            ['dashboard', 'Inicio', House], ['projects', 'Mis proyectos', FolderKanban],
+            ['board', 'Tablero', LayoutDashboard], ['reports', 'Reportes', ChartNoAxesCombined],
+          ] as const).map(([key, title, Icon]) => (
+            <button type="button" key={key} aria-current={view === key ? 'page' : undefined}
+              className={view === key ? 'active' : ''}
+              onClick={(event) => { setView(key); event.currentTarget.closest('details')?.removeAttribute('open'); }}>
+              <Icon size={17} aria-hidden="true" />{title}
+            </button>
+          ))}
+        </nav>
+      </details>}
       <main className="workspace">
         {feedback && <p role="status" className="feedback">{feedback}</p>}
         {error && <p role="alert" className="error">{error}</p>}
@@ -428,7 +433,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
         {space === 'projects' && view === 'projects' && (
           <>
-            <div className="heading"><div><h1>Proyectos</h1><p>Tu trabajo organizado por iniciativas.</p></div>
+            <div className="heading"><div><h1>Mis proyectos</h1><p>{projects.length} {projects.length === 1 ? "proyecto registrado" : "proyectos registrados"}</p></div>
               <button onClick={() => openEditor('project')}>＋ Nuevo proyecto</button></div>
             <div className="project-search"><Search size={18} aria-hidden="true" />
               <input type="search" aria-label="Buscar proyectos" placeholder="Buscar proyectos..."
@@ -443,49 +448,54 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 const pendingTasks = totalTasks - completedTasks;
                 const progress = calculateCompletionRate(projectTasks);
                 const expanded = expandedProjects.includes(project.id);
-                return <article className={expanded ? 'card project-compact-card is-expanded' : 'card project-compact-card'}
-                  key={project.id}>
-                  <button className="project-compact-summary" type="button" aria-expanded={expanded}
-                    aria-controls={`project-detail-${project.id}`}
-                    onClick={() => setExpandedProjects((current) => expanded
-                      ? current.filter((id) => id !== project.id) : [...current, project.id])}>
-                    <span className="project-compact-icon"><FolderKanban size={22} aria-hidden="true" /></span>
-                    <span className="project-compact-copy">
-                      <strong>{project.name}</strong>
-                      <span className="project-compact-metrics">
-                        <ListTodo size={14} aria-hidden="true" /> {totalTasks} {totalTasks === 1 ? 'tarea' : 'tareas'}
-                        <span className="project-compact-percent">{progress.toFixed(0)}%</span>
+                return <article className="card project-compact-card project-card-redesign" key={project.id}>
+                  <div className="project-card-top">
+                    <button className="project-compact-summary" type="button" aria-expanded={expanded}
+                      aria-controls={`project-detail-${project.id}`}
+                      onClick={() => setExpandedProjects((current) => expanded
+                        ? current.filter((id) => id !== project.id) : [...current, project.id])}>
+                      <span className="project-compact-icon"><FolderKanban size={22} aria-hidden="true" /></span>
+                      <span className="project-compact-copy">
+                        <strong>{project.name}</strong>
+                        <span className="project-card-description">{project.description || 'Sin descripción adicional.'}</span>
                       </span>
-                    </span>
-                    <span className="project-compact-chevron" aria-hidden="true">
-                      {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                    </span>
-                  </button>
+                      <span className="project-compact-chevron" aria-hidden="true">{expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</span>
+                    </button>
+                    <details className="project-card-options">
+                      <summary aria-label={`Opciones de ${project.name}`} title="Opciones del proyecto"><MoreVertical size={21} aria-hidden="true" /></summary>
+                      <div className="project-card-options-list">
+                        <button type="button" onClick={(event) => {
+                          event.currentTarget.closest('details')?.removeAttribute('open');
+                          setExpandedProjects((current) => current.includes(project.id) ? current : [...current, project.id]);
+                        }}><Pencil size={16} aria-hidden="true" /> Ver detalles</button>
+                        <button className="project-option-danger" type="button" onClick={(event) => {
+                          event.currentTarget.closest('details')?.removeAttribute('open');
+                          askConfirmation('Eliminar proyecto', '¿Eliminar el proyecto y todas sus tareas? Esta acción no se puede deshacer.', () => { void execute(() => orbitRepository.deleteProject(project.id)); });
+                        }}><Trash2 size={16} aria-hidden="true" /> Eliminar</button>
+                      </div>
+                    </details>
+                  </div>
+                  <div className="project-card-progress-label"><span>Progreso del proyecto</span><strong>{progress.toFixed(0)}%</strong></div>
                   <div className="project-progress-track" role="progressbar" aria-label={`Avance de ${project.name}`}
                     aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
                     <div style={{ width: `${progress}%` }} />
                   </div>
-                  <button className="project-create-task project-create-task-shortcut" type="button"
-                    onClick={() => openTaskForProject(project.id)}
-                    aria-label={`Crear una tarea en ${project.name}`}>
-                    <Plus size={16} aria-hidden="true"/> Crear tarea
-                  </button>
-                  {expanded && <div id={`project-detail-${project.id}`} className="project-compact-details">
-                    <p>{project.description || 'Sin descripción adicional.'}</p>
-                    <div className="project-compact-totals">
-                      <span><ListTodo size={17} aria-hidden="true" />Total <strong>{totalTasks}</strong></span>
-                      <span><ArrowRight size={17} aria-hidden="true" />Pendientes <strong>{pendingTasks}</strong></span>
-                      <span><CheckCircle2 size={17} aria-hidden="true" />Finalizadas <strong>{completedTasks}</strong></span>
-                    </div>
-                    <div className="card-actions">
-                      <button className="project-open-board" type="button"
-                        onClick={() => { setSelectedProject(project.id); setView('board'); }}>
-                        <ArrowRight size={15} aria-hidden="true" />Ver tablero
-                      </button>
-                      <button className="orbit-action-delete" type="button" onClick={() => {
-                        askConfirmation('Eliminar proyecto', '¿Eliminar el proyecto y todas sus tareas? Esta acción no se puede deshacer.', () => { void execute(() => orbitRepository.deleteProject(project.id)); });
-                      }}><Trash2 size={15} aria-hidden="true" />Eliminar</button>
-                    </div>
+                  <div className="project-compact-totals">
+                    <span><ListTodo size={17} aria-hidden="true" />Total <strong>{totalTasks}</strong></span>
+                    <span><ArrowRight size={17} aria-hidden="true" />Pendientes <strong>{pendingTasks}</strong></span>
+                    <span><CheckCircle2 size={17} aria-hidden="true" />Finalizadas <strong>{completedTasks}</strong></span>
+                  </div>
+                  <div className="project-card-primary-actions">
+                    <button className="project-open-board" type="button" onClick={() => { setSelectedProject(project.id); setView('board'); }}>
+                      <LayoutDashboard size={17} aria-hidden="true" /> Ver tablero
+                    </button>
+                    <button className="project-create-task" type="button" onClick={() => openTaskForProject(project.id)}
+                      aria-label={`Crear una tarea en ${project.name}`}>
+                      <Plus size={17} aria-hidden="true" /> Crear tarea
+                    </button>
+                  </div>
+                  {expanded && <div id={`project-detail-${project.id}`} className="project-card-extra">
+                    <p>{totalTasks === 0 ? 'Todavía no hay tareas en este proyecto.' : `Este proyecto tiene ${totalTasks} tareas registradas.`}</p>
                   </div>}
                 </article>;
               })}
