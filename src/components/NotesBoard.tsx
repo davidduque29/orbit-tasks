@@ -612,8 +612,15 @@ export function NotesBoard({ userId }: { userId: string }) {
     </div>}
     </>}
     {section === 'search' && <div className="notes-search-pane">
-      <h2>Buscar</h2>
-      <label className="notes-search"><Search size={19}/><input aria-label="Buscar pendientes por título" placeholder="Buscar pendientes por título..." value={search} onChange={event => setSearch(event.target.value)}/></label>
+      <div className="notes-search-highlight">
+        <div className="quick-capture-heading">
+          <span className="quick-capture-heading-icon"><Search size={20} aria-hidden="true"/></span>
+          <strong>Buscar pendientes</strong>
+        </div>
+        <div className="notes-search-body">
+          <label className="notes-search"><Search size={19} aria-hidden="true"/><input aria-label="Buscar pendientes por título" placeholder="Buscar pendientes por título..." value={search} onChange={event => setSearch(event.target.value)}/></label>
+        </div>
+      </div>
     {error && <p className="error" role="alert">{error}</p>}
     {message && <p className="feedback" role="status">{message}</p>}
     {loading && <p className="muted">Cargando tus pendientes…</p>}
