@@ -1647,3 +1647,23 @@ button:disabled { cursor:not-allowed; }
 .orbit-note-swipe-actions{display:flex;gap:8px;flex-wrap:wrap;padding:8px}
 .orbit-note-swipe-actions button{min-height:44px;display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:8px 12px}
 @media(max-width:720px){.orbit-kanban-dropbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.orbit-kanban-dropbar button{padding:7px 4px}.orbit-reorder-note .orbit-note-grip{min-width:28px}}
+
+/* Gesture redesign: action rails are behind, never part of the card's flex layout. */
+.orbit-swipe-shell{position:relative;isolation:isolate;overflow:hidden;border-radius:20px;margin-bottom:10px}
+.orbit-swipe-shell .orbit-reorder-note{position:relative;z-index:2;margin:0;width:100%;box-sizing:border-box;transition:transform .22s cubic-bezier(.2,.8,.2,1);touch-action:pan-y;will-change:transform}
+.orbit-swipe-underlay{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.orbit-swipe-underlay span{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;width:92px;height:100%;font-size:12px;font-weight:700;color:#fff}
+.orbit-swipe-pin{background:#6950cc}.orbit-swipe-delete{background:#bb2d43}
+.orbit-swipe-action{position:absolute;z-index:3;top:0;bottom:0;width:92px;display:flex}
+.orbit-swipe-action-left{left:0}.orbit-swipe-action-right{right:0}
+.orbit-swipe-action button{border:0;width:100%;height:100%;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;background:#6950cc;color:#fff;font-weight:700;font-size:12px}
+.orbit-swipe-action .orbit-action-delete{background:#bb2d43;color:#fff}
+.orbit-swipe-shell .orbit-swiped-right{transform:translate3d(92px,0,0)}
+.orbit-swipe-shell .orbit-swiped-left{transform:translate3d(-92px,0,0)}
+.orbit-swipe-shell .orbit-reorder-note .note-summary{min-width:0;flex:1}
+.orbit-kanban-dropbar{display:none}
+.orbit-kanban-dropbar.orbit-dropbar-active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));position:sticky;top:8px;z-index:8;background:#1b2340;padding:8px;border-radius:14px}
+.orbit-kanban-dropbar [data-touch-target=true],.kanban .lane[data-touch-target=true]{outline:3px solid #ae8cff;outline-offset:-3px;background:#433a66}
+.orbit-task-touch-active{outline:2px solid #ae8cff;box-shadow:0 8px 20px #0005}
+.orbit-drag-handle{min-height:30px;height:30px;min-width:30px;align-self:center}
+@media(max-width:720px){.kanban .task-compact-card{min-height:0;padding-top:8px;padding-bottom:8px}.kanban .task-compact-card .orbit-drag-handle{position:absolute;top:5px;left:5px;z-index:2}.kanban .task-compact-card .task-summary{padding-top:16px}.orbit-kanban-dropbar:not(.orbit-dropbar-active){display:none}}
