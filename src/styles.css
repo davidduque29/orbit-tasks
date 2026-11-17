@@ -1683,3 +1683,7 @@ button:disabled { cursor:not-allowed; }
 .task-compact-card:has(.orbit-inline-status-menu){z-index:20}
 [data-kanban-target],.orbit-kanban-dropbar,.orbit-kanban-dropbar *{user-select:none!important;-webkit-user-select:none!important}
 .orbit-touch-ghost{transition:none!important;animation:none!important}
+
+/* Long-press reorder: preserve normal page scrolling until the hold activates. */
+.orbit-reorder-note.orbit-touch-source{touch-action:none;z-index:5}
+.orbit-reorder-note .note-summary{touch-action:pan-y}
