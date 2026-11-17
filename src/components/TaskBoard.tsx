@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { Project, Task, TaskStatus } from '../domain/models';
 import { ReminderOverride } from './ReminderOverride';
 import { Search, List, Columns3, Plus, X, ClipboardList, CalendarDays, Flag, Bell, Pencil, Trash2, RotateCcw, GripVertical } from 'lucide-react';
@@ -125,6 +125,25 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
   const [view, setView] = useState<BoardView>('list');
   const [dragTaskId, setDragTaskId] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
+  const dragVisual=useRef<{ghost:HTMLElement;source:HTMLElement;offsetX:number;offsetY:number}|null>(null);
+  function startTouchVisual(event:React.PointerEvent<HTMLElement>) {
+    const source=event.currentTarget.closest<HTMLElement>('.task-compact-card');
+    if(!source)return;
+    const rect=source.getBoundingClientRect(),ghost=source.cloneNode(true) as HTMLElement;
+    ghost.classList.add('orbit-touch-ghost');
+    Object.assign(ghost.style,{position:'fixed',left:'0px',top:'0px',width:rect.width+'px',height:rect.height+'px',margin:'0',zIndex:'99999',pointerEvents:'none',transform:`translate3d(${rect.left}px,${rect.top}px,0)`});
+    document.body.appendChild(ghost);source.classList.add('orbit-touch-source');
+    dragVisual.current={ghost,source,offsetX:event.clientX-rect.left,offsetY:event.clientY-rect.top};
+  }
+  function stopTouchVisual(target?:HTMLElement|null) {
+    const visual=dragVisual.current;dragVisual.current=null;if(!visual)return;
+    visual.source.classList.remove('orbit-touch-source');
+    const rect=target?.getBoundingClientRect()??visual.source.getBoundingClientRect();
+    visual.ghost.style.transition='transform 180ms cubic-bezier(.2,.8,.2,1),opacity 180ms ease';
+    visual.ghost.style.transform=`translate3d(${rect.left}px,${rect.top}px,0)`;
+    visual.ghost.style.opacity='0.35';
+    window.setTimeout(()=>visual.ghost.remove(),200);
+  }
   const [touchTask,setTouchTask] = useState<string|null>(null);
   const [touchTarget,setTouchTarget] = useState<DisplayStatus|null>(null);
   const [moveError, setMoveError] = useState('');
@@ -146,11 +165,14 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
     if (event.pointerType === "mouse") return;
     const target=document.elementFromPoint(event.clientX,event.clientY)?.closest<HTMLElement>('[data-kanban-target]');
     const status=target?.dataset.kanbanTarget as DisplayStatus|undefined;
+    stopTouchVisual(target);
     if(status && STATUS_LABELS.includes(status)) void moveTask(taskId,status);
     setDragTaskId(null);setTouchTask(null);setTouchTarget(null);
   }
   function pointerMove(event:React.PointerEvent<HTMLElement>) {
     if(!touchTask || event.pointerType==="mouse")return;
+    const visual=dragVisual.current;
+    if(visual)visual.ghost.style.transform=`translate3d(${event.clientX-visual.offsetX}px,${event.clientY-visual.offsetY}px,0)`;
     const target=document.elementFromPoint(event.clientX,event.clientY)?.closest<HTMLElement>('[data-kanban-target]');
     const status=target?.dataset.kanbanTarget as DisplayStatus|undefined;
     setTouchTarget(status && STATUS_LABELS.includes(status)?status:null);
@@ -193,9 +215,9 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
         onDragStart={event => { if (!draggableCard) return; event.dataTransfer.setData("text/plain", task.id); event.dataTransfer.effectAllowed = "move"; setDragTaskId(task.id); }}
         onDragEnd={() => setDragTaskId(null)}>
         {draggableCard && <button type="button" className="orbit-drag-handle" aria-label={`Arrastrar ${task.title} a otro estado`} title="Mantén pulsado para mover"
-          onPointerDown={event => { if (event.pointerType !== "mouse") { event.currentTarget.setPointerCapture(event.pointerId); setDragTaskId(task.id); setTouchTask(task.id); } }}
+          onPointerDown={event => { if (event.pointerType !== "mouse") { event.currentTarget.setPointerCapture(event.pointerId); setDragTaskId(task.id); setTouchTask(task.id); startTouchVisual(event); } }}
           onPointerMove={pointerMove}
-          onPointerUp={event => pointerRelease(event, task.id)} onPointerCancel={() => {setDragTaskId(null);setTouchTask(null);setTouchTarget(null);}}><GripVertical size={18}/></button>}
+          onPointerUp={event => pointerRelease(event, task.id)} onPointerCancel={() => {setDragTaskId(null);setTouchTask(null);setTouchTarget(null);stopTouchVisual();}}><GripVertical size={18}/></button>}
         <button type="button" className="task-summary task-compact-button"
           aria-label={`Ver detalles de ${task.title}`}
           onClick={() => setSelectedTaskId(task.id)}>
