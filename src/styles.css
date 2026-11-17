@@ -1591,3 +1591,18 @@ button:disabled { cursor:not-allowed; }
  .orbit-board-panel .kanban .orbit-task-card-actions button{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}
  .orbit-board-panel .kanban .task-compact-button .status-indicator{font-size:11px}
 }
+
+
+/* Shared accessible close control for all dialogs in Orbit Tasks. */
+.orbit-modal-close,
+.orbit-detail-modal .orbit-modal-close {
+ width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;
+ padding:0!important;display:inline-grid!important;place-items:center!important;
+ color:#fff!important;-webkit-text-fill-color:#fff!important;
+ background:#353c5c!important;border:2px solid #9781e4!important;
+ border-radius:13px!important;opacity:1!important;box-shadow:0 0 0 1px #40375b!important;
+}
+.orbit-modal-close svg{color:#fff!important;stroke:#fff!important;opacity:1!important}
+.orbit-modal-close:focus-visible{outline:3px solid #c4b5fd!important;outline-offset:3px}
+.modal-backdrop.orbit-confirm-backdrop{z-index:100!important}
+.orbit-confirm-backdrop .orbit-detail-modal{z-index:101!important}
