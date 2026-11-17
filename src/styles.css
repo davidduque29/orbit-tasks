@@ -1674,3 +1674,12 @@ button:disabled { cursor:not-allowed; }
 .orbit-touch-source{opacity:.42;outline:2px dashed #9872ec}
 .orbit-drag-handle,.orbit-note-grip{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .orbit-reorder-note .note-summary,.task-compact-card .task-summary{-webkit-user-select:none;user-select:none}
+
+.orbit-inline-status{position:relative;flex:0 0 auto;align-self:center;z-index:5}
+.orbit-inline-status-trigger{border:0;background:transparent;min-height:40px;padding:4px;display:flex;align-items:center;cursor:pointer}
+.orbit-inline-status-menu{position:absolute;right:0;top:100%;z-index:40;min-width:160px;background:#fff;color:#18223c;border:1px solid #d9d0f1;box-shadow:0 12px 28px #11152e44;border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:3px}
+.orbit-inline-status-menu button{border:0;background:transparent;border-radius:8px;padding:9px;text-align:left;cursor:pointer}
+.orbit-inline-status-menu button:hover,.orbit-inline-status-menu button:focus-visible{background:#efeaff}
+.task-compact-card:has(.orbit-inline-status-menu){z-index:20}
+[data-kanban-target],.orbit-kanban-dropbar,.orbit-kanban-dropbar *{user-select:none!important;-webkit-user-select:none!important}
+.orbit-touch-ghost{transition:none!important;animation:none!important}
