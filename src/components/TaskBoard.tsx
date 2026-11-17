@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Project, Task, TaskStatus } from '../domain/models';
 import { ReminderOverride } from './ReminderOverride';
-import { Search, List, Columns3, Plus, X, ClipboardList, CalendarDays, Flag, Bell, Pencil, Trash2, RotateCcw } from 'lucide-react';
+import { Search, List, Columns3, Plus, X, ClipboardList, CalendarDays, Flag, Bell, Pencil, Trash2, RotateCcw, GripVertical } from 'lucide-react';
 
 type DisplayStatus = 'Activa' | 'En progreso' | 'Impedimento' | 'Finalizado';
 type TimeFilter = 'all' | 'overdue' | 'today' | 'week' | 'closed';
@@ -123,6 +123,29 @@ function TaskDetails({ task, projects, onSave, onDelete, saving, userId }: {
 
 export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, onNewTask, onEdit, onRestore, onPermanentDelete, onDeleteAll, saving, userId }: BoardProps) {
   const [view, setView] = useState<BoardView>('list');
+  const [dragTaskId, setDragTaskId] = useState<string | null>(null);
+  const [moving, setMoving] = useState(false);
+  const [moveError, setMoveError] = useState('');
+  async function moveTask(taskId: string, destination: DisplayStatus) {
+    const task = tasks.find(item => item.id === taskId);
+    if (!task || displayStatus(task.status) === destination || saving || moving) return;
+    let resolution = task.resolution ?? '';
+    if ((destination === 'Impedimento' || destination === 'Finalizado') && !resolution.trim()) {
+      const entered = window.prompt(destination === 'Impedimento' ? 'Indica el motivo del impedimento:' : 'Indica la resolución de la tarea:');
+      if (!entered?.trim()) { setMoveError('El cambio requiere un motivo o resolución.'); return; }
+      resolution = entered.trim();
+    }
+    setMoving(true); setMoveError('');
+    try { await onSave(taskId, storedStatus(destination), resolution); setMobileLane(destination); }
+    catch (error) { setMoveError(error instanceof Error ? error.message : 'No se pudo mover la tarea.'); }
+    finally { setMoving(false); setDragTaskId(null); }
+  }
+  function pointerRelease(event: React.PointerEvent<HTMLElement>, taskId: string) {
+    if (event.pointerType === 'mouse') return;
+    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-kanban-target]');
+    if (target?.dataset.kanbanTarget) void moveTask(taskId, target.dataset.kanbanTarget as DisplayStatus);
+    setDragTaskId(null);
+  }
   const [mobileLane, setMobileLane] = useState<DisplayStatus>('Activa');
   const [section, setSection] = useState<'tasks' | 'search' | 'trash'>('tasks');
   const [keyword, setKeyword] = useState('');
@@ -155,9 +178,14 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
   const overdue = filtered.filter((task) => task.status !== 'Finalizado'
     && task.estimated_due_at && new Date(task.estimated_due_at) < now).length;
 
-  function taskItem(task: Task) {
+  function taskItem(task: Task, draggableCard = false) {
     return (
-      <article className="task-list-item task-compact-card" key={task.id}>
+      <article className="task-list-item task-compact-card" key={task.id} draggable={draggableCard && !saving && !moving}
+        onDragStart={event => { if (!draggableCard) return; event.dataTransfer.setData("text/plain", task.id); event.dataTransfer.effectAllowed = "move"; setDragTaskId(task.id); }}
+        onDragEnd={() => setDragTaskId(null)}>
+        {draggableCard && <button type="button" className="orbit-drag-handle" aria-label={`Arrastrar ${task.title} a otro estado`} title="Mantén pulsado para mover"
+          onPointerDown={event => { if (event.pointerType !== "mouse") { event.currentTarget.setPointerCapture(event.pointerId); setDragTaskId(task.id); } }}
+          onPointerUp={event => pointerRelease(event, task.id)} onPointerCancel={() => setDragTaskId(null)}><GripVertical size={18}/></button>}
         <button type="button" className="task-summary task-compact-button"
           aria-label={`Ver detalles de ${task.title}`}
           onClick={() => setSelectedTaskId(task.id)}>
@@ -212,7 +240,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
       </div>
 
         <p>{filtered.length} resultados encontrados</p>
-        <div className="task-list">{filtered.map(taskItem)}{filtered.length === 0 && <p className="empty">No se encontraron tareas.</p>}</div>
+        <div className="task-list">{filtered.map(task => taskItem(task))}{filtered.length === 0 && <p className="empty">No se encontraron tareas.</p>}</div>
       </div></section>}
       {section === 'tasks' && <section className="orbit-board-panel"><h2 className="orbit-board-panel-title"><ClipboardList size={19} /> Tareas del proyecto</h2><div className="orbit-board-panel-body">
         <div className="orbit-board-primary-actions"><button type="button" onClick={onNewTask}><Plus size={16} /> Nueva tarea</button><button type="button" className="outline orbit-action-delete" disabled={!selectedProject || activeTasks.length === 0 || saving} onClick={() => { void onDeleteAll(); }}><Trash2 size={15} /> Eliminar todas</button></div>
@@ -225,12 +253,20 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
       </div>
       {view === 'list' && (
         <div className="task-list">
-          {activeTasks.map(taskItem)}
+          {activeTasks.map(task => taskItem(task))}
           {activeTasks.length === 0 && <p className="empty">No encontramos tareas con esos filtros.</p>}
         </div>
       )}
       {view === 'kanban' && (
         <div className="kanban-wrapper">
+          {moveError && <p className="error" role="alert">{moveError}</p>}
+          <div className="orbit-kanban-dropbar" aria-label="Mover tarea a estado">
+            {STATUS_LABELS.map(status => <button key={status} type="button" data-kanban-target={status}
+              disabled={!dragTaskId || saving || moving} onClick={() => { if (dragTaskId) void moveTask(dragTaskId, status); }}
+              onDragOver={event => { if (dragTaskId) event.preventDefault(); }}
+              onDrop={event => { event.preventDefault(); const id=event.dataTransfer.getData('text/plain') || dragTaskId; if (id) void moveTask(id,status); }}>
+              <StatusDot status={status}/></button>)}
+          </div>
           <label className="kanban-mobile-picker" htmlFor="kanban-mobile-status">Estado del tablero
             <select id="kanban-mobile-status" value={mobileLane} onChange={(event) => setMobileLane(event.target.value as DisplayStatus)}>
               {STATUS_LABELS.map((status) => <option key={status} value={status}>{status} ({activeTasks.filter((task) => displayStatus(task.status) === status).length})</option>)}
@@ -238,9 +274,11 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
           </label>
           <div className="kanban">
             {STATUS_LABELS.map((status) => (
-              <section className="lane" data-mobile-active={mobileLane === status ? 'true' : 'false'} key={status}>
+              <section className="lane" data-kanban-target={status} data-mobile-active={mobileLane === status ? 'true' : 'false'} key={status}
+                onDragOver={event => { if (dragTaskId) event.preventDefault(); }}
+                onDrop={event => { event.preventDefault(); const id=event.dataTransfer.getData("text/plain") || dragTaskId; if (id) void moveTask(id,status); }}>
                 <h2><StatusDot status={status} /> <span>{activeTasks.filter((task) => displayStatus(task.status) === status).length}</span></h2>
-                {activeTasks.filter((task) => displayStatus(task.status) === status).map(taskItem)}
+                {activeTasks.filter((task) => displayStatus(task.status) === status).map(task => taskItem(task, true))}
               </section>
             ))}
           </div>

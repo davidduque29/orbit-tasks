@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Bell, CalendarClock, Check, CheckCircle2, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, CheckSquare, Circle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Bell, CalendarClock, Check, CheckCircle2, ListTodo, NotebookPen, Pencil, Plus, Search, Tag, Trash2, X, Mic, MicOff, Volume2, VolumeX, CheckSquare, Circle, ChevronDown, ChevronUp, Pin, GripVertical } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { parsePendingItems } from '../domain/pendingChecklist';
 import { ReminderModal } from './ReminderModal';
@@ -12,7 +12,7 @@ type Note = {
   completed_at: string | null; created_at: string; updated_at: string;
   recurrence_rule: RecurrenceRule | null;
   recurrence_series_id: string | null; recurrence_next_created: boolean;
-  deleted_at: string | null;
+  deleted_at: string | null; is_pinned: boolean; sort_order: number | null;
 };
 type NoteItem = { id: string; note_id: string; owner_id: string; content: string; position: number; completed: boolean };
 type Category = { id: string; name: string; color: string; owner_id: string };
@@ -110,6 +110,44 @@ export function NotesBoard({ userId }: { userId: string }) {
   const editorListPreview = useMemo(() => parsePendingItems(title), [title]);
   const [historySeriesId, setHistorySeriesId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
+  const [dragNoteId, setDragNoteId] = useState<string | null>(null);
+  const [swipeNoteId, setSwipeNoteId] = useState<string | null>(null);
+  const [swipeDirection,setSwipeDirection] = useState<"left"|"right">("right");
+  const swipeStart = useRef<{id:string;x:number;y:number}|null>(null);
+  async function pinNote(note: Note) {
+    await perform(async () => {
+      const {error: updateError} = await supabase.from('notes').update({is_pinned:!note.is_pinned}).eq('id',note.id).eq('owner_id',userId);
+      if (updateError) throw updateError;
+    }, note.is_pinned ? 'Pendiente desfijado.' : 'Pendiente fijado arriba.');
+    setSwipeNoteId(null);
+  }
+  async function reorderNotes(sourceId:string,targetId:string) {
+    if (sourceId===targetId || busy) return;
+    const source=filtered.find(note=>note.id===sourceId), target=filtered.find(note=>note.id===targetId);
+    if (!source || !target || source.is_pinned!==target.is_pinned) {setError('Ordena los fijados entre sí y los demás por separado.');return;}
+    const group=filtered.filter(note=>note.is_pinned===source.is_pinned);
+    const from=group.findIndex(note=>note.id===sourceId),to=group.findIndex(note=>note.id===targetId);
+    if(from<0||to<0)return;
+    const ordered=[...group];ordered.splice(to,0,ordered.splice(from,1)[0]);
+    await perform(async()=>{
+      for (const [index,note] of ordered.entries()) {
+        const {error: updateError}=await supabase.from('notes').update({sort_order:index+1}).eq('id',note.id).eq('owner_id',userId);
+        if(updateError)throw updateError;
+      }
+    },'Orden guardado.');
+    setDragNoteId(null);
+  }
+  function releaseNote(event: React.PointerEvent<HTMLElement>,id:string) {
+    const target=document.elementFromPoint(event.clientX,event.clientY)?.closest<HTMLElement>('[data-note-drop]');
+    if(target?.dataset.noteDrop) void reorderNotes(id,target.dataset.noteDrop);
+    setDragNoteId(null);
+  }
+  function swipeEnd(event:React.PointerEvent<HTMLElement>,note:Note) {
+    const start=swipeStart.current;swipeStart.current=null;
+    if(!start||start.id!==note.id)return;
+    const dx=event.clientX-start.x,dy=event.clientY-start.y;
+    if(Math.abs(dx)>65 && Math.abs(dx)>Math.abs(dy)*1.5) {setSwipeDirection(dx>0?"right":"left");setSwipeNoteId(note.id);}
+  }
   const [expandedLists, setExpandedLists] = useState<Set<string>>(() => new Set());
   const toggleListExpansion = (id: string) => setExpandedLists(previous => {
     const next = new Set(previous);
@@ -276,11 +314,12 @@ export function NotesBoard({ userId }: { userId: string }) {
   const filtered = useMemo(() => visibleNotes.filter(note => {
     if (section === 'pending') return statusTab === 'active' ? !note.completed : note.completed;
     return section === 'search' && note.title.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es'));
-  }), [visibleNotes, section, statusTab, search]);
+  }).sort((a,b) => Number(b.is_pinned)-Number(a.is_pinned) || (a.sort_order??Number.MAX_SAFE_INTEGER)-(b.sort_order??Number.MAX_SAFE_INTEGER) || new Date(b.created_at).getTime()-new Date(a.created_at).getTime()), [visibleNotes, section, statusTab, search]);
   useEffect(() => { setPage(1); }, [section, statusTab, search]);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const displayPageSize = section === 'pending' && statusTab === 'active' ? Math.max(pageSize,filtered.length) : pageSize;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / displayPageSize));
   const currentPage = Math.min(page, totalPages);
-  const pagedNotes = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pagedNotes = filtered.slice((currentPage - 1) * displayPageSize, currentPage * displayPageSize);
   const trashPages = Math.max(1, Math.ceil(trashedNotes.length / pageSize));
   const currentTrashPage = Math.min(trashPage, trashPages);
   const pagedTrash = trashedNotes.slice((currentTrashPage - 1) * pageSize, currentTrashPage * pageSize);
@@ -579,7 +618,18 @@ export function NotesBoard({ userId }: { userId: string }) {
     {!loading && <>
     <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> Listado de pendientes ({filtered.length})</h2>
     <div className="notes-list">
-      {pagedNotes.map(note => <article className="card note-list-item" key={note.id}>
+      {pagedNotes.map(note => <article className="card note-list-item orbit-reorder-note" key={note.id} data-note-drop={note.id}
+        draggable={section === "pending" && statusTab === "active" && !busy}
+        onDragStart={event=>{event.dataTransfer.setData("text/plain",note.id);setDragNoteId(note.id);}}
+        onDragEnd={()=>setDragNoteId(null)}
+        onDragOver={event=>{if(dragNoteId)event.preventDefault();}}
+        onDrop={event=>{event.preventDefault();const id=event.dataTransfer.getData("text/plain")||dragNoteId;if(id)void reorderNotes(id,note.id);}}
+        onPointerDown={event=>{if(event.pointerType==="touch")swipeStart.current={id:note.id,x:event.clientX,y:event.clientY};}}
+        onPointerUp={event=>swipeEnd(event,note)}>
+        {section==="pending" && statusTab==="active" && <button type="button" className="orbit-note-grip" aria-label={`Arrastrar ${note.title} para ordenar`}
+          onPointerDown={event=>{event.stopPropagation();if(event.pointerType!=="mouse"){event.currentTarget.setPointerCapture(event.pointerId);setDragNoteId(note.id);}}}
+          onPointerUp={event=>{event.stopPropagation();releaseNote(event,note.id);}}><GripVertical size={18}/></button>}
+        {note.is_pinned && <Pin size={15} className="orbit-note-pin" aria-label="Fijado"/>}
         <div className="note-check">
           {note.kind === 'pending'
             ? <input type="checkbox" aria-label={`Marcar como ${note.completed ? 'pendiente' : 'completado'}: ${note.title}`}
@@ -612,6 +662,7 @@ export function NotesBoard({ userId }: { userId: string }) {
             {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/><span style={{textDecoration:item.completed?'line-through':'none'}}>{item.content}</span></label><button type="button" className="outline" disabled={busy} aria-label={`Editar ${item.content}`} onClick={() => void editListItem(item)}><Pencil size={14}/></button><button type="button" className="outline" disabled={busy} aria-label={`Eliminar ${item.content}`} onClick={() => void deleteListItem(item)}><X size={14}/></button></li>)}<li><button type="button" className="outline" disabled={busy} onClick={() => void addListItem(note.id)}><Plus size={14}/> Agregar elemento</button></li>
           </ul>}
         </div>}
+        {swipeNoteId===note.id && <div className="orbit-note-swipe-actions">{swipeDirection==="right" ? <button type="button" onClick={()=>void pinNote(note)}><Pin size={15}/>{note.is_pinned?"Desfijar":"Fijar"}</button> : <button type="button" className="orbit-action-delete" onClick={()=>{setDeleteTarget(note);setSwipeNoteId(null);}}><Trash2 size={15}/>Eliminar</button>}</div>}
         <div className="note-actions">
           {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
