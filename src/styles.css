@@ -1591,3 +1591,39 @@ button:disabled { cursor:not-allowed; }
  .orbit-board-panel .kanban .orbit-task-card-actions button{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}
  .orbit-board-panel .kanban .task-compact-button .status-indicator{font-size:11px}
 }
+
+
+/* Kanban density: actions beside content, not in a separate tall row. */
+.task-board .kanban .lane {min-height:0;align-content:start;min-width:0}
+.task-board .kanban .lane h2 {align-items:center;gap:8px;margin:0 0 10px;min-width:0}
+.task-board .kanban .task-compact-card {
+ display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+ align-items:center!important;align-self:start!important;
+ min-height:0!important;height:auto!important;margin:8px 0!important;
+}
+.task-board .kanban .task-compact-card > .task-compact-button {
+ grid-column:1!important;min-width:0!important;width:100%!important;
+ min-height:0!important;height:auto!important;padding:10px 4px 10px 9px!important;
+ gap:6px!important;align-self:stretch!important;
+}
+.task-board .kanban .task-compact-card > .orbit-task-card-actions {
+ grid-column:2!important;align-self:center!important;
+ display:flex!important;flex-wrap:nowrap!important;
+ padding:4px 7px 4px 0!important;margin:0!important;gap:4px!important;
+}
+.task-board .kanban .task-compact-card > .orbit-task-card-actions button {
+ flex:0 0 34px!important;width:34px!important;min-width:34px!important;
+ max-width:34px!important;height:36px!important;min-height:36px!important;
+ padding:0!important;
+}
+.task-board .kanban .task-compact-button .task-summary-main {
+ flex:none!important;min-width:0!important;width:100%!important;gap:5px!important;
+}
+.task-board .kanban .task-compact-button .status-indicator {
+ align-self:flex-start!important;margin:0!important;
+}
+@media(max-width:420px) {
+ .task-board .kanban .task-compact-card > .orbit-task-card-actions button {
+  flex-basis:32px!important;width:32px!important;min-width:32px!important;max-width:32px!important;
+ }
+}
