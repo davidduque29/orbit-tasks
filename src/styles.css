@@ -1726,3 +1726,9 @@ button:disabled { cursor:not-allowed; }
 .notes-board .notes-list-heading{position:relative;min-width:0}
 .notes-board .notes-list-heading .orbit-order-inline-notice{position:absolute;right:10px;top:50%;transform:translateY(-50%);padding:5px 8px;border-radius:999px;background:#dff6e9;color:#155e3c;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 5px #0002;pointer-events:none;z-index:2}
 @media(max-width:480px){.notes-board .notes-list-heading .orbit-order-inline-notice{font-size:10px;right:6px;padding:4px 6px}}
+
+/* Preserve the actual card silhouette during drag in light and dark themes. */
+.orbit-touch-ghost{border-radius:20px!important;overflow:hidden!important;clip-path:inset(0 round 20px);box-sizing:border-box!important}
+.orbit-touch-ghost.orbit-reorder-note{border-radius:20px!important;border:1px solid #9880d7!important;background:var(--card,#1b233c)!important;color:inherit!important;box-shadow:0 14px 38px #10152b66!important}
+.orbit-touch-ghost.task-compact-card{border-radius:18px!important;clip-path:inset(0 round 18px);background:var(--card,#fff)!important}
+.orbit-touch-ghost .note-summary,.orbit-touch-ghost .task-summary-main{color:inherit!important}

@@ -145,8 +145,19 @@ export function NotesBoard({ userId }: { userId: string }) {
   useEffect(() => {
     const onMove = (event: TouchEvent) => {
       const gesture = longPress.current;
-      if (!gesture || !event.touches.length) return;
+      if (!event.touches.length) return;
       const touch = event.touches[0];
+      const swipe = swipeStart.current;
+      if (swipe && !gesture) {
+        const dx = touch.clientX-swipe.x, dy = touch.clientY-swipe.y;
+        if (!swipe.direction && Math.max(Math.abs(dx),Math.abs(dy))>9) swipe.direction = Math.abs(dx)>Math.abs(dy)*1.3 ? 'horizontal' : 'vertical';
+        if (swipe.direction === 'horizontal') {
+          if (event.cancelable) event.preventDefault();
+          const card = document.querySelector<HTMLElement>(`[data-note-drop="${swipe.id}"]`);
+          if (card) { card.style.transition='none'; card.style.transform=`translate3d(${Math.max(-96,Math.min(96,swipe.base+dx))}px,0,0)`; }
+        }
+      }
+      if (!gesture) return;
       gesture.lastX = touch.clientX; gesture.lastY = touch.clientY;
       if (!gesture.active) {
         if (Math.hypot(touch.clientX - gesture.x, touch.clientY - gesture.y) > 9) {
@@ -161,6 +172,16 @@ export function NotesBoard({ userId }: { userId: string }) {
     };
     const finish = (event: TouchEvent) => {
       const gesture = longPress.current;
+      const swipe = swipeStart.current; swipeStart.current = null;
+      if (swipe) {
+        const card = document.querySelector<HTMLElement>(`[data-note-drop="${swipe.id}"]`);
+        if (card) {card.style.transform='';card.style.transition='';}
+        if (event.type !== 'touchcancel' && swipe.direction === 'horizontal') {
+          const touch = event.changedTouches[0];
+          const dx = swipe.base + (touch ? touch.clientX-swipe.x : 0);
+          if (Math.abs(dx)>44) {setSwipeDirection(dx>0?'right':'left');setSwipeNoteId(swipe.id);} else setSwipeNoteId(null);
+        }
+      }
       if (!gesture) return;
       window.clearTimeout(gesture.timer);
       longPress.current = null;
@@ -186,6 +207,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     if (busy || event.touches.length !== 1 || (event.target as HTMLElement).closest('button:not(.orbit-note-grip):not(.note-summary),input,select,textarea,a,label')) return;
     const touch = event.touches[0], source = event.currentTarget;
     const x = touch.clientX, y = touch.clientY;
+    swipeStart.current = {id,x,y,base:swipeNoteId===id?(swipeDirection==='right'?92:-92):0};
     if (longPress.current) window.clearTimeout(longPress.current.timer);
     const gesture = {id,x,y,lastX:x,lastY:y,active:false,timer:0};
     gesture.timer = window.setTimeout(() => {
@@ -756,10 +778,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           onDragEnd={()=>setDragNoteId(null)}
           onDragOver={event=>{if(dragNoteId)event.preventDefault();}}
           onDrop={event=>{event.preventDefault();const id=event.dataTransfer.getData("text/plain")||dragNoteId;if(id)void reorderNotes(id,note.id);}}
-          onPointerDown={event=>{if(event.pointerType==="touch" && !(event.target as HTMLElement).closest("button,input"))swipeStart.current={id:note.id,x:event.clientX,y:event.clientY,base:swipeNoteId===note.id?(swipeDirection==="right"?92:-92):0};}}
-          onPointerMove={event=>{if(!longPress.current?.active)swipeMove(event,note);}}
-          onPointerUp={event=>{if(!longPress.current?.active)swipeEnd(event,note);}}
-          onPointerCancel={event=>{if(longPress.current?.active)return;swipeStart.current=null;event.currentTarget.style.transform="";event.currentTarget.style.transition="";}}>
+>
         {section==="pending" && statusTab==="active" && <button type="button" className="orbit-note-grip" aria-label={`Arrastrar ${note.title} para ordenar`}
           onPointerDown={event=>{event.stopPropagation();if(event.pointerType==="mouse"){setDragNoteId(note.id);startNoteVisual(event);}}}
           onPointerMove={event=>{event.stopPropagation();if(event.pointerType==="mouse")moveNoteVisual(event);}}
