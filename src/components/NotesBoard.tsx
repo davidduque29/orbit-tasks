@@ -83,6 +83,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [orderNotice, setOrderNotice] = useState(false);
+  const suppressCardClickUntil = useRef(0);
   const orderNoticeTimer = useRef<number | null>(null);
   useEffect(() => () => { if (orderNoticeTimer.current !== null) window.clearTimeout(orderNoticeTimer.current); }, []);
   const [error, setError] = useState('');
@@ -182,7 +183,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     };
   }, []);
   function beginCardHold(event: React.TouchEvent<HTMLElement>, id: string) {
-    if (busy || event.touches.length !== 1 || (event.target as HTMLElement).closest('button:not(.orbit-note-grip),input,select,textarea,a,label')) return;
+    if (busy || event.touches.length !== 1 || (event.target as HTMLElement).closest('button:not(.orbit-note-grip):not(.note-summary),input,select,textarea,a,label')) return;
     const touch = event.touches[0], source = event.currentTarget;
     const x = touch.clientX, y = touch.clientY;
     if (longPress.current) window.clearTimeout(longPress.current.timer);
@@ -190,6 +191,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     gesture.timer = window.setTimeout(() => {
       if (longPress.current !== gesture) return;
       gesture.active = true;
+      suppressCardClickUntil.current = Date.now() + 900;
       swipeStart.current = null;
       source.style.transform = '';
       source.style.transition = '';
@@ -234,7 +236,7 @@ export function NotesBoard({ userId }: { userId: string }) {
       if (failed?.error) throw failed.error;
       setOrderNotice(true);
       if (orderNoticeTimer.current !== null) window.clearTimeout(orderNoticeTimer.current);
-      orderNoticeTimer.current = window.setTimeout(() => setOrderNotice(false), 1800);
+      orderNoticeTimer.current = window.setTimeout(() => setOrderNotice(false), 2500);
     } catch (cause) {
       setNotes(previousNotes);
       setError(errorText(cause));
@@ -749,6 +751,7 @@ export function NotesBoard({ userId }: { userId: string }) {
         <article className={`card note-list-item orbit-reorder-note ${swipeNoteId===note.id?(swipeDirection==="right"?"orbit-swiped-right":"orbit-swiped-left"):""}`}
           data-note-drop={note.id} draggable={false}
           onTouchStart={event=>beginCardHold(event,note.id)}
+          onClickCapture={event=>{if(Date.now()<suppressCardClickUntil.current){event.preventDefault();event.stopPropagation();}}}
           onDragStart={event=>{event.dataTransfer.setData("text/plain",note.id);setDragNoteId(note.id);}}
           onDragEnd={()=>setDragNoteId(null)}
           onDragOver={event=>{if(dragNoteId)event.preventDefault();}}
