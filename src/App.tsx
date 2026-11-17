@@ -159,7 +159,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   function closeEditor() {
     if (saving) return;
     if (editorDirty) {
-      askConfirmation('Descartar cambios', 'Tienes cambios sin guardar. ¿Quieres descartarlos?', () => {
+      askConfirmation('¿Descartar cambios?', 'Tienes información sin guardar. ¿Quieres salir sin guardar?', () => {
         setEditor(null);
         setEditorDirty(false);
       });
@@ -750,12 +750,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       )}
 
       {confirmation && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setConfirmation(null)}>
+        <div className="modal-backdrop orbit-confirm-backdrop" role="presentation" onClick={() => setConfirmation(null)}>
           <section className="modal orbit-detail-modal" role="alertdialog" aria-modal="true" aria-labelledby="orbit-confirm-title" aria-describedby="orbit-confirm-message" onClick={(event) => event.stopPropagation()}>
-            <h2 id="orbit-confirm-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{(confirmation.title === 'Descartar cambios' || confirmation.title === 'Posible evento duplicado') ? <AlertTriangle size={22} color="#d97706" aria-hidden="true" /> : <Trash2 size={22} color="#dc2626" aria-hidden="true" />}{confirmation.title}</h2>
+            <h2 id="orbit-confirm-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{(confirmation.title === '¿Descartar cambios?' || confirmation.title === 'Posible evento duplicado') ? <AlertTriangle size={22} color="#d97706" aria-hidden="true" /> : <Trash2 size={22} color="#dc2626" aria-hidden="true" />}{confirmation.title}</h2>
             <p id="orbit-confirm-message">{confirmation.message}</p>
             <div className="orbit-event-save-footer" style={{ display: 'flex', gap: 12 }}>
-              <button type="button" style={{ background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' }} onClick={() => setConfirmation(null)}>Cancelar</button>
+              <button type="button" style={{ background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' }} onClick={() => setConfirmation(null)}>Seguir editando</button>
               <button type="button" style={{ background: (confirmation.title === 'Descartar cambios' || confirmation.title === 'Posible evento duplicado') ? '#b45309' : '#dc2626', color: '#fff', border: 'none' }} onClick={() => { const action = confirmation.action; setConfirmation(null); action(); }}>{confirmation.title === 'Descartar cambios' ? 'Descartar cambios' : confirmation.title === 'Posible evento duplicado' ? 'Guardar de todos modos' : confirmation.title}</button>
             </div>
           </section>
