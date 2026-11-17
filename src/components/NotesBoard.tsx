@@ -132,7 +132,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     v.ghost.style.transition='opacity 150ms ease';v.ghost.style.opacity='0';
     window.setTimeout(()=>v.ghost.remove(),170);
   }
-  const swipeStart = useRef<{id:string;x:number;y:number;direction?: "horizontal"|"vertical"}|null>(null);
+  const swipeStart = useRef<{id:string;x:number;y:number;direction?: "horizontal"|"vertical";base:number}|null>(null);
   async function pinNote(note: Note) {
     await perform(async () => {
       const {error: updateError} = await supabase.from('notes').update({is_pinned:!note.is_pinned}).eq('id',note.id).eq('owner_id',userId);
@@ -168,19 +168,19 @@ export function NotesBoard({ userId }: { userId: string }) {
     if (!start.direction && Math.max(Math.abs(dx),Math.abs(dy))>9)
       start.direction=Math.abs(dx)>Math.abs(dy)*1.3?"horizontal":"vertical";
     if(start.direction!=="horizontal")return;
-    const offset=Math.max(-96,Math.min(96,dx));
+    const offset=Math.max(-96,Math.min(96,start.base+dx));
     event.currentTarget.style.transform=`translate3d(${offset}px,0,0)`;
     event.currentTarget.style.transition="none";
   }
   function swipeEnd(event:React.PointerEvent<HTMLElement>,note:Note) {
     const start=swipeStart.current;swipeStart.current=null;
     if(!start||start.id!==note.id)return;
-    const dx=event.clientX-start.x;
+    const dx=start.base+event.clientX-start.x;
     event.currentTarget.style.transform="";
     event.currentTarget.style.transition="";
-    if(start.direction==="horizontal" && Math.abs(dx)>52) {
-      setSwipeDirection(dx>0?"right":"left");
-      setSwipeNoteId(note.id);
+    if(start.direction==="horizontal") {
+      if(Math.abs(dx)>44){setSwipeDirection(dx>0?"right":"left");setSwipeNoteId(note.id);}
+      else setSwipeNoteId(null);
     }
   }
   const [expandedLists, setExpandedLists] = useState<Set<string>>(() => new Set());
@@ -664,7 +664,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           onDragEnd={()=>setDragNoteId(null)}
           onDragOver={event=>{if(dragNoteId)event.preventDefault();}}
           onDrop={event=>{event.preventDefault();const id=event.dataTransfer.getData("text/plain")||dragNoteId;if(id)void reorderNotes(id,note.id);}}
-          onPointerDown={event=>{if(event.pointerType==="touch" && !(event.target as HTMLElement).closest("button,input"))swipeStart.current={id:note.id,x:event.clientX,y:event.clientY};}}
+          onPointerDown={event=>{if(event.pointerType==="touch" && !(event.target as HTMLElement).closest("button,input"))swipeStart.current={id:note.id,x:event.clientX,y:event.clientY,base:swipeNoteId===note.id?(swipeDirection==="right"?92:-92):0};}}
           onPointerMove={event=>swipeMove(event,note)}
           onPointerUp={event=>swipeEnd(event,note)}
           onPointerCancel={event=>{swipeStart.current=null;event.currentTarget.style.transform="";event.currentTarget.style.transition="";}}>
