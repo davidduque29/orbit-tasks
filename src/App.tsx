@@ -7,7 +7,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, MoreVertical, ArrowLeft, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save, Sun, Moon } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, MoreVertical, ArrowLeft, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save, Sun, Moon } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderModal } from './components/ReminderModal';
 import { reminderSummary, validateReminder, type ReminderSchedule } from './domain/reminders';
@@ -394,7 +394,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           ] as const).map(([key, label, Icon]) => (
             <button key={key} type="button" className={`workspace-navigation-item${space === key ? ' is-active' : ''}`}
               aria-current={space === key ? 'page' : undefined}
-              onClick={() => { if (space !== key || view === 'account') chooseSpace(key); }}>
+              onClick={() => { if (space !== key) chooseSpace(key); }}>
               <Icon size={20} strokeWidth={2.2} aria-hidden="true" />
               <span>{label}</span>
             </button>
