@@ -1667,3 +1667,12 @@ button:disabled { cursor:not-allowed; }
 .orbit-task-touch-active{outline:2px solid #ae8cff;box-shadow:0 8px 20px #0005}
 .orbit-drag-handle{min-height:30px;height:30px;min-width:30px;align-self:center}
 @media(max-width:720px){.kanban .task-compact-card{min-height:0;padding-top:8px;padding-bottom:8px}.kanban .task-compact-card .orbit-drag-handle{position:absolute;top:5px;left:5px;z-index:2}.kanban .task-compact-card .task-summary{padding-top:16px}.orbit-kanban-dropbar:not(.orbit-dropbar-active){display:none}}
+
+/* Task status is a separate, accessible action from task details. */
+.task-compact-card{position:relative}
+.orbit-inline-status{position:relative;flex:0 0 auto;align-self:center;z-index:4}
+.orbit-inline-status-trigger{background:transparent;border:0;padding:4px;min-height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.orbit-inline-status-menu{position:absolute;right:0;top:calc(100% + 5px);z-index:30;min-width:174px;background:#fff;border:1px solid #d9d0f1;box-shadow:0 12px 28px #11152e44;border-radius:13px;padding:6px;display:flex;flex-direction:column;gap:3px}
+.orbit-inline-status-menu button{border:0;background:transparent;border-radius:8px;padding:9px;text-align:left;cursor:pointer}
+.orbit-inline-status-menu button:hover,.orbit-inline-status-menu button:focus-visible{background:#efeaff}
+.task-compact-card:has(.orbit-inline-status-menu){z-index:20}
