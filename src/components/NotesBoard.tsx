@@ -133,6 +133,72 @@ export function NotesBoard({ userId }: { userId: string }) {
     window.setTimeout(()=>v.ghost.remove(),170);
   }
   const swipeStart = useRef<{id:string;x:number;y:number;direction?: "horizontal"|"vertical";base:number}|null>(null);
+  // Long press on the card body enables reorder without sacrificing ordinary scrolling.
+  // A non-passive touchmove listener is needed on iOS Safari after the hold activates.
+  const longPress = useRef<{id:string;x:number;y:number;timer:number;active:boolean;lastX:number;lastY:number}|null>(null);
+  const reorderRef = useRef(reorderNotes);
+  reorderRef.current = reorderNotes;
+  useEffect(() => {
+    const onMove = (event: TouchEvent) => {
+      const gesture = longPress.current;
+      if (!gesture || !event.touches.length) return;
+      const touch = event.touches[0];
+      gesture.lastX = touch.clientX; gesture.lastY = touch.clientY;
+      if (!gesture.active) {
+        if (Math.hypot(touch.clientX - gesture.x, touch.clientY - gesture.y) > 9) {
+          window.clearTimeout(gesture.timer);
+          longPress.current = null;
+        }
+        return;
+      }
+      if (event.cancelable) event.preventDefault();
+      const visual = noteVisual.current;
+      if (visual) visual.ghost.style.transform = `translate3d(${touch.clientX - visual.offsetX}px,${touch.clientY - visual.offsetY}px,0)`;
+    };
+    const finish = () => {
+      const gesture = longPress.current;
+      if (!gesture) return;
+      window.clearTimeout(gesture.timer);
+      longPress.current = null;
+      if (!gesture.active) return;
+      const target = document.elementFromPoint(gesture.lastX, gesture.lastY)?.closest<HTMLElement>('[data-note-drop]');
+      if (target?.dataset.noteDrop && target.dataset.noteDrop !== gesture.id)
+        void reorderRef.current(gesture.id, target.dataset.noteDrop);
+      stopNoteVisual();
+      setDragNoteId(null);
+    };
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', finish);
+    document.addEventListener('touchcancel', finish);
+    return () => {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', finish);
+      document.removeEventListener('touchcancel', finish);
+      if (longPress.current) window.clearTimeout(longPress.current.timer);
+    };
+  }, []);
+  function beginCardHold(event: React.TouchEvent<HTMLElement>, id: string) {
+    if (busy || event.touches.length !== 1 || (event.target as HTMLElement).closest('button,input,select,textarea,a,label')) return;
+    const touch = event.touches[0], source = event.currentTarget;
+    const x = touch.clientX, y = touch.clientY;
+    if (longPress.current) window.clearTimeout(longPress.current.timer);
+    const gesture = {id,x,y,lastX:x,lastY:y,active:false,timer:0};
+    gesture.timer = window.setTimeout(() => {
+      if (longPress.current !== gesture) return;
+      gesture.active = true;
+      swipeStart.current = null;
+      setSwipeNoteId(null);
+      setDragNoteId(id);
+      const rect = source.getBoundingClientRect(), ghost = source.cloneNode(true) as HTMLElement;
+      ghost.classList.add('orbit-touch-ghost');
+      Object.assign(ghost.style,{position:'fixed',left:'0',top:'0',width:rect.width+'px',height:rect.height+'px',margin:'0',zIndex:'99999',pointerEvents:'none',transform:`translate3d(${rect.left}px,${rect.top}px,0)`});
+      document.body.appendChild(ghost);
+      source.classList.add('orbit-touch-source');
+      noteVisual.current = {ghost,source,offsetX:x-rect.left,offsetY:y-rect.top};
+    }, 320);
+    longPress.current = gesture;
+  }
+
   async function pinNote(note: Note) {
     await perform(async () => {
       const {error: updateError} = await supabase.from('notes').update({is_pinned:!note.is_pinned}).eq('id',note.id).eq('owner_id',userId);
@@ -660,14 +726,15 @@ export function NotesBoard({ userId }: { userId: string }) {
         </div>}
         <article className={`card note-list-item orbit-reorder-note ${swipeNoteId===note.id?(swipeDirection==="right"?"orbit-swiped-right":"orbit-swiped-left"):""}`}
           data-note-drop={note.id} draggable={false}
+          onTouchStart={event=>beginCardHold(event,note.id)}
           onDragStart={event=>{event.dataTransfer.setData("text/plain",note.id);setDragNoteId(note.id);}}
           onDragEnd={()=>setDragNoteId(null)}
           onDragOver={event=>{if(dragNoteId)event.preventDefault();}}
           onDrop={event=>{event.preventDefault();const id=event.dataTransfer.getData("text/plain")||dragNoteId;if(id)void reorderNotes(id,note.id);}}
           onPointerDown={event=>{if(event.pointerType==="touch" && !(event.target as HTMLElement).closest("button,input"))swipeStart.current={id:note.id,x:event.clientX,y:event.clientY,base:swipeNoteId===note.id?(swipeDirection==="right"?92:-92):0};}}
-          onPointerMove={event=>swipeMove(event,note)}
-          onPointerUp={event=>swipeEnd(event,note)}
-          onPointerCancel={event=>{swipeStart.current=null;event.currentTarget.style.transform="";event.currentTarget.style.transition="";}}>
+          onPointerMove={event=>{if(!longPress.current?.active)swipeMove(event,note);}}
+          onPointerUp={event=>{if(!longPress.current?.active)swipeEnd(event,note);}}
+          onPointerCancel={event=>{if(longPress.current?.active)return;swipeStart.current=null;event.currentTarget.style.transform="";event.currentTarget.style.transition="";}}>
         {section==="pending" && statusTab==="active" && <button type="button" className="orbit-note-grip" aria-label={`Arrastrar ${note.title} para ordenar`}
           onPointerDown={event=>{event.stopPropagation();if(event.pointerType!=="mouse"){event.currentTarget.setPointerCapture(event.pointerId);setDragNoteId(note.id);startNoteVisual(event);}}}
           onPointerMove={event=>{event.stopPropagation();moveNoteVisual(event);}}
