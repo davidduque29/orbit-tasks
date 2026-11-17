@@ -329,3 +329,18 @@
 [data-theme="dark"] .account-theme-options button { background:#2b3150; color:#e6d7ff; }
 [data-theme="dark"] .account-theme-options button.selected { background:#6c4bd8; color:white; }
 @media(max-width:480px) { .account-intro-card { padding:15px; gap:12px; } .account-intro-avatar { flex-basis:52px; height:52px; } .account-menu-item { padding:12px; gap:10px; } .account-module-header { gap:10px; } }
+
+
+/* Compact completion sound control in the Pendientes heading. */
+.notes-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.notes-heading > div { min-width:0; }
+.notes-heading .note-sound-toggle { flex:0 0 auto; min-height:36px; padding:7px 9px; border-radius:10px; font-size:12px; font-weight:650; white-space:nowrap; }
+[data-theme="dark"] .notes-heading .note-sound-toggle { background:#292f4c; border-color:#7064a6; color:#f0e8ff; }
+@media(max-width:480px) { .notes-heading { align-items:flex-start; } .notes-heading .note-sound-toggle { padding:8px; width:36px; height:36px; justify-content:center; } .notes-heading .note-sound-toggle span { display:none; } }
+/* Device cards stay light in both themes: use dark readable typography. */
+.device-modal .device-item { background:#fff; color:#202b42; border-color:#d7dce8; }
+.device-modal .device-item .device-details,
+.device-modal .device-item .device-details strong { color:#202b42 !important; opacity:1 !important; }
+.device-modal .device-item .device-details small { color:#475569 !important; opacity:1 !important; }
+.device-modal .device-item .device-status:not(.active) { background:#e9edf4; color:#475569 !important; }
+.device-modal .device-item .device-status.active { background:#d9f6e7; color:#166534 !important; }

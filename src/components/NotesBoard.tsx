@@ -510,6 +510,11 @@ export function NotesBoard({ userId }: { userId: string }) {
 
   return <section className="notes-board">
     <div className="heading notes-heading"><div><h1>Pendientes</h1><p>Captura rápidamente tus actividades personales.</p></div>
+      <button type="button" className="note-sound-toggle" aria-label={soundEnabled ? 'Silenciar sonido al completar' : 'Activar sonido al completar'}
+        aria-pressed={soundEnabled} onClick={toggleSound}>
+        {soundEnabled ? <Volume2 size={17}/> : <VolumeX size={17}/>}
+        <span>{soundEnabled ? 'Sonido activado' : 'Sin sonido'}</span>
+      </button>
     </div>
     {trashOpen && <section className="card notes-trash"><h2>Papelera</h2><p>Recupera tus pendientes o elimínalos definitivamente.</p>{pagedTrash.map(note => <div key={note.id} className="notes-trash-item"><strong>{note.title}</strong><button type="button" className="outline" disabled={busy} onClick={() => void restoreNote(note)}>Restaurar</button><button type="button" disabled={busy} onClick={() => void permanentlyDelete(note)}>Eliminar definitivamente</button></div>)}{!trashedNotes.length && <p>No hay pendientes eliminados.</p>}{pagination(currentTrashPage, trashPages, trashedNotes.length, setTrashPage)}</section>}
     <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
@@ -566,11 +571,7 @@ export function NotesBoard({ userId }: { userId: string }) {
         <button type="button" role="tab" aria-selected={statusTab === 'completed'} className={statusTab === 'completed' ? 'selected' : ''}
           onClick={() => setStatusTab('completed')}><CheckSquare size={15}/> Completados <span>{completedCount}</span></button>
       </div>
-      <button type="button" className="note-sound-toggle" aria-label={soundEnabled ? 'Silenciar sonido al completar' : 'Activar sonido al completar'}
-        aria-pressed={soundEnabled} onClick={toggleSound}>
-        {soundEnabled ? <Volume2 size={17}/> : <VolumeX size={17}/>}
-        <span>{soundEnabled ? 'Sonido activado' : 'Sin sonido'}</span>
-      </button>
+
     </div>
     {error && <p className="error" role="alert">{error}</p>}
     {message && <p className="feedback" role="status">{message}</p>}
