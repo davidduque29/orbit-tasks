@@ -1721,3 +1721,8 @@ button:disabled { cursor:not-allowed; }
 .notes-board .orbit-swipe-shell .note-list-item.orbit-reorder-note{border:1px solid #7366a7!important;border-radius:18px!important;box-shadow:inset 0 0 0 1px #554b7b33!important}
 .notes-board .orbit-swipe-shell .note-list-item.orbit-reorder-note:focus-within{border-color:#a48cf2!important}
 @media(prefers-color-scheme:light){.notes-board .orbit-swipe-shell .note-list-item.orbit-reorder-note{border-color:#c5b6e8!important}}
+
+/* Reorder confirmation stays inside the existing heading; no layout shift. */
+.notes-board .notes-list-heading{position:relative;min-width:0}
+.notes-board .notes-list-heading .orbit-order-inline-notice{position:absolute;right:10px;top:50%;transform:translateY(-50%);padding:5px 8px;border-radius:999px;background:#dff6e9;color:#155e3c;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 5px #0002;pointer-events:none;z-index:2}
+@media(max-width:480px){.notes-board .notes-list-heading .orbit-order-inline-notice{font-size:10px;right:6px;padding:4px 6px}}
