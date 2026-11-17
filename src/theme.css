@@ -399,3 +399,28 @@
   -webkit-text-fill-color:#667085!important;
   opacity:1!important;
 }
+
+
+/* Device account overview: contrast on the dark account card. */
+[data-theme="dark"] .account-device-launch strong,
+[data-theme="dark"] .account-devices-card .account-device-launch strong {
+  color:#f7f5ff!important;
+  -webkit-text-fill-color:#f7f5ff!important;
+  opacity:1!important;
+}
+[data-theme="dark"] .account-device-launch p {color:#d4d9e9!important;opacity:1!important;}
+/* Keep the device manager close button compact, never full-width on iPhone. */
+.device-modal .device-modal-heading {display:flex;align-items:flex-start;gap:12px;min-width:0;}
+.device-modal .device-modal-heading > div {flex:1 1 auto;min-width:0;}
+.device-modal .device-modal-heading h2 {overflow-wrap:normal;word-break:normal;}
+.device-modal .device-modal-heading > button {
+  display:grid;place-items:center;flex:0 0 42px;
+  width:42px!important;min-width:42px;max-width:42px;
+  height:42px;min-height:42px;padding:0!important;margin:0;
+  align-self:flex-start;line-height:1;
+}
+@media(max-width:520px) {
+  .device-modal .device-modal-heading {gap:8px;}
+  .device-modal .device-modal-heading h2 {font-size:20px;line-height:1.2;}
+  .device-modal .device-modal-heading p {font-size:13px;}
+}
