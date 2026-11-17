@@ -123,6 +123,7 @@ function TaskDetails({ task, projects, onSave, onDelete, saving, userId }: {
 
 export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, onNewTask, onEdit, onRestore, onPermanentDelete, onDeleteAll, saving, userId }: BoardProps) {
   const [view, setView] = useState<BoardView>('list');
+  const [mobileLane, setMobileLane] = useState<DisplayStatus>('Activa');
   const [section, setSection] = useState<'tasks' | 'search' | 'trash'>('tasks');
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -229,13 +230,20 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
         </div>
       )}
       {view === 'kanban' && (
-        <div className="kanban">
-          {STATUS_LABELS.map((status) => (
-            <section className="lane" key={status}>
-              <h2><StatusDot status={status} /> <span>{activeTasks.filter((task) => displayStatus(task.status) === status).length}</span></h2>
-              {activeTasks.filter((task) => displayStatus(task.status) === status).map(taskItem)}
-            </section>
-          ))}
+        <div className="kanban-wrapper">
+          <label className="kanban-mobile-picker" htmlFor="kanban-mobile-status">Estado del tablero
+            <select id="kanban-mobile-status" value={mobileLane} onChange={(event) => setMobileLane(event.target.value as DisplayStatus)}>
+              {STATUS_LABELS.map((status) => <option key={status} value={status}>{status} ({activeTasks.filter((task) => displayStatus(task.status) === status).length})</option>)}
+            </select>
+          </label>
+          <div className="kanban">
+            {STATUS_LABELS.map((status) => (
+              <section className="lane" data-mobile-active={mobileLane === status ? 'true' : 'false'} key={status}>
+                <h2><StatusDot status={status} /> <span>{activeTasks.filter((task) => displayStatus(task.status) === status).length}</span></h2>
+                {activeTasks.filter((task) => displayStatus(task.status) === status).map(taskItem)}
+              </section>
+            ))}
+          </div>
         </div>
       )}
 
