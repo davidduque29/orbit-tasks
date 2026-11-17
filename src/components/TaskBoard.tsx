@@ -240,7 +240,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
       </div>
 
         <p>{filtered.length} resultados encontrados</p>
-        <div className="task-list">{filtered.map(taskItem)}{filtered.length === 0 && <p className="empty">No se encontraron tareas.</p>}</div>
+        <div className="task-list">{filtered.map(task => taskItem(task))}{filtered.length === 0 && <p className="empty">No se encontraron tareas.</p>}</div>
       </div></section>}
       {section === 'tasks' && <section className="orbit-board-panel"><h2 className="orbit-board-panel-title"><ClipboardList size={19} /> Tareas del proyecto</h2><div className="orbit-board-panel-body">
         <div className="orbit-board-primary-actions"><button type="button" onClick={onNewTask}><Plus size={16} /> Nueva tarea</button><button type="button" className="outline orbit-action-delete" disabled={!selectedProject || activeTasks.length === 0 || saving} onClick={() => { void onDeleteAll(); }}><Trash2 size={15} /> Eliminar todas</button></div>
@@ -253,7 +253,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
       </div>
       {view === 'list' && (
         <div className="task-list">
-          {activeTasks.map(taskItem)}
+          {activeTasks.map(task => taskItem(task))}
           {activeTasks.length === 0 && <p className="empty">No encontramos tareas con esos filtros.</p>}
         </div>
       )}
