@@ -218,13 +218,26 @@ export function NotesBoard({ userId }: { userId: string }) {
     const from=group.findIndex(note=>note.id===sourceId),to=group.findIndex(note=>note.id===targetId);
     if(from<0||to<0)return;
     const ordered=[...group];ordered.splice(to,0,ordered.splice(from,1)[0]);
-    await perform(async()=>{
-      for (const [index,note] of ordered.entries()) {
-        const {error: updateError}=await supabase.from('notes').update({sort_order:index+1}).eq('id',note.id).eq('owner_id',userId);
-        if(updateError)throw updateError;
-      }
-    },'Orden guardado.');
-    setDragNoteId(null);
+    // Update the visible order immediately; persist independent rows concurrently.
+    const previousNotes = notes;
+    const positions = new Map(ordered.map((note,index) => [note.id,index+1]));
+    setNotes(current => current.map(note => positions.has(note.id) ? {...note,sort_order:positions.get(note.id)!} : note));
+    setBusy(true); setError(''); setMessage('');
+    try {
+      const results = await Promise.all(ordered.map((note,index) =>
+        supabase.from('notes').update({sort_order:index+1}).eq('id',note.id).eq('owner_id',userId)
+      ));
+      const failed = results.find(result => result.error);
+      if (failed?.error) throw failed.error;
+      setMessage('Orden guardado.');
+    } catch (cause) {
+      setNotes(previousNotes);
+      setError(errorText(cause));
+      void load(); // Reconcile if some writes succeeded before another failed.
+    } finally {
+      setBusy(false);
+      setDragNoteId(null);
+    }
   }
   function releaseNote(event: React.PointerEvent<HTMLElement>,id:string) {
     const target=document.elementFromPoint(event.clientX,event.clientY)?.closest<HTMLElement>('[data-note-drop]');
