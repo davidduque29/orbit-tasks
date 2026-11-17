@@ -469,3 +469,24 @@ html[data-theme="dark"] .device-modal .device-item .device-details > small,
 [data-theme="dark"] .task-board .kanban-mobile-picker select {
  color:#f8f8ff!important;-webkit-text-fill-color:#f8f8ff!important;background:#28314a!important;
 }
+
+
+/* Accessible contrast for project heading and every Kanban status label. */
+[data-theme="dark"] .project-board-context h1 {
+ color:#f4f2ff!important;-webkit-text-fill-color:#f4f2ff!important;opacity:1!important;
+}
+[data-theme="dark"] .task-board .kanban .lane h2 .status-indicator,
+[data-theme="dark"] .task-board .kanban .task-compact-card .status-indicator {
+ color:#233047!important;-webkit-text-fill-color:#233047!important;
+ opacity:1!important;text-shadow:none!important;
+}
+[data-theme="dark"] .task-board .kanban .lane h2 .status-indicator *,
+[data-theme="dark"] .task-board .kanban .task-compact-card .status-indicator * {
+ opacity:1!important;
+}
+[data-theme="dark"] .task-board .kanban .task-compact-card .task-summary-main strong {
+ color:#24334c!important;-webkit-text-fill-color:#24334c!important;
+}
+[data-theme="dark"] .task-board .kanban .task-compact-card .task-compact-meta {
+ color:#56657f!important;-webkit-text-fill-color:#56657f!important;
+}
