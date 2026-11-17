@@ -750,13 +750,13 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       )}
 
       {confirmation && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setConfirmation(null)}>
-          <section className="modal orbit-detail-modal" role="alertdialog" aria-modal="true" aria-labelledby="orbit-confirm-title" aria-describedby="orbit-confirm-message" onClick={(event) => event.stopPropagation()}>
-            <h2 id="orbit-confirm-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{(confirmation.title === 'Descartar cambios' || confirmation.title === 'Posible evento duplicado') ? <AlertTriangle size={22} color="#d97706" aria-hidden="true" /> : <Trash2 size={22} color="#dc2626" aria-hidden="true" />}{confirmation.title}</h2>
-            <p id="orbit-confirm-message">{confirmation.message}</p>
-            <div className="orbit-event-save-footer" style={{ display: 'flex', gap: 12 }}>
-              <button type="button" style={{ background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' }} onClick={() => setConfirmation(null)}>Cancelar</button>
-              <button type="button" style={{ background: (confirmation.title === 'Descartar cambios' || confirmation.title === 'Posible evento duplicado') ? '#b45309' : '#dc2626', color: '#fff', border: 'none' }} onClick={() => { const action = confirmation.action; setConfirmation(null); action(); }}>{confirmation.title === 'Descartar cambios' ? 'Descartar cambios' : confirmation.title === 'Posible evento duplicado' ? 'Guardar de todos modos' : confirmation.title}</button>
+        <div className="modal-backdrop orbit-confirmation-backdrop" role="presentation" onClick={() => setConfirmation(null)}>
+          <section className="modal orbit-detail-modal orbit-confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="orbit-confirm-title" aria-describedby="orbit-confirm-message" onClick={(event) => event.stopPropagation()}>
+            <h2 id="orbit-confirm-title" className="orbit-confirmation-title">{(confirmation.title === 'Descartar cambios' || confirmation.title === 'Posible evento duplicado') ? <AlertTriangle size={22} aria-hidden="true" /> : <Trash2 size={22} aria-hidden="true" />}{confirmation.title === 'Descartar cambios' ? '¿Descartar cambios?' : confirmation.title}</h2>
+            <p id="orbit-confirm-message">{confirmation.title === 'Descartar cambios' ? 'Tienes información sin guardar. ¿Quieres salir sin guardar?' : confirmation.message}</p>
+            <div className="orbit-confirmation-actions">
+              <button type="button" className="orbit-confirmation-cancel" onClick={() => setConfirmation(null)}>{confirmation.title === 'Descartar cambios' ? 'Seguir editando' : 'Cancelar'}</button>
+              <button type="button" className="orbit-confirmation-accept" onClick={() => { const action = confirmation.action; setConfirmation(null); action(); }}>{confirmation.title === 'Descartar cambios' ? 'Descartar' : confirmation.title === 'Posible evento duplicado' ? 'Guardar de todos modos' : confirmation.title}</button>
             </div>
           </section>
         </div>

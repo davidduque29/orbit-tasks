@@ -450,3 +450,41 @@ html[data-theme="dark"] .device-modal .device-item .device-details > small,
 [data-theme="dark"] .orbit-event-save-footer > button {
   border-color:transparent!important;
 }
+
+/* Confirmation must sit above the open editor, not behind its modal backdrop. */
+.modal-backdrop.orbit-confirmation-backdrop { z-index: 70; }
+
+
+/* Shared dialog design system: close controls and confirmation actions. */
+.orbit-modal-close,
+.device-modal .device-modal-heading > button {
+  display:grid!important;place-items:center!important;
+  flex:0 0 44px!important;width:44px!important;height:44px!important;
+  min-width:44px!important;max-width:44px!important;min-height:44px!important;
+  padding:0!important;border-radius:14px!important;
+  background:#343a58!important;color:#fff!important;
+  border:1px solid #9182d9!important;
+  box-shadow:none!important;line-height:1!important;
+}
+.orbit-modal-close:hover,
+.device-modal .device-modal-heading > button:hover {background:#464c72!important;}
+.orbit-modal-close:focus-visible,
+.device-modal .device-modal-heading > button:focus-visible {
+  outline:3px solid #a78bfa!important;outline-offset:2px!important;
+}
+[data-theme="light"] .orbit-modal-close,
+[data-theme="light"] .device-modal .device-modal-heading > button {
+  background:#f2eeff!important;color:#4b348e!important;border-color:#a99add!important;
+}
+.orbit-confirmation-dialog {width:min(100%,430px);max-height:min(80dvh,550px);padding:24px;}
+.orbit-confirmation-title {display:flex;align-items:center;gap:10px;line-height:1.3;margin:0 0 12px;}
+.orbit-confirmation-title svg {flex-shrink:0;color:#f5b85d;}
+.orbit-confirmation-dialog > p {margin:0 0 20px;line-height:1.55;}
+.orbit-confirmation-actions {display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.orbit-confirmation-actions button {min-width:0;min-height:44px;border-radius:12px;padding:10px 8px;font-weight:650;white-space:normal;}
+.orbit-confirmation-cancel {background:#343a58!important;color:#fff!important;border:1px solid #777a9e!important;}
+.orbit-confirmation-accept {background:#a63e58!important;color:#fff!important;border:1px solid #a63e58!important;}
+.orbit-confirmation-cancel:hover {background:#474e72!important;}
+.orbit-confirmation-accept:hover {background:#8d3049!important;}
+.orbit-confirmation-actions button:focus-visible {outline:3px solid #a78bfa;outline-offset:2px;}
+@media(max-width:360px) {.orbit-confirmation-dialog {padding:16px;}.orbit-confirmation-actions {gap:7px;}}
