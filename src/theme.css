@@ -344,3 +344,38 @@
 .device-modal .device-item .device-details small { color:#475569 !important; opacity:1 !important; }
 .device-modal .device-item .device-status:not(.active) { background:#e9edf4; color:#475569 !important; }
 .device-modal .device-item .device-status.active { background:#d9f6e7; color:#166534 !important; }
+
+
+/* Account notification preferences: labels live on dark cards in dark mode. */
+[data-theme="dark"] .notification-intervals legend,
+[data-theme="dark"] .notification-choice-grid .notification-check,
+[data-theme="dark"] .notification-intervals > .notification-check,
+[data-theme="dark"] .notification-choice-grid .notification-check *,
+[data-theme="dark"] .notification-intervals > .notification-check * {
+  color:#e5eaf7!important; opacity:1!important;
+}
+[data-theme="dark"] .notification-choice-grid .notification-check input,
+[data-theme="dark"] .notification-intervals > .notification-check input { accent-color:#a78bfa; }
+/* Event list has white tiles: keep all text on them dark even when the page is dark. */
+[data-theme="dark"] .event-list-card .event-compact-card,
+[data-theme="dark"] .event-list-card .event-compact-card .event-compact-copy,
+[data-theme="dark"] .event-list-card .event-compact-card .event-compact-copy strong,
+[data-theme="dark"] .event-list-card .event-compact-card .event-compact-copy small,
+[data-theme="dark"] .event-list-card .event-compact-card .event-compact-copy svg {
+  color:#253047!important;opacity:1!important;
+}
+[data-theme="dark"] .event-list-card .event-compact-card .event-compact-copy small {color:#536078!important;}
+[data-theme="dark"] .event-list-card .event-compact-card .event-date-tile,
+[data-theme="dark"] .event-list-card .event-compact-card .event-date-tile strong,
+[data-theme="dark"] .event-list-card .event-compact-card .event-date-tile small {
+  color:#5634b8!important;opacity:1!important;
+}
+/* Compact user popover on mobile and desktop, without shrinking tap targets. */
+.profile-dropdown { width:min(280px,calc(100vw - 22px));padding:11px;border-radius:14px; }
+.profile-dropdown .profile-heading {gap:9px;}
+.profile-dropdown .profile-avatar.large {width:38px;height:38px;}
+.profile-dropdown .profile-heading strong {font-size:14px;}
+.profile-dropdown .profile-heading small {font-size:11px;margin-top:2px;}
+.profile-dropdown .profile-action {margin-top:10px;min-height:42px;padding:8px 10px;font-size:13px;}
+.profile-dropdown .profile-logout {margin-top:7px;min-height:42px;padding:8px 10px;font-size:13px;}
+@media(max-width:480px) {.profile-dropdown {width:min(260px,calc(100vw - 20px));padding:10px;}}
