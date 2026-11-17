@@ -492,13 +492,25 @@ export function NotesBoard({ userId }: { userId: string }) {
     const reminderError = validateReminder(quickReminder);
     if (reminderError) { setError(reminderError); return; }
     if (await perform(async () => {
+      const knownIds = new Set(notes.map(note => note.id));
       const { error: saveError } = await supabase.rpc('save_pending_with_items', {
         p_title: cleaned, p_category_id: null, p_reminder_at: quickReminder.at,
         p_recurrence_rule: quickReminder.rule, p_items: quickListPreview,
       });
       if (saveError) throw saveError;
+      // New pending entries go above existing manually reordered entries.
+      const {data: recent, error: findError} = await supabase.from('notes').select('id,title')
+        .eq('owner_id',userId).eq('kind','pending').eq('title',cleaned)
+        .order('created_at',{ascending:false}).limit(10);
+      if(findError) throw findError;
+      const created = recent?.find(note => !knownIds.has(note.id));
+      if(created){
+        const firstOrder = Math.min(0,...notes.filter(note => !note.deleted_at && !note.completed && !note.is_pinned).map(note => note.sort_order ?? 0))-1;
+        const {error: orderError} = await supabase.from('notes').update({sort_order:firstOrder}).eq('id',created.id).eq('owner_id',userId);
+        if(orderError) throw orderError;
+      }
     }, 'Pendiente creado.')) {
-      setQuickTitle(''); setVoiceHint(''); setQuickReminder(NO_REMINDER); setStatusTab('active');
+      setQuickTitle(''); setVoiceHint(''); setQuickReminder(NO_REMINDER); setStatusTab('active'); setPage(1);
     }
   }
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -738,10 +750,10 @@ export function NotesBoard({ userId }: { userId: string }) {
 
     </div>
     {error && <p className="error" role="alert">{error}</p>}
-    {message && <p className="feedback" role="status">{message}</p>}
+    {message && message !== "Pendiente creado." && <p className="feedback" role="status">{message}</p>}
     {loading && <p className="muted">Cargando tus pendientes…</p>}
     {!loading && <>
-    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> <span>Listado de pendientes ({filtered.length})</span>{orderNotice && <span className="orbit-order-inline-notice" role="status">Orden guardado</span>}</h2>
+    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> <span>Listado de pendientes ({filtered.length})</span>{(orderNotice || message === "Pendiente creado.") && <span className="orbit-order-inline-notice" role="status">{message === "Pendiente creado." ? "Pendiente creado" : "Orden guardado"}</span>}</h2>
     <div className="notes-list">
       {pagedNotes.map(note => <div className="orbit-swipe-shell" key={note.id}>
         {section==="pending" && statusTab==="active" && <div className="orbit-swipe-underlay" aria-hidden="true">
