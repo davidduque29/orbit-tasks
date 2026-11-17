@@ -450,3 +450,22 @@ html[data-theme="dark"] .device-modal .device-item .device-details > small,
 [data-theme="dark"] .orbit-event-save-footer > button {
   border-color:transparent!important;
 }
+
+
+/* Contrast in project detail and Kanban across dark theme. */
+[data-theme="dark"] .task-board .orbit-board-tabs button:not(.active) {
+ color:#e5e7f4!important;-webkit-text-fill-color:#e5e7f4!important;
+ background:#252e48!important;border-color:#626b89!important;opacity:1!important;
+}
+[data-theme="dark"] .task-board .orbit-board-tabs button:disabled {opacity:.65!important}
+[data-theme="dark"] .task-board .lane h2 span {color:#e5e7f4!important}
+[data-theme="dark"] .task-board .task-compact-card .task-summary-main strong {
+ color:#24334c!important;-webkit-text-fill-color:#24334c!important;opacity:1!important;
+}
+[data-theme="dark"] .task-board .task-compact-card .task-compact-meta {
+ color:#56657f!important;-webkit-text-fill-color:#56657f!important;
+}
+[data-theme="dark"] .task-board .kanban-mobile-picker {color:#e5e7f4!important}
+[data-theme="dark"] .task-board .kanban-mobile-picker select {
+ color:#f8f8ff!important;-webkit-text-fill-color:#f8f8ff!important;background:#28314a!important;
+}
