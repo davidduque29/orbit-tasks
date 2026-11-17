@@ -1716,3 +1716,8 @@ button:disabled { cursor:not-allowed; }
 .orbit-board-panel .kanban .task-compact-card .orbit-drag-handle{grid-column:2!important;grid-row:2!important;justify-self:end!important;position:relative!important;margin-right:68px!important;width:28px!important;min-width:28px!important;height:30px!important;min-height:30px!important;z-index:3!important}
 .orbit-board-panel .task-compact-card:not(.unused) .orbit-task-priority{color:var(--text,#334155);font-size:12px;display:flex;align-items:center;gap:4px}
 @media(max-width:480px){.orbit-board-panel .kanban .task-compact-card:has(.orbit-inline-status){grid-template-columns:minmax(0,1fr) auto!important}.orbit-board-panel .kanban .task-compact-card .orbit-task-card-actions button{width:28px!important;min-width:28px!important}.orbit-board-panel .kanban .task-compact-card .orbit-drag-handle{margin-right:64px!important}}
+
+/* Restore the visible outline of each pending item without affecting swipe/reorder. */
+.notes-board .orbit-swipe-shell .note-list-item.orbit-reorder-note{border:1px solid #7366a7!important;border-radius:18px!important;box-shadow:inset 0 0 0 1px #554b7b33!important}
+.notes-board .orbit-swipe-shell .note-list-item.orbit-reorder-note:focus-within{border-color:#a48cf2!important}
+@media(prefers-color-scheme:light){.notes-board .orbit-swipe-shell .note-list-item.orbit-reorder-note{border-color:#c5b6e8!important}}
