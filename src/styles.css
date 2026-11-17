@@ -1726,3 +1726,9 @@ button:disabled { cursor:not-allowed; }
 .notes-board .notes-list-heading{position:relative;min-width:0}
 .notes-board .notes-list-heading .orbit-order-inline-notice{position:absolute;right:10px;top:50%;transform:translateY(-50%);padding:5px 8px;border-radius:999px;background:#dff6e9;color:#155e3c;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 5px #0002;pointer-events:none;z-index:2}
 @media(max-width:480px){.notes-board .notes-list-heading .orbit-order-inline-notice{font-size:10px;right:6px;padding:4px 6px}}
+
+/* Azure-style compact status: show only the value until the native selector is focused. */
+.orbit-board-panel .kanban .task-compact-card .orbit-inline-status-select{appearance:none!important;-webkit-appearance:none!important;background-image:none!important;padding:3px 8px!important;cursor:pointer!important}
+.orbit-board-panel .kanban .task-compact-card .orbit-inline-status-select-wrap{position:relative!important}
+.orbit-board-panel .kanban .task-compact-card .orbit-inline-status-select-wrap:focus-within::after{content:'⌄';position:absolute;right:5px;top:50%;transform:translateY(-55%);font-size:12px;line-height:1;pointer-events:none;color:currentColor}
+.orbit-board-panel .kanban .task-compact-card .orbit-inline-status-select:focus{padding-right:18px!important}
