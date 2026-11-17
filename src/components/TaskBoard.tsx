@@ -175,7 +175,8 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
     if(visual)visual.ghost.style.transform=`translate3d(${event.clientX-visual.offsetX}px,${event.clientY-visual.offsetY}px,0)`;
     const target=document.elementFromPoint(event.clientX,event.clientY)?.closest<HTMLElement>('[data-kanban-target]');
     const status=target?.dataset.kanbanTarget as DisplayStatus|undefined;
-    setTouchTarget(status && STATUS_LABELS.includes(status)?status:null);
+    const next=status && STATUS_LABELS.includes(status)?status:null;
+    setTouchTarget(previous=>previous===next?previous:next);
   }
   const [mobileLane, setMobileLane] = useState<DisplayStatus>('Activa');
   const [section, setSection] = useState<'tasks' | 'search' | 'trash'>('tasks');
@@ -184,6 +185,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [statusMenuTaskId,setStatusMenuTaskId]=useState<string|null>(null);
   const selectedTask = tasks.find((task) => task.id === selectedTaskId && !task.deleted_at);
   const activeTasks = tasks.filter(task => !task.deleted_at && (!selectedProject || task.project_id === selectedProject));
   const trashedTasks = tasks.filter(task => !!task.deleted_at && (!selectedProject || task.project_id === selectedProject));
@@ -228,8 +230,8 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
               {task.reminder_override_minutes?.length ? <Bell size={13} aria-label="Con recordatorios" /> : null}
             </span>
           </span>
-          <StatusDot status={displayStatus(task.status)} />
         </button>
+        <div className="orbit-inline-status"><button type="button" className="orbit-inline-status-trigger" aria-label={`Cambiar estado de ${task.title}`} aria-expanded={statusMenuTaskId===task.id} onClick={()=>setStatusMenuTaskId(v=>v===task.id?null:task.id)}><StatusDot status={displayStatus(task.status)}/></button>{statusMenuTaskId===task.id && <div className="orbit-inline-status-menu">{STATUS_LABELS.map(status=><button type="button" key={status} disabled={saving||moving} onClick={()=>{setStatusMenuTaskId(null);void moveTask(task.id,status);}}><StatusDot status={status}/></button>)}</div>}</div>
         <div className="orbit-task-card-actions"><button type="button" className="outline" onClick={() => onEdit(task)}><Pencil size={15} /> Editar</button><button type="button" className="outline orbit-action-delete" onClick={() => { void onDelete(task.id); }}><Trash2 size={15} /> Eliminar</button></div>
       </article>
     );
