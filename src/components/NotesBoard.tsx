@@ -112,6 +112,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
   const [dragNoteId, setDragNoteId] = useState<string | null>(null);
   const [swipeNoteId, setSwipeNoteId] = useState<string | null>(null);
+  const [swipeDirection,setSwipeDirection] = useState<"left"|"right">("right");
   const swipeStart = useRef<{id:string;x:number;y:number}|null>(null);
   async function pinNote(note: Note) {
     await perform(async () => {
@@ -145,7 +146,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     const start=swipeStart.current;swipeStart.current=null;
     if(!start||start.id!==note.id)return;
     const dx=event.clientX-start.x,dy=event.clientY-start.y;
-    if(Math.abs(dx)>65 && Math.abs(dx)>Math.abs(dy)*1.5) setSwipeNoteId(note.id);
+    if(Math.abs(dx)>65 && Math.abs(dx)>Math.abs(dy)*1.5) {setSwipeDirection(dx>0?"right":"left");setSwipeNoteId(note.id);}
   }
   const [expandedLists, setExpandedLists] = useState<Set<string>>(() => new Set());
   const toggleListExpansion = (id: string) => setExpandedLists(previous => {
@@ -661,7 +662,7 @@ export function NotesBoard({ userId }: { userId: string }) {
             {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/><span style={{textDecoration:item.completed?'line-through':'none'}}>{item.content}</span></label><button type="button" className="outline" disabled={busy} aria-label={`Editar ${item.content}`} onClick={() => void editListItem(item)}><Pencil size={14}/></button><button type="button" className="outline" disabled={busy} aria-label={`Eliminar ${item.content}`} onClick={() => void deleteListItem(item)}><X size={14}/></button></li>)}<li><button type="button" className="outline" disabled={busy} onClick={() => void addListItem(note.id)}><Plus size={14}/> Agregar elemento</button></li>
           </ul>}
         </div>}
-        {swipeNoteId===note.id && <div className="orbit-note-swipe-actions"><button type="button" onClick={()=>void pinNote(note)}><Pin size={15}/>{note.is_pinned?"Desfijar":"Fijar"}</button><button type="button" className="orbit-action-delete" onClick={()=>{setDeleteTarget(note);setSwipeNoteId(null);}}><Trash2 size={15}/>Eliminar</button></div>}
+        {swipeNoteId===note.id && <div className="orbit-note-swipe-actions">{swipeDirection==="right" ? <button type="button" onClick={()=>void pinNote(note)}><Pin size={15}/>{note.is_pinned?"Desfijar":"Fijar"}</button> : <button type="button" className="orbit-action-delete" onClick={()=>{setDeleteTarget(note);setSwipeNoteId(null);}}><Trash2 size={15}/>Eliminar</button>}</div>}
         <div className="note-actions">
           {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
