@@ -276,28 +276,6 @@ export function NotesBoard({ userId }: { userId: string }) {
     if(target?.dataset.noteDrop) void reorderNotes(id,target.dataset.noteDrop);
     stopNoteVisual();setDragNoteId(null);
   }
-  function swipeMove(event:React.PointerEvent<HTMLElement>,note:Note) {
-    const start=swipeStart.current;
-    if (!start || start.id!==note.id || event.pointerType!=="touch") return;
-    const dx=event.clientX-start.x,dy=event.clientY-start.y;
-    if (!start.direction && Math.max(Math.abs(dx),Math.abs(dy))>9)
-      start.direction=Math.abs(dx)>Math.abs(dy)*1.3?"horizontal":"vertical";
-    if(start.direction!=="horizontal")return;
-    const offset=Math.max(-96,Math.min(96,start.base+dx));
-    event.currentTarget.style.transform=`translate3d(${offset}px,0,0)`;
-    event.currentTarget.style.transition="none";
-  }
-  function swipeEnd(event:React.PointerEvent<HTMLElement>,note:Note) {
-    const start=swipeStart.current;swipeStart.current=null;
-    if(!start||start.id!==note.id)return;
-    const dx=start.base+event.clientX-start.x;
-    event.currentTarget.style.transform="";
-    event.currentTarget.style.transition="";
-    if(start.direction==="horizontal") {
-      if(Math.abs(dx)>44){setSwipeDirection(dx>0?"right":"left");setSwipeNoteId(note.id);}
-      else setSwipeNoteId(null);
-    }
-  }
   const [expandedLists, setExpandedLists] = useState<Set<string>>(() => new Set());
   const toggleListExpansion = (id: string) => setExpandedLists(previous => {
     const next = new Set(previous);
