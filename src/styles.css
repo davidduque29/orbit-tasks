@@ -1739,3 +1739,15 @@ button:disabled { cursor:not-allowed; }
 .orbit-board-panel .kanban .task-compact-card .orbit-status-overlay{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;opacity:0!important;appearance:none!important;-webkit-appearance:none!important;cursor:pointer!important;padding:0!important;margin:0!important;border:0!important}
 .orbit-board-panel .kanban .task-compact-card .orbit-inline-status-select-wrap:focus-within::after{content:none!important}
 .orbit-board-panel .kanban .task-compact-card .orbit-inline-status-select-wrap:focus-within{outline:2px solid #8b5cf6;outline-offset:2px}
+
+/* Restore readable project task cards and keep the compact state text above native controls. */
+.orbit-board-panel .task-compact-card{background:#fff!important;color:#202b43!important;border-radius:18px!important;min-height:0!important}
+.orbit-board-panel .task-compact-card .task-compact-button,.orbit-board-panel .task-compact-card .task-summary-main,.orbit-board-panel .task-compact-card .task-summary-main strong,.orbit-board-panel .task-compact-card .orbit-task-priority{color:#202b43!important}
+.orbit-board-panel .task-compact-card .orbit-status-visible{display:block!important;color:#fff!important;font-size:12px!important;font-weight:700!important;line-height:1.25!important;white-space:nowrap!important;pointer-events:none!important;padding:5px 9px!important}
+.orbit-board-panel .task-compact-card .orbit-inline-status-select-wrap{position:relative!important;display:inline-flex!important;align-items:center!important;width:max-content!important;max-width:100%!important;min-height:30px!important;border-radius:16px!important;background:#252c45!important;border:1px solid #8175a6!important;overflow:hidden!important}
+.orbit-board-panel .task-compact-card .orbit-status-overlay{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;opacity:0!important;appearance:none!important;-webkit-appearance:none!important;padding:0!important;border:0!important;margin:0!important;cursor:pointer!important}
+.orbit-board-panel .task-compact-card .orbit-inline-status-select-wrap:focus-within::after{content:none!important}
+.orbit-board-panel .task-compact-card .orbit-inline-status{justify-self:start!important;max-width:max-content!important}
+.orbit-board-panel .task-compact-card .orbit-task-card-actions{align-self:center!important}
+.orbit-board-panel .task-compact-card .orbit-task-card-actions button{color:#fff!important}
+.orbit-board-panel .task-compact-card .status-indicator{color:#28344c!important}
