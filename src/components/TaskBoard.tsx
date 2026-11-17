@@ -125,6 +125,8 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
   const [view, setView] = useState<BoardView>('list');
   const [dragTaskId, setDragTaskId] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
+  const [touchTask,setTouchTask] = useState<string|null>(null);
+  const [touchTarget,setTouchTarget] = useState<DisplayStatus|null>(null);
   const [moveError, setMoveError] = useState('');
   async function moveTask(taskId: string, destination: DisplayStatus) {
     const task = tasks.find(item => item.id === taskId);
@@ -141,10 +143,17 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
     finally { setMoving(false); setDragTaskId(null); }
   }
   function pointerRelease(event: React.PointerEvent<HTMLElement>, taskId: string) {
-    if (event.pointerType === 'mouse') return;
-    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>('[data-kanban-target]');
-    if (target?.dataset.kanbanTarget) void moveTask(taskId, target.dataset.kanbanTarget as DisplayStatus);
-    setDragTaskId(null);
+    if (event.pointerType === "mouse") return;
+    const target=document.elementFromPoint(event.clientX,event.clientY)?.closest<HTMLElement>('[data-kanban-target]');
+    const status=target?.dataset.kanbanTarget as DisplayStatus|undefined;
+    if(status && STATUS_LABELS.includes(status)) void moveTask(taskId,status);
+    setDragTaskId(null);setTouchTask(null);setTouchTarget(null);
+  }
+  function pointerMove(event:React.PointerEvent<HTMLElement>) {
+    if(!touchTask || event.pointerType==="mouse")return;
+    const target=document.elementFromPoint(event.clientX,event.clientY)?.closest<HTMLElement>('[data-kanban-target]');
+    const status=target?.dataset.kanbanTarget as DisplayStatus|undefined;
+    setTouchTarget(status && STATUS_LABELS.includes(status)?status:null);
   }
   const [mobileLane, setMobileLane] = useState<DisplayStatus>('Activa');
   const [section, setSection] = useState<'tasks' | 'search' | 'trash'>('tasks');
@@ -180,12 +189,13 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
 
   function taskItem(task: Task, draggableCard = false) {
     return (
-      <article className="task-list-item task-compact-card" key={task.id} draggable={draggableCard && !saving && !moving}
+      <article className={`task-list-item task-compact-card ${touchTask===task.id?"orbit-task-touch-active":""}`} key={task.id} draggable={draggableCard && !saving && !moving}
         onDragStart={event => { if (!draggableCard) return; event.dataTransfer.setData("text/plain", task.id); event.dataTransfer.effectAllowed = "move"; setDragTaskId(task.id); }}
         onDragEnd={() => setDragTaskId(null)}>
         {draggableCard && <button type="button" className="orbit-drag-handle" aria-label={`Arrastrar ${task.title} a otro estado`} title="Mantén pulsado para mover"
-          onPointerDown={event => { if (event.pointerType !== "mouse") { event.currentTarget.setPointerCapture(event.pointerId); setDragTaskId(task.id); } }}
-          onPointerUp={event => pointerRelease(event, task.id)} onPointerCancel={() => setDragTaskId(null)}><GripVertical size={18}/></button>}
+          onPointerDown={event => { if (event.pointerType !== "mouse") { event.currentTarget.setPointerCapture(event.pointerId); setDragTaskId(task.id); setTouchTask(task.id); } }}
+          onPointerMove={pointerMove}
+          onPointerUp={event => pointerRelease(event, task.id)} onPointerCancel={() => {setDragTaskId(null);setTouchTask(null);setTouchTarget(null);}}><GripVertical size={18}/></button>}
         <button type="button" className="task-summary task-compact-button"
           aria-label={`Ver detalles de ${task.title}`}
           onClick={() => setSelectedTaskId(task.id)}>
@@ -260,8 +270,8 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
       {view === 'kanban' && (
         <div className="kanban-wrapper">
           {moveError && <p className="error" role="alert">{moveError}</p>}
-          <div className="orbit-kanban-dropbar" aria-label="Mover tarea a estado">
-            {STATUS_LABELS.map(status => <button key={status} type="button" data-kanban-target={status}
+          <div className={`orbit-kanban-dropbar ${touchTask?"orbit-dropbar-active":""}`} aria-label="Mover tarea a estado">
+            {STATUS_LABELS.map(status => <button key={status} type="button" data-kanban-target={status} data-touch-target={touchTarget===status}
               disabled={!dragTaskId || saving || moving} onClick={() => { if (dragTaskId) void moveTask(dragTaskId, status); }}
               onDragOver={event => { if (dragTaskId) event.preventDefault(); }}
               onDrop={event => { event.preventDefault(); const id=event.dataTransfer.getData('text/plain') || dragTaskId; if (id) void moveTask(id,status); }}>
@@ -274,7 +284,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
           </label>
           <div className="kanban">
             {STATUS_LABELS.map((status) => (
-              <section className="lane" data-kanban-target={status} data-mobile-active={mobileLane === status ? 'true' : 'false'} key={status}
+              <section className="lane" data-kanban-target={status} data-touch-target={touchTarget===status} data-mobile-active={mobileLane === status ? 'true' : 'false'} key={status}
                 onDragOver={event => { if (dragTaskId) event.preventDefault(); }}
                 onDrop={event => { event.preventDefault(); const id=event.dataTransfer.getData("text/plain") || dragTaskId; if (id) void moveTask(id,status); }}>
                 <h2><StatusDot status={status} /> <span>{activeTasks.filter((task) => displayStatus(task.status) === status).length}</span></h2>
