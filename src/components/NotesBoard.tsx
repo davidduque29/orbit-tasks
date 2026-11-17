@@ -669,7 +669,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           onPointerUp={event=>swipeEnd(event,note)}
           onPointerCancel={event=>{swipeStart.current=null;event.currentTarget.style.transform="";event.currentTarget.style.transition="";}}>
         {section==="pending" && statusTab==="active" && <button type="button" className="orbit-note-grip" aria-label={`Arrastrar ${note.title} para ordenar`}
-          onPointerDown={event=>{event.stopPropagation();if(event.pointerType!=="mouse"){event.currentTarget.setPointerCapture(event.pointerId);setDragNoteId(note.id);startNoteVisual(event);}}}
+          onPointerDown={event=>{event.stopPropagation();if(event.pointerType!=="mouse"){event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);setDragNoteId(note.id);startNoteVisual(event);}}}
           onPointerMove={event=>{event.stopPropagation();moveNoteVisual(event);}}
           onPointerCancel={()=>{stopNoteVisual();setDragNoteId(null);}}
           onPointerUp={event=>{event.stopPropagation();releaseNote(event,note.id);}}><GripVertical size={18}/></button>}
