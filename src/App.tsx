@@ -750,7 +750,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       )}
 
       {confirmation && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setConfirmation(null)}>
+        <div className="modal-backdrop orbit-confirmation-backdrop" role="presentation" onClick={() => setConfirmation(null)}>
           <section className="modal orbit-detail-modal" role="alertdialog" aria-modal="true" aria-labelledby="orbit-confirm-title" aria-describedby="orbit-confirm-message" onClick={(event) => event.stopPropagation()}>
             <h2 id="orbit-confirm-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{(confirmation.title === 'Descartar cambios' || confirmation.title === 'Posible evento duplicado') ? <AlertTriangle size={22} color="#d97706" aria-hidden="true" /> : <Trash2 size={22} color="#dc2626" aria-hidden="true" />}{confirmation.title}</h2>
             <p id="orbit-confirm-message">{confirmation.message}</p>
