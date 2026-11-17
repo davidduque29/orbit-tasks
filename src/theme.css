@@ -379,3 +379,23 @@
 .profile-dropdown .profile-action {margin-top:10px;min-height:42px;padding:8px 10px;font-size:13px;}
 .profile-dropdown .profile-logout {margin-top:7px;min-height:42px;padding:8px 10px;font-size:13px;}
 @media(max-width:480px) {.profile-dropdown {width:min(260px,calc(100vw - 20px));padding:10px;}}
+
+/* Keep text readable when iOS Safari focuses event title/description.
+   Legacy .orbit-validated-form:focus switches the background to white. */
+[data-theme="dark"] .orbit-validated-form input:focus,
+[data-theme="dark"] .orbit-validated-form textarea:focus,
+[data-theme="dark"] .orbit-validated-form input:focus-visible,
+[data-theme="dark"] .orbit-validated-form textarea:focus-visible {
+  background-color:#fff!important;
+  color:#20283e!important;
+  -webkit-text-fill-color:#20283e!important;
+  caret-color:#5634bf!important;
+  border-color:#8b5cf6!important;
+  opacity:1!important;
+}
+[data-theme="dark"] .orbit-validated-form input:focus::placeholder,
+[data-theme="dark"] .orbit-validated-form textarea:focus::placeholder {
+  color:#667085!important;
+  -webkit-text-fill-color:#667085!important;
+  opacity:1!important;
+}
