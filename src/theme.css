@@ -424,3 +424,29 @@
   .device-modal .device-modal-heading h2 {font-size:20px;line-height:1.2;}
   .device-modal .device-modal-heading p {font-size:13px;}
 }
+
+
+/* Device names on white cards: override inherited dark-theme text fill as well as color. */
+html[data-theme="dark"] .device-modal .device-item .device-details > strong,
+[data-theme="dark"] .device-modal .device-item .device-details > strong,
+.device-modal .device-item .device-details > strong {
+  color:#202b42!important;
+  -webkit-text-fill-color:#202b42!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+html[data-theme="dark"] .device-modal .device-item .device-details > small,
+[data-theme="dark"] .device-modal .device-item .device-details > small {
+  color:#475569!important;
+  -webkit-text-fill-color:#475569!important;
+  opacity:1!important;
+}
+/* Sticky event save bar should blend into the dark modal, never show a white frame. */
+[data-theme="dark"] .orbit-event-save-footer {
+  background:#1b233c!important;
+  border-top:1px solid #48516d!important;
+  box-shadow:none!important;
+}
+[data-theme="dark"] .orbit-event-save-footer > button {
+  border-color:transparent!important;
+}
