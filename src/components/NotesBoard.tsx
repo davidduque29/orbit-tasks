@@ -441,7 +441,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     return section === 'search' && note.title.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es'));
   }).sort((a,b) => Number(b.is_pinned)-Number(a.is_pinned) || (a.sort_order??Number.MAX_SAFE_INTEGER)-(b.sort_order??Number.MAX_SAFE_INTEGER) || new Date(b.created_at).getTime()-new Date(a.created_at).getTime()), [visibleNotes, section, statusTab, search]);
   useEffect(() => { setPage(1); }, [section, statusTab, search]);
-  const displayPageSize = section === 'pending' && statusTab === 'active' ? Math.max(pageSize,filtered.length) : pageSize;
+  const displayPageSize = pageSize;
   const totalPages = Math.max(1, Math.ceil(filtered.length / displayPageSize));
   const currentPage = Math.min(page, totalPages);
   const pagedNotes = filtered.slice((currentPage - 1) * displayPageSize, currentPage * displayPageSize);
