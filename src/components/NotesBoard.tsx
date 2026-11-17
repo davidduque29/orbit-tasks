@@ -155,15 +155,16 @@ export function NotesBoard({ userId }: { userId: string }) {
       const visual = noteVisual.current;
       if (visual) visual.ghost.style.transform = `translate3d(${touch.clientX - visual.offsetX}px,${touch.clientY - visual.offsetY}px,0)`;
     };
-    const finish = () => {
+    const finish = (event: TouchEvent) => {
       const gesture = longPress.current;
       if (!gesture) return;
       window.clearTimeout(gesture.timer);
       longPress.current = null;
       if (!gesture.active) return;
-      const target = document.elementFromPoint(gesture.lastX, gesture.lastY)?.closest<HTMLElement>('[data-note-drop]');
-      if (target?.dataset.noteDrop && target.dataset.noteDrop !== gesture.id)
-        void reorderRef.current(gesture.id, target.dataset.noteDrop);
+      if (event.type === 'touchcancel') { stopNoteVisual(); setDragNoteId(null); return; }
+      const cards = [...document.querySelectorAll<HTMLElement>('[data-note-drop]')].filter(card => card.dataset.noteDrop !== gesture.id);
+      const target = cards.find(card => { const rect = card.getBoundingClientRect(); return gesture.lastY >= rect.top && gesture.lastY <= rect.bottom; });
+      if (target?.dataset.noteDrop) void reorderRef.current(gesture.id, target.dataset.noteDrop);
       stopNoteVisual();
       setDragNoteId(null);
     };
@@ -178,7 +179,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     };
   }, []);
   function beginCardHold(event: React.TouchEvent<HTMLElement>, id: string) {
-    if (busy || event.touches.length !== 1 || (event.target as HTMLElement).closest('button,input,select,textarea,a,label')) return;
+    if (busy || event.touches.length !== 1 || (event.target as HTMLElement).closest('button:not(.orbit-note-grip),input,select,textarea,a,label')) return;
     const touch = event.touches[0], source = event.currentTarget;
     const x = touch.clientX, y = touch.clientY;
     if (longPress.current) window.clearTimeout(longPress.current.timer);
@@ -187,6 +188,8 @@ export function NotesBoard({ userId }: { userId: string }) {
       if (longPress.current !== gesture) return;
       gesture.active = true;
       swipeStart.current = null;
+      source.style.transform = '';
+      source.style.transition = '';
       setSwipeNoteId(null);
       setDragNoteId(id);
       const rect = source.getBoundingClientRect(), ghost = source.cloneNode(true) as HTMLElement;
@@ -737,10 +740,10 @@ export function NotesBoard({ userId }: { userId: string }) {
           onPointerUp={event=>{if(!longPress.current?.active)swipeEnd(event,note);}}
           onPointerCancel={event=>{if(longPress.current?.active)return;swipeStart.current=null;event.currentTarget.style.transform="";event.currentTarget.style.transition="";}}>
         {section==="pending" && statusTab==="active" && <button type="button" className="orbit-note-grip" aria-label={`Arrastrar ${note.title} para ordenar`}
-          onPointerDown={event=>{event.stopPropagation();if(event.pointerType!=="mouse"){event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);setDragNoteId(note.id);startNoteVisual(event);}}}
-          onPointerMove={event=>{event.stopPropagation();moveNoteVisual(event);}}
-          onPointerCancel={()=>{stopNoteVisual();setDragNoteId(null);}}
-          onPointerUp={event=>{event.stopPropagation();releaseNote(event,note.id);}}><GripVertical size={18}/></button>}
+          onPointerDown={event=>{event.stopPropagation();if(event.pointerType==="mouse"){setDragNoteId(note.id);startNoteVisual(event);}}}
+          onPointerMove={event=>{event.stopPropagation();if(event.pointerType==="mouse")moveNoteVisual(event);}}
+          onPointerCancel={event=>{if(event.pointerType==="mouse"){stopNoteVisual();setDragNoteId(null);}}}
+          onPointerUp={event=>{event.stopPropagation();if(event.pointerType==="mouse")releaseNote(event,note.id);}}><GripVertical size={18}/></button>}
         {note.is_pinned && <Pin size={15} className="orbit-note-pin" aria-label="Fijado"/>}
         <div className="note-check">
           {note.kind === 'pending'
