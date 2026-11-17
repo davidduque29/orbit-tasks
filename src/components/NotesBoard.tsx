@@ -83,9 +83,11 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [orderNotice, setOrderNotice] = useState(false);
+  const [createdNotice, setCreatedNotice] = useState(false);
   const suppressCardClickUntil = useRef(0);
   const orderNoticeTimer = useRef<number | null>(null);
-  useEffect(() => () => { if (orderNoticeTimer.current !== null) window.clearTimeout(orderNoticeTimer.current); }, []);
+  const createdNoticeTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (orderNoticeTimer.current !== null) window.clearTimeout(orderNoticeTimer.current); if (createdNoticeTimer.current !== null) window.clearTimeout(createdNoticeTimer.current); }, []);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [section, setSection] = useState<'pending' | 'search' | 'categories'>('pending');
@@ -492,13 +494,27 @@ export function NotesBoard({ userId }: { userId: string }) {
     const reminderError = validateReminder(quickReminder);
     if (reminderError) { setError(reminderError); return; }
     if (await perform(async () => {
+      const existingIds = new Set(notes.map(note => note.id));
       const { error: saveError } = await supabase.rpc('save_pending_with_items', {
         p_title: cleaned, p_category_id: null, p_reminder_at: quickReminder.at,
         p_recurrence_rule: quickReminder.rule, p_items: quickListPreview,
       });
       if (saveError) throw saveError;
+      const { data: candidates, error: lookupError } = await supabase.from('notes')
+        .select('id').eq('owner_id', userId).eq('kind','pending').eq('title',cleaned)
+        .order('created_at',{ascending:false}).limit(20);
+      if (lookupError) throw lookupError;
+      const created = candidates?.find(candidate => !existingIds.has(candidate.id));
+      if (!created) throw new Error('No se pudo identificar el pendiente recién creado para ordenarlo.');
+      const minOrder = Math.min(0,...notes.filter(note => !note.deleted_at && !note.completed && !note.is_pinned).map(note => note.sort_order ?? 0));
+      const { error: positionError } = await supabase.from('notes')
+        .update({sort_order:minOrder-1}).eq('owner_id',userId).eq('id',created.id);
+      if (positionError) throw positionError;
     }, 'Pendiente creado.')) {
-      setQuickTitle(''); setVoiceHint(''); setQuickReminder(NO_REMINDER); setStatusTab('active');
+      setQuickTitle(''); setVoiceHint(''); setQuickReminder(NO_REMINDER); setStatusTab('active'); setPage(1);
+      setCreatedNotice(true);
+      if (createdNoticeTimer.current !== null) window.clearTimeout(createdNoticeTimer.current);
+      createdNoticeTimer.current = window.setTimeout(() => setCreatedNotice(false), 2500);
     }
   }
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -738,10 +754,10 @@ export function NotesBoard({ userId }: { userId: string }) {
 
     </div>
     {error && <p className="error" role="alert">{error}</p>}
-    {message && <p className="feedback" role="status">{message}</p>}
+    {message && message !== "Pendiente creado." && <p className="feedback" role="status">{message}</p>}
     {loading && <p className="muted">Cargando tus pendientes…</p>}
     {!loading && <>
-    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> <span>Listado de pendientes ({filtered.length})</span>{orderNotice && <span className="orbit-order-inline-notice" role="status">Orden guardado</span>}</h2>
+    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> <span>Listado de pendientes ({filtered.length})</span>{(createdNotice || orderNotice) && <span className="orbit-order-inline-notice" role="status">{createdNotice ? "Pendiente creado" : "Orden guardado"}</span>}</h2>
     <div className="notes-list">
       {pagedNotes.map(note => <div className="orbit-swipe-shell" key={note.id}>
         {section==="pending" && statusTab==="active" && <div className="orbit-swipe-underlay" aria-hidden="true">
