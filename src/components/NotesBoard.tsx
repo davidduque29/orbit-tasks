@@ -113,7 +113,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [dragNoteId, setDragNoteId] = useState<string | null>(null);
   const [swipeNoteId, setSwipeNoteId] = useState<string | null>(null);
   const [swipeDirection,setSwipeDirection] = useState<"left"|"right">("right");
-  const swipeStart = useRef<{id:string;x:number;y:number}|null>(null);
+  const swipeStart = useRef<{id:string;x:number;y:number;direction?: "horizontal"|"vertical"}|null>(null);
   async function pinNote(note: Note) {
     await perform(async () => {
       const {error: updateError} = await supabase.from('notes').update({is_pinned:!note.is_pinned}).eq('id',note.id).eq('owner_id',userId);
@@ -142,11 +142,27 @@ export function NotesBoard({ userId }: { userId: string }) {
     if(target?.dataset.noteDrop) void reorderNotes(id,target.dataset.noteDrop);
     setDragNoteId(null);
   }
+  function swipeMove(event:React.PointerEvent<HTMLElement>,note:Note) {
+    const start=swipeStart.current;
+    if (!start || start.id!==note.id || event.pointerType!=="touch") return;
+    const dx=event.clientX-start.x,dy=event.clientY-start.y;
+    if (!start.direction && Math.max(Math.abs(dx),Math.abs(dy))>9)
+      start.direction=Math.abs(dx)>Math.abs(dy)*1.3?"horizontal":"vertical";
+    if(start.direction!=="horizontal")return;
+    const offset=Math.max(-96,Math.min(96,dx));
+    event.currentTarget.style.transform=`translate3d(${offset}px,0,0)`;
+    event.currentTarget.style.transition="none";
+  }
   function swipeEnd(event:React.PointerEvent<HTMLElement>,note:Note) {
     const start=swipeStart.current;swipeStart.current=null;
     if(!start||start.id!==note.id)return;
-    const dx=event.clientX-start.x,dy=event.clientY-start.y;
-    if(Math.abs(dx)>65 && Math.abs(dx)>Math.abs(dy)*1.5) {setSwipeDirection(dx>0?"right":"left");setSwipeNoteId(note.id);}
+    const dx=event.clientX-start.x;
+    event.currentTarget.style.transform="";
+    event.currentTarget.style.transition="";
+    if(start.direction==="horizontal" && Math.abs(dx)>52) {
+      setSwipeDirection(dx>0?"right":"left");
+      setSwipeNoteId(note.id);
+    }
   }
   const [expandedLists, setExpandedLists] = useState<Set<string>>(() => new Set());
   const toggleListExpansion = (id: string) => setExpandedLists(previous => {
@@ -618,14 +634,21 @@ export function NotesBoard({ userId }: { userId: string }) {
     {!loading && <>
     <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> Listado de pendientes ({filtered.length})</h2>
     <div className="notes-list">
-      {pagedNotes.map(note => <article className="card note-list-item orbit-reorder-note" key={note.id} data-note-drop={note.id}
-        draggable={section === "pending" && statusTab === "active" && !busy}
-        onDragStart={event=>{event.dataTransfer.setData("text/plain",note.id);setDragNoteId(note.id);}}
-        onDragEnd={()=>setDragNoteId(null)}
-        onDragOver={event=>{if(dragNoteId)event.preventDefault();}}
-        onDrop={event=>{event.preventDefault();const id=event.dataTransfer.getData("text/plain")||dragNoteId;if(id)void reorderNotes(id,note.id);}}
-        onPointerDown={event=>{if(event.pointerType==="touch")swipeStart.current={id:note.id,x:event.clientX,y:event.clientY};}}
-        onPointerUp={event=>swipeEnd(event,note)}>
+      {pagedNotes.map(note => <div className="orbit-swipe-shell" key={note.id}>
+        {section==="pending" && statusTab==="active" && <div className="orbit-swipe-underlay" aria-hidden="true">
+          <span className="orbit-swipe-pin"><Pin size={20}/>{note.is_pinned?"Desfijar":"Fijar"}</span>
+          <span className="orbit-swipe-delete"><Trash2 size={20}/>Eliminar</span>
+        </div>}
+        <article className={`card note-list-item orbit-reorder-note ${swipeNoteId===note.id?(swipeDirection==="right"?"orbit-swiped-right":"orbit-swiped-left"):""}`}
+          data-note-drop={note.id} draggable={section==="pending" && statusTab==="active" && !busy}
+          onDragStart={event=>{event.dataTransfer.setData("text/plain",note.id);setDragNoteId(note.id);}}
+          onDragEnd={()=>setDragNoteId(null)}
+          onDragOver={event=>{if(dragNoteId)event.preventDefault();}}
+          onDrop={event=>{event.preventDefault();const id=event.dataTransfer.getData("text/plain")||dragNoteId;if(id)void reorderNotes(id,note.id);}}
+          onPointerDown={event=>{if(event.pointerType==="touch" && !(event.target as HTMLElement).closest("button,input"))swipeStart.current={id:note.id,x:event.clientX,y:event.clientY};}}
+          onPointerMove={event=>swipeMove(event,note)}
+          onPointerUp={event=>swipeEnd(event,note)}
+          onPointerCancel={event=>{swipeStart.current=null;event.currentTarget.style.transform="";event.currentTarget.style.transition="";}}>
         {section==="pending" && statusTab==="active" && <button type="button" className="orbit-note-grip" aria-label={`Arrastrar ${note.title} para ordenar`}
           onPointerDown={event=>{event.stopPropagation();if(event.pointerType!=="mouse"){event.currentTarget.setPointerCapture(event.pointerId);setDragNoteId(note.id);}}}
           onPointerUp={event=>{event.stopPropagation();releaseNote(event,note.id);}}><GripVertical size={18}/></button>}
@@ -662,7 +685,7 @@ export function NotesBoard({ userId }: { userId: string }) {
             {itemsFor(note.id).map(item => <li key={item.id}><label><input type="checkbox" checked={item.completed} disabled={busy} onChange={() => void toggleItem(item)}/><span style={{textDecoration:item.completed?'line-through':'none'}}>{item.content}</span></label><button type="button" className="outline" disabled={busy} aria-label={`Editar ${item.content}`} onClick={() => void editListItem(item)}><Pencil size={14}/></button><button type="button" className="outline" disabled={busy} aria-label={`Eliminar ${item.content}`} onClick={() => void deleteListItem(item)}><X size={14}/></button></li>)}<li><button type="button" className="outline" disabled={busy} onClick={() => void addListItem(note.id)}><Plus size={14}/> Agregar elemento</button></li>
           </ul>}
         </div>}
-        {swipeNoteId===note.id && <div className="orbit-note-swipe-actions">{swipeDirection==="right" ? <button type="button" onClick={()=>void pinNote(note)}><Pin size={15}/>{note.is_pinned?"Desfijar":"Fijar"}</button> : <button type="button" className="orbit-action-delete" onClick={()=>{setDeleteTarget(note);setSwipeNoteId(null);}}><Trash2 size={15}/>Eliminar</button>}</div>}
+        
         <div className="note-actions">
           {recurringSeries.has(seriesKey(note)) && <button type="button" className="note-history-button"
             aria-label={`Ver historial de ${note.title}`} title="Historial de repeticiones"
@@ -670,7 +693,11 @@ export function NotesBoard({ userId }: { userId: string }) {
           <button type="button" className="orbit-action-edit" aria-label={`Editar ${note.title}`} title="Editar" onClick={() => openEditor(note)}><Pencil size={17} aria-hidden="true"/><span>Editar</span></button>
           <button type="button" className="orbit-action-delete" aria-label={`Eliminar ${note.title}`} title="Eliminar" onClick={() => remove(note)} disabled={busy}><Trash2 size={17} aria-hidden="true"/><span>Eliminar</span></button>
         </div>
-      </article>)}
+      </article>
+        {swipeNoteId===note.id && <div className={`orbit-swipe-action ${swipeDirection==="right"?"orbit-swipe-action-left":"orbit-swipe-action-right"}`}>
+          {swipeDirection==="right" ? <button type="button" onClick={()=>void pinNote(note)}><Pin size={17}/>{note.is_pinned?"Desfijar":"Fijar"}</button> : <button type="button" className="orbit-action-delete" onClick={()=>{setDeleteTarget(note);setSwipeNoteId(null);}}><Trash2 size={17}/>Eliminar</button>}
+        </div>}
+      </div>)}
       {filtered.length === 0 && <div className="card notes-empty"><NotebookPen size={30} aria-hidden="true"/>
         <h2>{statusTab === 'active' ? 'Sin pendientes activos' : 'Aún no hay completados'}</h2>
         <p>No hay registros en esta sección.</p>
