@@ -450,3 +450,6 @@ html[data-theme="dark"] .device-modal .device-item .device-details > small,
 [data-theme="dark"] .orbit-event-save-footer > button {
   border-color:transparent!important;
 }
+
+/* Confirmation must sit above the open editor, not behind its modal backdrop. */
+.modal-backdrop.orbit-confirmation-backdrop { z-index: 70; }
