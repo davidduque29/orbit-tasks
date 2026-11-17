@@ -1692,3 +1692,13 @@ button:disabled { cursor:not-allowed; }
 /* Long-press reorder: preserve normal page scrolling until the hold activates. */
 .orbit-reorder-note.orbit-touch-source{touch-action:none;z-index:5}
 .orbit-reorder-note .note-summary{touch-action:pan-y}
+
+/* Compact, accessible native status control for list and narrow Kanban lanes. */
+.orbit-board-panel .task-compact-card:has(.orbit-inline-status){display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;align-items:center!important;gap:6px!important;min-width:0!important}
+.orbit-board-panel .task-compact-card .task-compact-button{grid-column:1 / -1!important;grid-row:1!important;min-width:0!important;width:100%!important;overflow:hidden!important}
+.orbit-board-panel .task-compact-card .task-summary-main{min-width:0!important;width:100%!important}
+.orbit-board-panel .task-compact-card .task-summary-main strong{overflow-wrap:break-word!important;word-break:normal!important;white-space:normal!important}
+.orbit-board-panel .task-compact-card .orbit-inline-status{grid-column:1!important;grid-row:2!important;justify-self:start!important;align-self:center!important;width:auto!important;max-width:100%!important;min-width:0!important;margin:0 0 8px 10px!important;z-index:2}
+.orbit-board-panel .task-compact-card .orbit-inline-status-select-wrap{display:inline-block!important;width:auto!important;max-width:100%!important}
+.orbit-board-panel .task-compact-card .orbit-inline-status-select{box-sizing:border-box!important;display:inline-block!important;width:auto!important;max-width:100%!important;min-width:0!important;min-height:34px!important;height:34px!important;padding:4px 24px 4px 9px!important;border-radius:18px!important;font-size:12px!important;line-height:1.2!important;white-space:nowrap!important}
+.orbit-board-panel .task-compact-card .orbit-task-card-actions{grid-column:2!important;grid-row:2!important;justify-self:end!important;display:flex!important;flex-wrap:nowrap!important;align-items:center!important;width:auto!important;margin:0!important;padding:0 8px 8px 0!important}
