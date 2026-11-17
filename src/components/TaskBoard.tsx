@@ -224,12 +224,10 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
           onClick={() => setSelectedTaskId(task.id)}>
           <span className="task-summary-main">
             <strong>{task.title}</strong>
-            <span className="task-compact-meta"><Flag size={13} aria-hidden="true" />{task.priority}
-              {task.estimated_due_at && <><CalendarDays size={13} aria-hidden="true" />{dateLabel(task.estimated_due_at)}</>}
-              {task.reminder_override_minutes?.length ? <Bell size={13} aria-label="Con recordatorios" /> : null}
-            </span>
+            <span className="task-compact-meta">{task.estimated_due_at && <><CalendarDays size={13} aria-hidden="true" />{dateLabel(task.estimated_due_at)}</>}{task.reminder_override_minutes?.length ? <Bell size={13} aria-label="Con recordatorios" /> : null}</span>
           </span>
         </button>
+        <div className="orbit-task-priority"><Flag size={13} aria-hidden="true" />Prioridad {task.priority.toLowerCase()}</div>
         <div className="orbit-inline-status"><label className="orbit-inline-status-select-wrap"><select className="orbit-inline-status-select" aria-label={`Cambiar estado de ${task.title}`} value={displayStatus(task.status)} disabled={saving||moving} onChange={event=>{void moveTask(task.id,event.target.value as DisplayStatus);}}>{STATUS_LABELS.map(status=><option key={status} value={status}>{status}</option>)}</select></label></div>
         <div className="orbit-task-card-actions"><button type="button" className="outline" onClick={() => onEdit(task)}><Pencil size={15} /> Editar</button><button type="button" className="outline orbit-action-delete" onClick={() => { void onDelete(task.id); }}><Trash2 size={15} /> Eliminar</button></div>
       </article>
