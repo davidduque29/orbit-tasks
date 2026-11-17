@@ -113,6 +113,25 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [dragNoteId, setDragNoteId] = useState<string | null>(null);
   const [swipeNoteId, setSwipeNoteId] = useState<string | null>(null);
   const [swipeDirection,setSwipeDirection] = useState<"left"|"right">("right");
+  const noteVisual=useRef<{ghost:HTMLElement;source:HTMLElement;offsetY:number;offsetX:number}|null>(null);
+  function startNoteVisual(event:React.PointerEvent<HTMLElement>) {
+    const source=event.currentTarget.closest<HTMLElement>('.orbit-reorder-note');if(!source)return;
+    const rect=source.getBoundingClientRect(),ghost=source.cloneNode(true) as HTMLElement;
+    Object.assign(ghost.style,{position:'fixed',left:'0',top:'0',width:rect.width+'px',height:rect.height+'px',margin:'0',zIndex:'99999',pointerEvents:'none',transform:`translate3d(${rect.left}px,${rect.top}px,0)`});
+    ghost.classList.add('orbit-touch-ghost');document.body.appendChild(ghost);
+    source.classList.add('orbit-touch-source');
+    noteVisual.current={ghost,source,offsetX:event.clientX-rect.left,offsetY:event.clientY-rect.top};
+  }
+  function moveNoteVisual(event:React.PointerEvent<HTMLElement>) {
+    const v=noteVisual.current;if(!v)return;
+    v.ghost.style.transform=`translate3d(${event.clientX-v.offsetX}px,${event.clientY-v.offsetY}px,0)`;
+  }
+  function stopNoteVisual() {
+    const v=noteVisual.current;noteVisual.current=null;if(!v)return;
+    v.source.classList.remove('orbit-touch-source');
+    v.ghost.style.transition='opacity 150ms ease';v.ghost.style.opacity='0';
+    window.setTimeout(()=>v.ghost.remove(),170);
+  }
   const swipeStart = useRef<{id:string;x:number;y:number;direction?: "horizontal"|"vertical"}|null>(null);
   async function pinNote(note: Note) {
     await perform(async () => {
@@ -140,7 +159,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   function releaseNote(event: React.PointerEvent<HTMLElement>,id:string) {
     const target=document.elementFromPoint(event.clientX,event.clientY)?.closest<HTMLElement>('[data-note-drop]');
     if(target?.dataset.noteDrop) void reorderNotes(id,target.dataset.noteDrop);
-    setDragNoteId(null);
+    stopNoteVisual();setDragNoteId(null);
   }
   function swipeMove(event:React.PointerEvent<HTMLElement>,note:Note) {
     const start=swipeStart.current;
@@ -640,7 +659,7 @@ export function NotesBoard({ userId }: { userId: string }) {
           <span className="orbit-swipe-delete"><Trash2 size={20}/>Eliminar</span>
         </div>}
         <article className={`card note-list-item orbit-reorder-note ${swipeNoteId===note.id?(swipeDirection==="right"?"orbit-swiped-right":"orbit-swiped-left"):""}`}
-          data-note-drop={note.id} draggable={section==="pending" && statusTab==="active" && !busy}
+          data-note-drop={note.id} draggable={false}
           onDragStart={event=>{event.dataTransfer.setData("text/plain",note.id);setDragNoteId(note.id);}}
           onDragEnd={()=>setDragNoteId(null)}
           onDragOver={event=>{if(dragNoteId)event.preventDefault();}}
@@ -650,7 +669,9 @@ export function NotesBoard({ userId }: { userId: string }) {
           onPointerUp={event=>swipeEnd(event,note)}
           onPointerCancel={event=>{swipeStart.current=null;event.currentTarget.style.transform="";event.currentTarget.style.transition="";}}>
         {section==="pending" && statusTab==="active" && <button type="button" className="orbit-note-grip" aria-label={`Arrastrar ${note.title} para ordenar`}
-          onPointerDown={event=>{event.stopPropagation();if(event.pointerType!=="mouse"){event.currentTarget.setPointerCapture(event.pointerId);setDragNoteId(note.id);}}}
+          onPointerDown={event=>{event.stopPropagation();if(event.pointerType!=="mouse"){event.currentTarget.setPointerCapture(event.pointerId);setDragNoteId(note.id);startNoteVisual(event);}}}
+          onPointerMove={event=>{event.stopPropagation();moveNoteVisual(event);}}
+          onPointerCancel={()=>{stopNoteVisual();setDragNoteId(null);}}
           onPointerUp={event=>{event.stopPropagation();releaseNote(event,note.id);}}><GripVertical size={18}/></button>}
         {note.is_pinned && <Pin size={15} className="orbit-note-pin" aria-label="Fijado"/>}
         <div className="note-check">

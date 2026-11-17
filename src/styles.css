@@ -1667,3 +1667,10 @@ button:disabled { cursor:not-allowed; }
 .orbit-task-touch-active{outline:2px solid #ae8cff;box-shadow:0 8px 20px #0005}
 .orbit-drag-handle{min-height:30px;height:30px;min-width:30px;align-self:center}
 @media(max-width:720px){.kanban .task-compact-card{min-height:0;padding-top:8px;padding-bottom:8px}.kanban .task-compact-card .orbit-drag-handle{position:absolute;top:5px;left:5px;z-index:2}.kanban .task-compact-card .task-summary{padding-top:16px}.orbit-kanban-dropbar:not(.orbit-dropbar-active){display:none}}
+
+/* Touch drag: clone retains original card colors; no Safari selection or black preview. */
+.orbit-touch-ghost{opacity:1!important;background:#fff!important;color:#18223c!important;border-radius:15px!important;box-shadow:0 14px 38px #10152b66!important;overflow:hidden;user-select:none!important;-webkit-user-select:none!important}
+.orbit-touch-ghost *{user-select:none!important;-webkit-user-select:none!important}
+.orbit-touch-source{opacity:.42;outline:2px dashed #9872ec}
+.orbit-drag-handle,.orbit-note-grip{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.orbit-reorder-note .note-summary,.task-compact-card .task-summary{-webkit-user-select:none;user-select:none}
