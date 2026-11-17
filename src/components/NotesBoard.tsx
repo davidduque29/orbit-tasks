@@ -82,6 +82,9 @@ export function NotesBoard({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [orderNotice, setOrderNotice] = useState(false);
+  const orderNoticeTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (orderNoticeTimer.current !== null) window.clearTimeout(orderNoticeTimer.current); }, []);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [section, setSection] = useState<'pending' | 'search' | 'categories'>('pending');
@@ -229,7 +232,9 @@ export function NotesBoard({ userId }: { userId: string }) {
       ));
       const failed = results.find(result => result.error);
       if (failed?.error) throw failed.error;
-      setMessage('Orden guardado.');
+      setOrderNotice(true);
+      if (orderNoticeTimer.current !== null) window.clearTimeout(orderNoticeTimer.current);
+      orderNoticeTimer.current = window.setTimeout(() => setOrderNotice(false), 1800);
     } catch (cause) {
       setNotes(previousNotes);
       setError(errorText(cause));
@@ -734,7 +739,7 @@ export function NotesBoard({ userId }: { userId: string }) {
     {message && <p className="feedback" role="status">{message}</p>}
     {loading && <p className="muted">Cargando tus pendientes…</p>}
     {!loading && <>
-    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> Listado de pendientes ({filtered.length})</h2>
+    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> <span>Listado de pendientes ({filtered.length})</span>{orderNotice && <span className="orbit-order-inline-notice" role="status">Orden guardado</span>}</h2>
     <div className="notes-list">
       {pagedNotes.map(note => <div className="orbit-swipe-shell" key={note.id}>
         {section==="pending" && statusTab==="active" && <div className="orbit-swipe-underlay" aria-hidden="true">
