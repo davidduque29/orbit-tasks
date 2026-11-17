@@ -1683,3 +1683,9 @@ button:disabled { cursor:not-allowed; }
 .task-compact-card:has(.orbit-inline-status-menu){z-index:20}
 [data-kanban-target],.orbit-kanban-dropbar,.orbit-kanban-dropbar *{user-select:none!important;-webkit-user-select:none!important}
 .orbit-touch-ghost{transition:none!important;animation:none!important}
+
+/* iPhone: use native status picker instead of a clipped popover inside Kanban cards. */
+.orbit-inline-status-select-wrap{display:block;max-width:100%}
+.orbit-inline-status-select{appearance:auto;-webkit-appearance:menulist;max-width:100%;min-width:0;width:100%;font-size:13px;font-weight:700;line-height:1.4;padding:7px 3px;border:1px solid #d9d0f1;border-radius:12px;background:#fff;color:#18223c}
+.kanban .orbit-inline-status{min-width:0;max-width:100%}
+@media(max-width:720px){.kanban .orbit-inline-status{width:100%;align-self:stretch}.kanban .orbit-inline-status-select{min-height:42px}.orbit-note-grip{touch-action:none!important;overscroll-behavior:contain}}
