@@ -7,7 +7,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, NotebookPen, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, MoreVertical, ArrowLeft, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save, Sun, Moon } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, MoreVertical, ArrowLeft, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save, Sun, Moon } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderModal } from './components/ReminderModal';
 import { reminderSummary, validateReminder, type ReminderSchedule } from './domain/reminders';
@@ -23,7 +23,7 @@ import { supabase } from './infrastructure/supabaseClient';
 
 type View = 'dashboard' | 'projects' | 'board' | 'events' | 'reports' | 'account';
 type Space = 'pick' | 'notes' | 'projects' | 'events';
-type AccountSection = 'profile' | 'devices' | 'notifications';
+type AccountSection = 'home' | 'profile' | 'devices' | 'notifications' | 'appearance' | 'security';
 type Editor = 'project' | 'task' | 'event';
 
 function toLocalInput(date: Date): string {
@@ -114,7 +114,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     setFeedback('');
   }
 
-  const [accountSection, setAccountSection] = useState<AccountSection>('profile');
+  const [accountSection, setAccountSection] = useState<AccountSection>('home');
+  const [accountReturn, setAccountReturn] = useState<{ space: Space; view: View } | null>(null);
+  function openAccount(section: AccountSection = 'home') { setAccountReturn({ space, view }); setAccountSection(section); setView('account'); }
+  function closeAccount() { if (accountReturn) { setSpace(accountReturn.space); setView(accountReturn.view === 'account' ? 'dashboard' : accountReturn.view); } else { setView(space === 'events' ? 'events' : space === 'projects' ? 'projects' : 'dashboard'); } setAccountSection('home'); }
+
   const [reportTab, setReportTab] = useState<'indicators' | 'progress'>('indicators');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -371,11 +375,11 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       <header className="header">
         <div className="wordmark"><img className="brand-logo" src="/orbit-tasks/orbit-approved.webp" alt="" /><span className="orbit-brand-stack"><span>Orbit <b>Tasks</b></span><small className="orbit-header-clock">{clockNow.toLocaleString("es-CO", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })}</small></span></div>
         <div className="orbit-header-actions">
-          <UserProfile userId={userId} email={email} onAccountClick={() => { setView('account'); setAccountSection('profile'); }} />
+          <UserProfile userId={userId} email={email} onAccountClick={() => openAccount() } />
           <button type="button" className="orbit-theme-toggle" onClick={() => setTheme(current => current === 'dark' ? 'light' : 'dark')} aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'} title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'} aria-pressed={theme === 'dark'}>{theme === 'dark' ? <Sun size={19} aria-hidden="true" /> : <Moon size={19} aria-hidden="true" />}</button>
         </div>
       </header>
-      {space !== 'pick' && <nav className="workspace-navigation" aria-label="Cambiar módulo">
+      {space !== 'pick' && view !== 'account' && <nav className="workspace-navigation" aria-label="Cambiar módulo">
         <div className="workspace-navigation-heading">
           <span>Espacios de trabajo</span>
           <button type="button" className="workspace-navigation-home" onClick={() => chooseSpace('pick')} aria-label="Ver todos los espacios de trabajo">
@@ -402,7 +406,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         {error && <p role="alert" className="error">{error}</p>}
         {loading && <p className="muted">Sincronizando datos…</p>}
 
-        {space === 'pick' && <section className="space-welcome">
+        {space === 'pick' && view !== 'account' && <section className="space-welcome">
           <img src="/orbit-tasks/orbit-approved.webp" alt="" className="space-welcome-logo" />
           <h1>¿Qué quieres organizar hoy?</h1>
           <p>Tres espacios independientes para organizar tus pendientes, proyectos y eventos.</p>
@@ -425,12 +429,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           </div>
         </section>}
         {space === 'notes' && view !== 'account' && <NotesBoard userId={userId} />}
-        {space === 'notes' && view === 'account' && <button type="button" className="outline space-return" onClick={() => setView('dashboard')}>
-          <NotebookPen size={17} aria-hidden="true"/> Volver a Pendientes
-        </button>}
-        {space === 'events' && view === 'account' && <button type="button" className="outline space-return" onClick={() => setView('events')}>
-          <CalendarDays size={17} aria-hidden="true"/> Volver a Eventos
-        </button>}
+        
         {space === 'projects' && view === 'dashboard' && (
           <>
             <div className="heading"><div><h1>Tu productividad</h1><p>Proyectos y tareas sincronizados en Supabase.</p></div>
@@ -567,7 +566,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <div className="event-reminder-hint">
               <CalendarClock size={17} aria-hidden="true" />
               <span>Los recordatorios se gestionan automáticamente. Revisa tus permisos en <button type="button"
-                onClick={() => { setView('account'); setAccountSection('notifications'); }}>Mi cuenta → Avisos</button>.</span>
+                onClick={() => openAccount('notifications')}>Mi cuenta → Avisos</button>.</span>
             </div>
             <WeeklyAgenda events={events} onEdit={editEvent} onDelete={(item) => {
               askConfirmation('Eliminar evento', `¿Eliminar el evento "${item.title}"? Esta acción no se puede deshacer.`, () => { void execute(() => orbitRepository.deleteEvent(item.id)); });
@@ -618,32 +617,40 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
         )}
 
         {view === 'account' && (
-          <section className="account-page">
-            <div className="heading"><div><h1>Mi cuenta</h1><p>Personaliza tu perfil y administra los avisos de tus dispositivos.</p></div>
-              <Settings size={27} aria-hidden="true" className="account-page-icon" /></div>
-            <div className="account-navigation" role="group" aria-label="Configuración de cuenta">
-              {([
-                ['profile', 'Mi perfil', UserRound],
-                ['devices', 'Dispositivos', Smartphone],
-                ['notifications', 'Avisos', Bell],
-              ] as const).map(([section, title, Icon]) =>
-                <button type="button" key={section} aria-pressed={accountSection === section}
-                  className={accountSection === section ? 'account-nav-active' : ''}
-                  onClick={() => setAccountSection(section)}><Icon size={16} aria-hidden="true" />{title}</button>)}
+          <section className="account-page account-module" aria-label="Módulo Mi cuenta">
+            <div className="account-module-header">
+              <button type="button" className="account-back-button" onClick={() => accountSection === 'home' ? closeAccount() : setAccountSection('home')} aria-label={accountSection === 'home' ? 'Volver al espacio de trabajo' : 'Volver a Mi cuenta'}><ArrowLeft size={22} aria-hidden="true" /></button>
+              <div><h1>{accountSection === 'home' ? 'Mi cuenta' : accountSection === 'profile' ? 'Mi perfil' : accountSection === 'devices' ? 'Dispositivos' : accountSection === 'notifications' ? 'Avisos y notificaciones' : accountSection === 'appearance' ? 'Apariencia' : 'Seguridad'}</h1><p>{accountSection === 'home' ? 'Configuración y preferencias' : 'Administración de tu cuenta'}</p></div>
+              <Settings size={24} className="account-page-icon" aria-hidden="true" />
             </div>
-            {accountSection === 'profile' && (
-              <div className="card account-profile-card">
-                <UserProfile userId={userId} email={email} embedded />
-              </div>
+            {accountSection === 'home' && (
+              <>
+                <div className="account-intro-card">
+                  <div className="account-intro-avatar"><UserRound size={30} aria-hidden="true" /></div>
+                  <div><strong>Tu cuenta de Orbit Tasks</strong><span>{email}</span><small>Cuenta activa</small></div>
+                </div>
+                <div className="account-menu-list">
+                  {([
+                    ['profile', 'Mi perfil', 'Foto, nombre y datos personales', UserRound],
+                    ['devices', 'Dispositivos', 'Gestiona tus dispositivos y notificaciones', Smartphone],
+                    ['notifications', 'Avisos y notificaciones', 'Preferencias de avisos y recordatorios', Bell],
+                    ['appearance', 'Apariencia', 'Tema y visualización', Sun],
+                    ['security', 'Seguridad', 'Acceso y protección de la cuenta', Settings],
+                  ] as const).map(([section, title, subtitle, Icon]) => (
+                    <button type="button" key={section} className="account-menu-item" onClick={() => setAccountSection(section)}>
+                      <span className="account-menu-icon"><Icon size={21} aria-hidden="true" /></span>
+                      <span className="account-menu-copy"><strong>{title}</strong><small>{subtitle}</small></span>
+                      <ArrowRight size={18} aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
-            {accountSection === 'devices' && (
-              <div className="card account-devices-card">
-                <h2>Mis dispositivos</h2>
-                <p>Administra los equipos registrados para recibir notificaciones de Orbit Tasks.</p>
-                <DeviceAccountSection userId={userId} />
-              </div>
-            )}
+            {accountSection === 'profile' && <div className="card account-profile-card"><UserProfile userId={userId} email={email} embedded /></div>}
+            {accountSection === 'devices' && <div className="card account-devices-card"><h2>Mis dispositivos</h2><p>Administra los equipos registrados para recibir notificaciones de Orbit Tasks.</p><DeviceAccountSection userId={userId} /></div>}
             {accountSection === 'notifications' && <NotificationCenter userId={userId} />}
+            {accountSection === 'appearance' && <div className="card account-settings-card"><h2>Tema de la aplicación</h2><p>Selecciona cómo quieres visualizar Orbit Tasks.</p><div className="account-theme-options"><button type="button" aria-pressed={theme === 'light'} className={theme === 'light' ? 'selected' : ''} onClick={() => setTheme('light')}><Sun size={20} /> Modo claro</button><button type="button" aria-pressed={theme === 'dark'} className={theme === 'dark' ? 'selected' : ''} onClick={() => setTheme('dark')}><Moon size={20} /> Modo oscuro</button></div></div>}
+            {accountSection === 'security' && <div className="card account-settings-card"><h2>Seguridad de tu cuenta</h2><p>La autenticación y recuperación de acceso se gestionan desde tu proveedor de inicio de sesión. No compartas tus credenciales.</p><p>Correo de acceso: <strong>{email}</strong></p></div>}
           </section>
         )}
 
