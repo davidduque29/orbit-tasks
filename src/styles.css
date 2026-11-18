@@ -1908,13 +1908,100 @@ button:disabled { cursor:not-allowed; }
  opacity:0!important;z-index:4!important;touch-action:none!important;
 }
 .orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-card:has(.orbit-task-select) .task-compact-button{padding-left:24px!important}
-@media(max-width:540px){
- .orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-card{column-gap:5px!important;padding:5px 6px 5px 12px!important}
- .orbit-board-panel .kanban.orbit-kanban-stacked .task-summary-main strong{font-size:12px!important}
- .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-priority{max-width:52px!important;font-size:10px!important;padding:3px!important}
- .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-priority svg{display:none!important}
- .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-status-visible{font-size:10px!important;padding:5px!important}
- .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-card-actions button{width:27px!important;min-width:27px!important;height:29px!important;min-height:29px!important}
- .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-inline-status-select-wrap{max-width:85px!important}
+/* Keep the four-column approved layout on wide screens. On phones, avoid
+   squeezing priority and actions into the title/status row. */
+.orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-priority{
+ display:inline-flex!important;align-items:center!important;gap:4px!important;
+ overflow:visible!important;text-overflow:clip!important;white-space:nowrap!important;
+ max-width:none!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-priority span{white-space:nowrap!important}
+@media(max-width:720px){
+ .orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-card{
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:minmax(32px,auto) 34px!important;
+  column-gap:8px!important;row-gap:5px!important;
+  padding:8px 11px 8px 15px!important;min-height:78px!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-button{
+  grid-column:1!important;grid-row:1!important;min-width:0!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .task-summary-main strong{
+  font-size:14px!important;white-space:nowrap!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-inline-status{
+  grid-column:2!important;grid-row:1!important;justify-self:end!important;
+  max-width:126px!important;min-width:0!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-priority{
+  grid-column:1!important;grid-row:2!important;justify-self:start!important;
+  max-width:none!important;width:auto!important;min-width:0!important;
+  font-size:12px!important;padding:4px 8px!important;margin-left:7px!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-card-actions{
+  grid-column:2!important;grid-row:2!important;justify-self:end!important;
+  position:static!important;gap:5px!important;min-width:0!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-card-actions button{
+  width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-inline-status-select-wrap{
+  max-width:126px!important;
+ }
  .orbit-board-panel .kanban-mobile-picker{display:none!important}
+}
+@media(max-width:380px){
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-priority-prefix{display:none!important}
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-inline-status{max-width:110px!important}
+ .orbit-board-panel .kanban.orbit-kanban-stacked .task-summary-main strong{font-size:13px!important}
+}
+
+/* Kanban responds to device orientation, not only viewport width.
+   Portrait keeps the approved stacked list; landscape restores an Azure-like board. */
+@media (orientation: landscape) and (max-width: 1100px) {
+ .orbit-board-panel .kanban.orbit-kanban-stacked {
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(190px,1fr))!important;
+  flex-direction:unset!important;
+  gap:10px!important;
+  overflow-x:auto!important;
+  overflow-y:visible!important;
+  width:100%!important;
+  padding-bottom:10px!important;
+  align-items:start!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .lane,
+ .orbit-board-panel .kanban.orbit-kanban-stacked .lane[data-mobile-active] {
+  display:block!important;
+  min-width:190px!important;
+  width:auto!important;
+  align-self:start!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-card {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:auto auto auto!important;
+  min-height:100px!important;
+  gap:7px!important;
+  padding:10px!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-button {
+  grid-column:1 / -1!important;grid-row:1!important;
+  min-width:0!important;padding-left:7px!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-inline-status {
+  grid-column:1 / -1!important;grid-row:2!important;
+  justify-self:start!important;max-width:100%!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-priority {
+  grid-column:1!important;grid-row:3!important;
+  justify-self:start!important;margin-left:0!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-card-actions {
+  grid-column:2!important;grid-row:3!important;
+  justify-self:end!important;position:static!important;
+ }
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-drag-handle {
+  left:0!important;
+ }
 }
