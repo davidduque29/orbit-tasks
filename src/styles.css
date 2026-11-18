@@ -1848,3 +1848,88 @@ button:disabled { cursor:not-allowed; }
   .orbit-board-panel .kanban .task-compact-card{padding:9px 10px!important}
   .orbit-board-panel .kanban .task-compact-card .orbit-drag-handle{right:76px!important}
 }
+
+/* Reference layout: stacked Kanban lanes and genuinely single-row task cards.
+   Scoped to Kanban so existing List and touch interactions remain unchanged. */
+.orbit-board-panel .kanban.orbit-kanban-stacked{
+ display:flex!important;flex-direction:column!important;gap:10px!important;
+ overflow:visible!important;width:100%!important;min-width:0!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .lane,
+.orbit-board-panel .kanban.orbit-kanban-stacked .lane[data-mobile-active]{
+ display:block!important;width:100%!important;min-width:0!important;
+ min-height:0!important;margin:0!important;padding:0!important;
+ background:transparent!important;border:0!important;box-shadow:none!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .lane>h2{
+ display:flex!important;align-items:center!important;gap:5px!important;
+ min-height:36px!important;padding:7px 13px!important;margin:0 0 7px!important;
+ border-radius:13px!important;color:#17243b!important;font-size:14px!important;
+ font-weight:800!important;background:#fff4bf!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .lane:nth-child(2)>h2{background:#ffead7!important}
+.orbit-board-panel .kanban.orbit-kanban-stacked .lane:nth-child(3)>h2{background:#ffe0e9!important}
+.orbit-board-panel .kanban.orbit-kanban-stacked .lane:nth-child(4)>h2{background:#ddf8e4!important}
+.orbit-board-panel .kanban.orbit-kanban-stacked .lane>h2 .status-indicator{
+ background:transparent!important;border:0!important;box-shadow:none!important;
+ padding:0!important;color:#17243b!important;font-weight:800!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .lane>h2 .orbit-lane-count{color:#17243b!important}
+.orbit-board-panel .kanban.orbit-kanban-stacked .orbit-lane-chevron{margin-left:auto!important;font-size:22px!important;line-height:1!important}
+.orbit-board-panel .kanban.orbit-kanban-stacked .orbit-lane-empty{
+ border:1px dashed #7e86a7;border-radius:13px;padding:13px;
+ text-align:center;color:#d6dbed;font-size:13px;margin:0 3px;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-card{
+ display:grid!important;grid-template-columns:minmax(0,1fr) auto auto auto!important;
+ grid-template-rows:minmax(42px,auto)!important;column-gap:9px!important;row-gap:0!important;
+ align-items:center!important;min-height:54px!important;height:auto!important;
+ padding:6px 10px 6px 15px!important;margin:0 3px 7px!important;
+ border-radius:15px!important;overflow:visible!important;
+ background:#fff!important;box-shadow:0 2px 6px #0002!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-card::before{
+ content:""!important;position:absolute!important;left:5px!important;top:9px!important;
+ bottom:9px!important;width:4px!important;border-radius:5px!important;background:#8a38ee!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-button{
+ grid-column:1!important;grid-row:1!important;width:100%!important;min-width:0!important;
+ min-height:0!important;max-width:100%!important;padding:0 0 0 7px!important;
+ display:block!important;text-align:left!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .task-summary-main,
+.orbit-board-panel .kanban.orbit-kanban-stacked .task-summary-main strong{
+ display:block!important;width:100%!important;min-width:0!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+ font-size:14px!important;line-height:1.35!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .orbit-inline-status{
+ grid-column:2!important;grid-row:1!important;justify-self:center!important;
+ max-width:120px!important;margin:0!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-priority{
+ grid-column:3!important;grid-row:1!important;justify-self:center!important;
+ width:auto!important;max-width:92px!important;font-size:12px!important;
+ padding:4px 8px!important;border:1px solid #e2e4f0!important;
+ border-radius:20px!important;background:#fafaff!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-card-actions{
+ grid-column:4!important;grid-row:1!important;justify-self:end!important;
+ padding:0!important;margin:0!important;gap:5px!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .orbit-drag-handle{
+ position:absolute!important;right:auto!important;left:-1px!important;top:0!important;
+ bottom:auto!important;width:12px!important;min-width:12px!important;height:100%!important;
+ opacity:0!important;z-index:4!important;touch-action:none!important;
+}
+.orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-card:has(.orbit-task-select) .task-compact-button{padding-left:24px!important}
+@media(max-width:540px){
+ .orbit-board-panel .kanban.orbit-kanban-stacked .task-compact-card{column-gap:5px!important;padding:5px 6px 5px 12px!important}
+ .orbit-board-panel .kanban.orbit-kanban-stacked .task-summary-main strong{font-size:12px!important}
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-priority{max-width:52px!important;font-size:10px!important;padding:3px!important}
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-priority svg{display:none!important}
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-status-visible{font-size:10px!important;padding:5px!important}
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-task-card-actions button{width:27px!important;min-width:27px!important;height:29px!important;min-height:29px!important}
+ .orbit-board-panel .kanban.orbit-kanban-stacked .orbit-inline-status-select-wrap{max-width:85px!important}
+ .orbit-board-panel .kanban-mobile-picker{display:none!important}
+}
