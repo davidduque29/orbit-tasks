@@ -1751,3 +1751,11 @@ button:disabled { cursor:not-allowed; }
 .orbit-board-panel .task-compact-card .orbit-task-card-actions{align-self:center!important}
 .orbit-board-panel .task-compact-card .orbit-task-card-actions button{color:#fff!important}
 .orbit-board-panel .task-compact-card .status-indicator{color:#28344c!important}
+
+/* Notes: fixed-position feedback in list header; no layout shift or drag handle. */
+.notes-board .notes-list-heading{position:relative!important;padding-right:12px!important;min-height:56px!important;display:flex!important;align-items:center!important;gap:8px!important;font-weight:800!important}
+.notes-board .notes-list-heading>span:first-of-type{font-weight:800!important;letter-spacing:-.015em!important}
+.notes-board .notes-list-heading .orbit-order-inline-notice{position:absolute!important;right:8px!important;top:50%!important;transform:translateY(-50%)!important;max-width:46%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:12px!important;font-weight:800!important;color:#145c3b!important;background:#d8f7e6!important;border:1px solid #91dfb2!important;border-radius:999px!important;padding:5px 9px!important;box-shadow:0 2px 7px #0002!important;z-index:2!important}
+.notes-board .notes-list-heading .orbit-order-inline-notice.orbit-inline-error{color:#84233c!important;background:#ffe6ec!important;border-color:#eaa1b1!important}
+.notes-board .note-list-item .note-summary strong{font-weight:800!important}
+@media(max-width:480px){.notes-board .notes-list-heading .orbit-order-inline-notice{max-width:39%!important;font-size:10px!important;padding:4px 6px!important}.notes-board .notes-list-heading>span:first-of-type{font-size:clamp(14px,3.8vw,18px)!important}}
