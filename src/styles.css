@@ -2005,3 +2005,47 @@ button:disabled { cursor:not-allowed; }
   left:0!important;
  }
 }
+
+/* List-only compact single-row layout. Kanban remains unchanged. */
+.orbit-board-panel .task-list {
+ overflow-x:auto;
+ overscroll-behavior-x:contain;
+ -webkit-overflow-scrolling:touch;
+}
+.orbit-board-panel .task-list .task-compact-card {
+ display:grid!important;
+ grid-template-columns:minmax(180px,1fr) minmax(105px,auto) minmax(120px,auto) auto!important;
+ grid-template-rows:52px!important;
+ align-items:center!important;
+ column-gap:10px!important;
+ min-width:650px!important;
+ min-height:52px!important;
+ padding:0 9px!important;
+ margin:6px 0!important;
+}
+.orbit-board-panel .task-list .task-compact-card>.task-compact-button {
+ grid-column:1!important;grid-row:1!important;
+ padding:0 8px!important;min-height:0!important;
+ overflow:hidden!important;
+}
+.orbit-board-panel .task-list .task-compact-card .task-summary-main strong {
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+.orbit-board-panel .task-list .task-compact-card>.orbit-inline-status {
+ grid-column:2!important;grid-row:1!important;
+ justify-self:start!important;max-width:150px!important;
+}
+.orbit-board-panel .task-list .task-compact-card>.orbit-task-priority {
+ grid-column:3!important;grid-row:1!important;
+ justify-self:start!important;white-space:nowrap!important;
+ margin:0!important;
+}
+.orbit-board-panel .task-list .task-compact-card>.orbit-task-card-actions {
+ grid-column:4!important;grid-row:1!important;
+ justify-self:end!important;align-self:center!important;
+ padding:0!important;margin:0!important;
+}
+.orbit-board-panel .task-list .task-compact-card>.orbit-task-card-actions button {
+ width:32px!important;min-width:32px!important;max-width:32px!important;
+ height:32px!important;min-height:32px!important;
+}
