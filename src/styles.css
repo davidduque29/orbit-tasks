@@ -493,19 +493,19 @@ button:disabled { cursor:not-allowed; }
 .project-progress-track > div { height:100%; border-radius:6px; background:linear-gradient(90deg,#805ef0,#6240d7); transition:width .6s ease; }
 .project-compact-details { border-top:1px solid #eee9f7; margin-top:14px; padding:16px 0 0; animation:orbit-project-detail .2s ease; }
 .project-compact-details p { color:#465474; font-size:13px; line-height:1.55; }
-.project-compact-totals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:15px 0; }
-.project-compact-totals > span { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:12px 8px; border:0; border-radius:0; font-size:11px; background:transparent; }
-.project-compact-totals svg { color:#7056d0; }
-.project-compact-totals strong { font-size:15px; color:#28334d; }
+
+
+
+
 .project-compact-details .card-actions { gap:10px; }
 .project-compact-details .card-actions button { display:inline-flex; align-items:center; gap:7px; }
 .project-open-board { background:linear-gradient(120deg,#8064e9,#5d37cc); }
 @keyframes orbit-project-detail { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
 @media(max-width:520px) {
  .project-compact-card { padding:12px; }
- .project-compact-totals { gap:5px; }
- .project-compact-totals > span { padding:9px 6px; font-size:10px; }
- .project-compact-totals strong { font-size:13px; }
+
+
+
 }
 @media(prefers-reduced-motion:reduce) { .project-compact-details { animation:none; } }
 
@@ -1390,7 +1390,7 @@ button:disabled { cursor:not-allowed; }
 .project-card-progress-label { display:flex; justify-content:space-between; margin:14px 0 7px; font-size:12px; color:#6c748b; }
 .project-card-progress-label strong { color:#7045d8; font-size:15px; }
 .project-card-redesign .project-progress-track { margin:0 0 13px; }
-.project-card-redesign .project-compact-totals { margin:0 0 14px; }
+
 .project-card-primary-actions { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
 .project-card-primary-actions button { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-radius:12px; padding:9px 7px; font-size:13px; font-weight:700; white-space:nowrap; }
 .project-card-primary-actions .project-open-board { color:white; background:linear-gradient(110deg,#7650e6,#632bd4); }
@@ -1401,7 +1401,7 @@ button:disabled { cursor:not-allowed; }
  .project-section-menu { padding:0 16px; }
  .project-section-menu > nav { left:16px; }
  .project-card-redesign { padding:13px; }
- .project-card-redesign .project-compact-totals > span { padding:9px 4px; }
+
  .project-card-primary-actions button { font-size:12px; }
 }
 
@@ -2152,68 +2152,35 @@ button:disabled { cursor:not-allowed; }
 }
 
 /* Project overview: informational statistics, not button-like tiles. */
-.project-card-redesign .project-compact-totals {
- display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
- gap:0;margin:12px 0 14px;padding:12px 0;
- border-bottom:1px solid rgba(156,148,190,.32);
-}
-.project-card-redesign .project-compact-totals > span {
- display:flex;flex-direction:column;align-items:center;justify-content:center;
- gap:5px;min-width:0;padding:4px 5px!important;
- border:0!important;border-radius:0!important;box-shadow:none!important;
- background:transparent!important;color:inherit;
-}
-.project-card-redesign .project-compact-totals > span + span {
- border-left:1px solid rgba(156,148,190,.3)!important;
-}
-.project-card-redesign .project-compact-totals .project-stat-label {
- display:inline-flex;align-items:center;justify-content:center;
- gap:5px;min-width:0;font-size:12px;font-weight:500;white-space:nowrap;
- color:var(--text-muted,#bac2d7);
-}
-.project-card-redesign .project-compact-totals .project-stat-label svg {
- color:#986be9;flex-shrink:0;
-}
-.project-card-redesign .project-compact-totals strong {
- display:block;font-size:22px;line-height:1.1;font-weight:800;
- color:var(--text-primary,#f5f3ff);
-}
+
+
+
+
+
+
 .project-card-redesign .project-card-primary-actions {
  display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px;
 }
 .project-card-redesign .project-card-primary-actions button {min-width:0;}
 @media(max-width:520px){
- .project-card-redesign .project-compact-totals .project-stat-label {font-size:10px;gap:3px;}
- .project-card-redesign .project-compact-totals .project-stat-label svg {width:14px;height:14px;}
- .project-card-redesign .project-compact-totals strong {font-size:20px;}
+
+
+
  .project-card-redesign .project-card-primary-actions {gap:7px;}
  .project-card-redesign .project-card-primary-actions button {font-size:11px;padding:9px 4px;}
 }
 
 /* Project statistics are read-only text: no white panel or button styling. */
 .project-card-redesign { border-width:2px!important; }
-.project-card-redesign .project-compact-totals {
- background:transparent!important;background-color:transparent!important;
- border:0!important;box-shadow:none!important;
- padding:8px 0 12px!important;margin:8px 0 14px!important;
-}
+
 .project-card-redesign .project-compact-totals > span,
-.project-card-redesign .project-compact-totals .project-stat-label {
- background:transparent!important;background-color:transparent!important;
- box-shadow:none!important;outline:0!important;
-}
-.project-card-redesign .project-compact-totals .project-stat-label {
- color:#c9b6fa!important;font-weight:750!important;font-size:13px!important;
-}
-.project-card-redesign .project-compact-totals strong {
- color:#f5f0ff!important;font-weight:850!important;font-size:24px!important;
-}
-.project-card-redesign .project-compact-totals > span + span {
- border-left:1px solid rgba(175,153,230,.28)!important;
-}
+
+
+
+
 @media(max-width:520px) {
- .project-card-redesign .project-compact-totals .project-stat-label {font-size:11px!important;}
- .project-card-redesign .project-compact-totals strong {font-size:22px!important;}
+
+
 }
 
 /* Isolated plain project metrics: intentionally unrelated to legacy tiles. */
