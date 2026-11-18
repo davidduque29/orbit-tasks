@@ -494,7 +494,7 @@ button:disabled { cursor:not-allowed; }
 .project-compact-details { border-top:1px solid #eee9f7; margin-top:14px; padding:16px 0 0; animation:orbit-project-detail .2s ease; }
 .project-compact-details p { color:#465474; font-size:13px; line-height:1.55; }
 .project-compact-totals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:15px 0; }
-.project-compact-totals > span { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:12px 8px; border:1px solid #eee9f7; border-radius:12px; font-size:11px; background:#faf9ff; }
+.project-compact-totals > span { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:12px 8px; border:0; border-radius:0; font-size:11px; background:transparent; }
 .project-compact-totals svg { color:#7056d0; }
 .project-compact-totals strong { font-size:15px; color:#28334d; }
 .project-compact-details .card-actions { gap:10px; }
