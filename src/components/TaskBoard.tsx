@@ -190,8 +190,8 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const selectedTask = tasks.find((task) => task.id === selectedTaskId && !task.deleted_at);
-  const activeTasks = tasks.filter(task => !task.deleted_at && (!selectedProject || task.project_id === selectedProject));
-  const trashedTasks = tasks.filter(task => !!task.deleted_at && (!selectedProject || task.project_id === selectedProject));
+  const activeTasks = useMemo(() => tasks.filter(task => !task.deleted_at && (!selectedProject || task.project_id === selectedProject)), [tasks, selectedProject]);
+  const trashedTasks = useMemo(() => tasks.filter(task => !!task.deleted_at && (!selectedProject || task.project_id === selectedProject)), [tasks, selectedProject]);
   useEffect(() => {
     if (!selectedTaskId) return;
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelectedTaskId(null); };
