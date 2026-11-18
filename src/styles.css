@@ -2175,3 +2175,41 @@ button:disabled { cursor:not-allowed; }
  .project-card-redesign .orbit-project-metrics-plain .project-stat-label svg {width:14px;height:14px;}
  .project-card-redesign .orbit-project-metrics-plain strong {font-size:22px;}
 }
+
+/* Reports: accessible contrast for project progress in dark appearance.
+   Scoped to this report so existing cards and other modules remain unchanged. */
+html[data-theme="dark"] .project-progress-report .project-progress-kpis > div {
+ background:#242d46;
+ border-color:#555f81;
+}
+html[data-theme="dark"] .project-progress-report .project-progress-kpis small {
+ color:#d5dcef;
+}
+html[data-theme="dark"] .project-progress-report .project-progress-kpis strong {
+ color:#f5f7ff;
+}
+html[data-theme="dark"] .project-progress-report .project-progress-note {
+ background:#252e49;
+ border-color:#5b6688;
+}
+html[data-theme="dark"] .project-progress-report .project-progress-note p {
+ color:#e1e6f4;
+}
+html[data-theme="dark"] .project-progress-report .project-progress-row {
+ color:#f2f4ff;
+ border-bottom-color:#47516e;
+}
+html[data-theme="dark"] .project-progress-report .project-progress-row strong,
+html[data-theme="dark"] .project-progress-report .project-progress-row b {
+ color:#f2f4ff;
+}
+html[data-theme="dark"] .project-progress-report .project-progress-row small {
+ color:#cbd3e7;
+}
+html[data-theme="dark"] .project-progress-report .project-progress-row:hover,
+html[data-theme="dark"] .project-progress-report .project-progress-row:focus-visible {
+ background:#2b3554;
+}
+html[data-theme="dark"] .project-progress-report .project-progress-title > strong {
+ color:#bda2ff;
+}
