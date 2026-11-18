@@ -745,6 +745,7 @@ export function NotesBoard({ userId }: { userId: string }) {
       </div>}
       </div>
     </form>
+    <section className="notes-notebook">
     <div className="notes-status-row">
       <div className="notes-status-tabs" role="tablist" aria-label="Estado de pendientes">
         <button type="button" role="tab" aria-selected={statusTab === 'active'} className={statusTab === 'active' ? 'selected' : ''}
@@ -757,7 +758,7 @@ export function NotesBoard({ userId }: { userId: string }) {
 
     {loading && <p className="muted">Cargando tus pendientes…</p>}
     {!loading && <>
-    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> <span>Listado de pendientes ({filtered.length})</span>{(error || (message && message !== 'Pendiente creado.') || createdNotice || orderNotice) && <span className={`orbit-order-inline-notice${error ? ' orbit-inline-error' : ''}`} role={error ? 'alert' : 'status'} title={error || message || ''}>{error || (createdNotice ? 'Pendiente creado' : orderNotice ? 'Orden guardado' : message)}</span>}</h2>
+    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> <span>Pendientes ({filtered.length})</span>{(error || (message && message !== 'Pendiente creado.') || createdNotice || orderNotice) && <span className={`orbit-order-inline-notice${error ? ' orbit-inline-error' : ''}`} role={error ? 'alert' : 'status'} title={error || message || ''}>{error || (createdNotice ? 'Pendiente creado' : orderNotice ? 'Orden guardado' : message)}</span>}</h2>
     <div className="notes-list">
       {pagedNotes.map(note => <div className="orbit-swipe-shell" key={note.id}>
         {section==="pending" && statusTab==="active" && <div className="orbit-swipe-underlay" aria-hidden="true">
@@ -828,6 +829,7 @@ export function NotesBoard({ userId }: { userId: string }) {
         <p>No hay registros en esta sección.</p>
       </div>}
     </div>{pagination(currentPage, totalPages, filtered.length, setPage)}</>}
+    </section>
     </>}
     {section === 'search' && <div className="notes-search-pane">
       <div className="notes-search-highlight">
