@@ -382,10 +382,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       </header>
       {space !== 'pick' && view !== 'account' && <nav className="workspace-navigation" aria-label="Cambiar módulo">
         <div className="workspace-navigation-heading">
-          <span>Espacios de trabajo</span>
-          <button type="button" className="workspace-navigation-home" onClick={() => chooseSpace('pick')} aria-label="Ver todos los espacios de trabajo">
-            <LayoutDashboard size={15} aria-hidden="true" /> Ver todos
-          </button>
+          <span>Módulos</span>
         </div>
         <div className="workspace-navigation-options">
           {([
