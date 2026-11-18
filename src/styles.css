@@ -2006,46 +2006,82 @@ button:disabled { cursor:not-allowed; }
  }
 }
 
-/* List-only compact single-row layout. Kanban remains unchanged. */
+/* List-only responsive single-row cards; no horizontal scroll on phones. */
 .orbit-board-panel .task-list {
- overflow-x:auto;
- overscroll-behavior-x:contain;
- -webkit-overflow-scrolling:touch;
+ overflow-x:hidden;
+ min-width:0;
 }
 .orbit-board-panel .task-list .task-compact-card {
  display:grid!important;
- grid-template-columns:minmax(180px,1fr) minmax(105px,auto) minmax(120px,auto) auto!important;
- grid-template-rows:52px!important;
+ grid-template-columns:minmax(0,1fr) auto auto auto!important;
+ grid-template-rows:48px!important;
  align-items:center!important;
- column-gap:10px!important;
- min-width:650px!important;
- min-height:52px!important;
- padding:0 9px!important;
+ column-gap:8px!important;
+ width:100%!important;
+ min-width:0!important;
+ max-width:100%!important;
+ min-height:48px!important;
+ padding:0 8px!important;
  margin:6px 0!important;
+ box-sizing:border-box!important;
 }
 .orbit-board-panel .task-list .task-compact-card>.task-compact-button {
  grid-column:1!important;grid-row:1!important;
- padding:0 8px!important;min-height:0!important;
- overflow:hidden!important;
+ padding:0 5px!important;min-width:0!important;
+ width:100%!important;overflow:hidden!important;
+}
+.orbit-board-panel .task-list .task-compact-card .task-summary-main {
+ min-width:0!important;max-width:100%!important;
 }
 .orbit-board-panel .task-list .task-compact-card .task-summary-main strong {
  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+ display:block!important;max-width:100%!important;
 }
 .orbit-board-panel .task-list .task-compact-card>.orbit-inline-status {
  grid-column:2!important;grid-row:1!important;
- justify-self:start!important;max-width:150px!important;
+ justify-self:start!important;min-width:0!important;max-width:125px!important;
 }
 .orbit-board-panel .task-list .task-compact-card>.orbit-task-priority {
  grid-column:3!important;grid-row:1!important;
- justify-self:start!important;white-space:nowrap!important;
- margin:0!important;
+ justify-self:center!important;min-width:0!important;
+ white-space:nowrap!important;margin:0!important;
 }
 .orbit-board-panel .task-list .task-compact-card>.orbit-task-card-actions {
  grid-column:4!important;grid-row:1!important;
  justify-self:end!important;align-self:center!important;
- padding:0!important;margin:0!important;
+ display:flex!important;flex-wrap:nowrap!important;
+ padding:0!important;margin:0!important;gap:4px!important;
 }
 .orbit-board-panel .task-list .task-compact-card>.orbit-task-card-actions button {
  width:32px!important;min-width:32px!important;max-width:32px!important;
  height:32px!important;min-height:32px!important;
+}
+@media(max-width:600px){
+ .orbit-board-panel .task-list .task-compact-card {
+  grid-template-columns:minmax(0,1fr) auto 18px 68px!important;
+  column-gap:5px!important;padding:0 6px!important;
+ }
+ .orbit-board-panel .task-list .task-compact-card>.orbit-inline-status {
+  max-width:104px!important;
+ }
+ .orbit-board-panel .task-list .task-compact-card .orbit-status-visible {
+  font-size:10px!important;padding:5px 6px!important;
+ }
+ .orbit-board-panel .task-list .task-compact-card .orbit-inline-status-select-wrap {
+  min-height:28px!important;
+ }
+ .orbit-board-panel .task-list .task-compact-card>.orbit-task-priority {
+  width:18px!important;max-width:18px!important;
+  overflow:hidden!important;padding:0!important;border:0!important;background:transparent!important;
+  font-size:0!important;gap:0!important;
+ }
+ .orbit-board-panel .task-list .task-compact-card>.orbit-task-priority svg {
+  display:block!important;width:15px!important;height:15px!important;flex-shrink:0!important;
+ }
+ .orbit-board-panel .task-list .task-compact-card>.orbit-task-priority span {
+  display:none!important;
+ }
+ .orbit-board-panel .task-list .task-compact-card>.orbit-task-card-actions button {
+  width:32px!important;min-width:32px!important;max-width:32px!important;
+ }
 }
