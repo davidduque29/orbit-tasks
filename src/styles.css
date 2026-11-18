@@ -2213,3 +2213,52 @@ html[data-theme="dark"] .project-progress-report .project-progress-row:focus-vis
 html[data-theme="dark"] .project-progress-report .project-progress-title > strong {
  color:#bda2ff;
 }
+
+
+/* Pending notebook redesign: compact Azure-style navigation and unified list. */
+.notes-board .notes-section-tabs{
+  display:flex;align-items:stretch;gap:clamp(8px,3vw,28px);width:100%;
+  border-bottom:1px solid #8175a655;margin:0 0 18px;overflow-x:auto;
+}
+.notes-board .notes-section-tabs > button,
+.notes-board .notes-section-tabs > .notes-trash-tab,
+.notes-board .notes-section-tabs > .notes-trash-tab.selected{
+  position:relative;display:inline-flex;flex:1 1 0;flex-direction:row;align-items:center;
+  justify-content:center;gap:7px;min-width:0;width:auto;min-height:44px;
+  padding:9px 3px 12px;border:0;border-radius:0;background:transparent;
+  box-shadow:none;color:inherit;font-size:13px;font-weight:700;white-space:nowrap;
+}
+.notes-board .notes-section-tabs > button.selected{color:#39bfee}
+.notes-board .notes-section-tabs > button.selected::after{
+  content:"";position:absolute;bottom:0;left:10%;width:80%;height:3px;
+  border-radius:3px 3px 0 0;background:#39bfee;
+}
+.notes-board .notes-notebook{
+  min-width:0;margin-top:16px;padding:12px;
+  border:2px solid #8b35ef;border-radius:23px;
+  background:var(--surface,#fff);
+}
+.notes-board .notes-notebook .notes-status-row{margin:0 0 10px}
+.notes-board .notes-notebook .notes-status-tabs{width:100%}
+.notes-board .notes-notebook .notes-status-tabs button{flex:1;justify-content:center}
+.notes-board .notes-notebook .notes-list-heading{
+  position:relative!important;display:flex!important;align-items:center!important;
+  min-height:46px!important;margin:0 0 10px;padding:8px 4px!important;
+  background:transparent!important;border:0!important;border-radius:0!important;
+  box-shadow:none!important;color:inherit!important;font-size:18px;
+}
+.notes-board .notes-notebook .notes-list-heading .orbit-order-inline-notice{
+  position:static!important;transform:none!important;margin-left:auto;
+  max-width:46%!important;flex-shrink:1;
+}
+.notes-board .notes-notebook .orbit-pagination{margin-top:18px;padding-top:15px;border-top:1px solid #8175a655}
+@media(max-width:480px){
+  .notes-board .notes-section-tabs{gap:5px;grid-template-columns:none}
+  .notes-board .notes-section-tabs > button,
+  .notes-board .notes-section-tabs > .notes-trash-tab,
+  .notes-board .notes-section-tabs > .notes-trash-tab.selected{
+    grid-column:auto;min-height:42px;padding:8px 2px 11px;font-size:12px;gap:4px;
+  }
+  .notes-board .notes-notebook{padding:9px}
+  .notes-board .notes-notebook .notes-list-heading .orbit-order-inline-notice{max-width:43%!important}
+}
