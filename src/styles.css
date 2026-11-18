@@ -1759,3 +1759,19 @@ button:disabled { cursor:not-allowed; }
 .notes-board .notes-list-heading .orbit-order-inline-notice.orbit-inline-error{color:#84233c!important;background:#ffe6ec!important;border-color:#eaa1b1!important}
 .notes-board .note-list-item .note-summary strong{font-weight:800!important}
 @media(max-width:480px){.notes-board .notes-list-heading .orbit-order-inline-notice{max-width:39%!important;font-size:10px!important;padding:4px 6px!important}.notes-board .notes-list-heading>span:first-of-type{font-size:clamp(14px,3.8vw,18px)!important}}
+
+/* Azure-inspired project toolbar: 2px active underline, strong primary CTA. */
+.orbit-board-panel .orbit-board-primary-actions{display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:9px!important;position:relative!important;margin-bottom:10px!important}
+.orbit-board-panel .orbit-new-task-button{display:inline-flex!important;align-items:center!important;gap:7px!important;background:linear-gradient(110deg,#6553e8,#8717f4)!important;color:#fff!important;border:1px solid #a782ff!important;box-shadow:0 2px 9px #6023cb40!important;font-weight:800!important;opacity:1!important}
+.orbit-board-panel .orbit-board-more{position:relative;flex:none}
+.orbit-board-panel .orbit-board-more-trigger{width:42px;height:42px;padding:0!important;border:1px solid #9876e9!important;background:transparent!important;color:inherit!important;font-size:27px!important;line-height:1!important}
+.orbit-board-panel .orbit-board-more-menu{position:absolute;z-index:60;right:0;top:calc(100% + 6px);min-width:220px;padding:6px;background:var(--surface,#fff);color:var(--text,#18223c);border:1px solid #8e7abb;border-radius:12px;box-shadow:0 12px 28px #0005}
+.orbit-board-panel .orbit-board-more-menu button{display:block;width:100%;text-align:left;background:transparent!important;color:inherit!important;border-radius:7px;padding:11px;font-size:13px}
+.orbit-board-panel .orbit-board-more-menu button:hover{background:#8465e329!important}
+.orbit-board-panel .orbit-board-more-menu .orbit-menu-danger{color:#d94b6c!important}
+.orbit-board-panel .board-view-controls{display:flex!important;align-items:stretch!important;gap:18px!important;border-bottom:1px solid #7d82954a!important}
+.orbit-board-panel .board-view-controls button{position:relative!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;padding:10px 8px 12px!important;color:var(--muted,#a6aec5)!important;font-weight:700!important}
+.orbit-board-panel .board-view-controls button.active{color:var(--text,#fff)!important}
+.orbit-board-panel .board-view-controls button.active::after{content:"";position:absolute;bottom:-1px;left:8px;right:8px;height:2px;background:#a86aff;border-radius:2px}
+.orbit-board-panel .orbit-task-select{width:18px;height:18px;flex:0 0 18px;accent-color:#7953e7;margin:0 4px 0 8px}
+@media(max-width:520px){.orbit-board-panel .board-switch{align-items:center!important;gap:5px!important}.orbit-board-panel .board-view-controls{gap:8px!important}.orbit-board-panel .board-view-controls button{padding:9px 5px 11px!important;font-size:13px!important}.orbit-board-panel .board-switch>span{font-size:11px!important;white-space:nowrap}}

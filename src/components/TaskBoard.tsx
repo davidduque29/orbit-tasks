@@ -123,6 +123,8 @@ function TaskDetails({ task, projects, onSave, onDelete, saving, userId }: {
 
 export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, onNewTask, onEdit, onRestore, onPermanentDelete, onDeleteAll, saving, userId }: BoardProps) {
   const [view, setView] = useState<BoardView>('list');
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [dragTaskId, setDragTaskId] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
   const dragVisual=useRef<{ghost:HTMLElement;source:HTMLElement;offsetX:number;offsetY:number}|null>(null);
@@ -215,6 +217,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
       <article className={`task-list-item task-compact-card ${touchTask===task.id?"orbit-task-touch-active":""}`} key={task.id} draggable={draggableCard && !saving && !moving}
         onDragStart={event => { if (!draggableCard) return; event.dataTransfer.setData("text/plain", task.id); event.dataTransfer.effectAllowed = "move"; setDragTaskId(task.id); }}
         onDragEnd={() => setDragTaskId(null)}>
+        {selectedIds.length > 0 && <input type="checkbox" className="orbit-task-select" aria-label={`Seleccionar ${task.title}`} checked={selectedIds.includes(task.id)} onChange={event => setSelectedIds(current => event.target.checked ? [...current,task.id] : current.filter(id=>id!==task.id))} />}
         {draggableCard && <button type="button" className="orbit-drag-handle" aria-label={`Arrastrar ${task.title} a otro estado`} title="Mantén pulsado para mover"
           onPointerDown={event => { if (event.pointerType !== "mouse") { event.currentTarget.setPointerCapture(event.pointerId); setDragTaskId(task.id); setTouchTask(task.id); startTouchVisual(event); } }}
           onPointerMove={pointerMove}
@@ -274,11 +277,21 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
         <div className="task-list">{filtered.map(task => taskItem(task))}{filtered.length === 0 && <p className="empty">No se encontraron tareas.</p>}</div>
       </div></section>}
       {section === 'tasks' && <section className="orbit-board-panel"><h2 className="orbit-board-panel-title"><ClipboardList size={19} /> Tareas del proyecto</h2><div className="orbit-board-panel-body">
-        <div className="orbit-board-primary-actions"><button type="button" onClick={onNewTask}><Plus size={16} /> Nueva tarea</button><button type="button" className="outline orbit-action-delete" disabled={!selectedProject || activeTasks.length === 0 || saving} onClick={() => { void onDeleteAll(); }}><Trash2 size={15} /> Eliminar todas</button></div>
+        <div className="orbit-board-primary-actions">
+          <button type="button" className="orbit-new-task-button" onClick={onNewTask}><Plus size={17} /> Nueva tarea</button>
+          <div className="orbit-board-more">
+            <button type="button" className="orbit-board-more-trigger" aria-label="Más acciones de tareas" aria-expanded={actionsOpen} aria-haspopup="true" onClick={() => setActionsOpen(!actionsOpen)}>⋮</button>
+            {actionsOpen && <div className="orbit-board-more-menu">
+              <button type="button" disabled={!activeTasks.length || saving} onClick={() => { setSelectedIds(activeTasks.map(task => task.id)); setActionsOpen(false); }}>Seleccionar todas</button>
+              <button type="button" disabled={!selectedIds.length || saving} onClick={() => { const ids=selectedIds.filter(id=>activeTasks.some(task=>task.id===id)); if(!ids.length)return; if(window.confirm(`¿Eliminar ${ids.length} tareas seleccionadas?`)){void (async()=>{for(const id of ids)await onDelete(id);setSelectedIds([]);})();} setActionsOpen(false); }}>Eliminar seleccionadas ({selectedIds.length})</button>
+              <button type="button" className="orbit-menu-danger" disabled={!selectedProject || !activeTasks.length || saving} onClick={() => { setActionsOpen(false); void onDeleteAll(); }}>Eliminar todas</button>
+            </div>}
+          </div>
+        </div>
               <div className="board-switch">
-        <div className="board-view-controls">
-          <button type="button" className={view === 'list' ? '' : 'outline'} onClick={() => setView('list')}><List size={16} aria-hidden="true" /> Lista</button>
-          <button type="button" className={view === 'kanban' ? '' : 'outline'} onClick={() => setView('kanban')}><Columns3 size={16} aria-hidden="true" /> Kanban</button>
+        <div className="board-view-controls" role="tablist" aria-label="Vista de tareas">
+          <button type="button" role="tab" aria-selected={view === 'list'} className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}><List size={16} aria-hidden="true" /> Lista</button>
+          <button type="button" role="tab" aria-selected={view === 'kanban'} className={view === 'kanban' ? 'active' : ''} onClick={() => setView('kanban')}><Columns3 size={16} aria-hidden="true" /> Kanban</button>
         </div>
         <span>{activeTasks.length} tareas · {overdue} vencidas</span>
       </div>
