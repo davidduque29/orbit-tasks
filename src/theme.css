@@ -21,7 +21,7 @@
 [data-theme="dark"] .pill, [data-theme="dark"] .notice { background: #353055; color: #e7d9ff; }
 [data-theme="dark"] .feedback { background: #164734; color: #d1fae5; }
 [data-theme="dark"] .error { background: #54263b; color: #ffe4e6; }
-[data-theme="dark"] .workspace-navigation-item.is-active { color: #fff; }
+
 @media (max-width: 420px) { .orbit-header-actions { gap: 5px; } .orbit-theme-toggle { width: 36px; height: 36px; } }
 
 /* High-contrast dark welcome screen, matching the approved concept. */
@@ -226,8 +226,7 @@
 [data-theme="dark"] .workspace-navigation .workspace-navigation-item:not(.is-active),
 [data-theme="dark"] .workspace-navigation .workspace-navigation-item:not(.is-active) svg,
 [data-theme="dark"] .workspace-navigation-heading {color:#d8c9f9!important;opacity:1!important;}
-[data-theme="dark"] .workspace-navigation .workspace-navigation-item.is-active,
-[data-theme="dark"] .workspace-navigation .workspace-navigation-item.is-active svg {color:#fff!important;opacity:1!important;}
+
 [data-theme="dark"] .event-list-card h2,
 [data-theme="dark"] .event-list-card h3,
 [data-theme="dark"] .event-list-card .list-row,
@@ -490,3 +489,12 @@ html[data-theme="dark"] .device-modal .device-item .device-details > small,
 [data-theme="dark"] .task-board .kanban .task-compact-card .task-compact-meta {
  color:#56657f!important;-webkit-text-fill-color:#56657f!important;
 }
+
+/* Workspace navigation: dark-mode tabs share the same cyan active indicator. */
+[data-theme="dark"] .workspace-navigation { background:#19223a; border-color:#525579; }
+[data-theme="dark"] .workspace-navigation-options { background:transparent; border:0; border-bottom:2px solid #525579; border-radius:0; padding:0; gap:0; }
+[data-theme="dark"] .workspace-navigation .workspace-navigation-item { background:transparent; border:0; border-radius:0; box-shadow:none; }
+[data-theme="dark"] .workspace-navigation .workspace-navigation-item.is-active,
+[data-theme="dark"] .workspace-navigation .workspace-navigation-item.is-active svg { color:#38bdf8; }
+[data-theme="dark"] .workspace-navigation .workspace-navigation-item.is-active::after { background:#38bdf8; }
+[data-theme="dark"] .workspace-navigation .workspace-navigation-item:not(.is-active):hover { background:transparent; color:#7dd3fc!important; }
