@@ -133,6 +133,8 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
     if(!source)return;
     const rect=source.getBoundingClientRect(),ghost=source.cloneNode(true) as HTMLElement;
     ghost.classList.add('orbit-touch-ghost');
+    ghost.querySelectorAll('[id]').forEach(element => element.removeAttribute('id'));
+    ghost.querySelectorAll('input,select,button').forEach(element => { (element as HTMLElement).tabIndex = -1; });
     Object.assign(ghost.style,{position:'fixed',left:'0px',top:'0px',width:rect.width+'px',height:rect.height+'px',margin:'0',zIndex:'99999',pointerEvents:'none',transform:`translate3d(${rect.left}px,${rect.top}px,0)`});
     document.body.appendChild(ghost);source.classList.add('orbit-touch-source');
     dragVisual.current={ghost,source,offsetX:event.clientX-rect.left,offsetY:event.clientY-rect.top};
