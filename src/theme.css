@@ -7,12 +7,12 @@
 [data-theme="dark"] { color-scheme: dark; background: #0f172a; color: #f1f5ff; }
 [data-theme="dark"] body, [data-theme="dark"] .shell { background: #0f172a; color: #f1f5ff; }
 [data-theme="dark"] .header, [data-theme="dark"] .tabs, [data-theme="dark"] .card, [data-theme="dark"] .ticket, [data-theme="dark"] .outline,
-[data-theme="dark"] .workspace-navigation, [data-theme="dark"] .workspace-navigation-options,
+[data-theme="dark"] .workspace-navigation,
 [data-theme="dark"] .notes-board, [data-theme="dark"] .note-card,
 [data-theme="dark"] .modal, [data-theme="dark"] .modal-content { background: #19223a; color: #f1f5ff; border-color: #525579; }
 [data-theme="dark"] .orbit-header-clock { color: #e2e8f0 !important; }
 [data-theme="dark"] .orbit-theme-toggle { background: #303653; color: #f4eaff; border-color: #7970b3; }
-[data-theme="dark"] .workspace-navigation-item:not(.is-active), [data-theme="dark"] .workspace-navigation-heading,
+[data-theme="dark"] .workspace-navigation-heading,
 [data-theme="dark"] .heading, [data-theme="dark"] .list-row, [data-theme="dark"] .user-menu { color: #e2e8f0; }
 [data-theme="dark"] small, [data-theme="dark"] p { color: #d1d8e9; }
 [data-theme="dark"] input, [data-theme="dark"] textarea, [data-theme="dark"] select { background: #242d46; color: #f8fafc; border-color: #777e9e; }
