@@ -211,6 +211,14 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
       && isWithinFilter(task, timeFilter, now);
   }), [tasks, projects, selectedProject, keyword, statusFilter, priorityFilter, timeFilter, now.getTime()]);
 
+  // Derive status lanes once per render instead of filtering the same task list
+  // repeatedly for counts, empty states and card rendering.
+  const tasksByStatus = useMemo(() => {
+    const lanes = Object.fromEntries(STATUS_LABELS.map(status => [status, [] as Task[]])) as Record<DisplayStatus, Task[]>;
+    for (const task of activeTasks) lanes[displayStatus(task.status)].push(task);
+    return lanes;
+  }, [activeTasks]);
+
   const overdue = filtered.filter((task) => task.status !== 'Finalizado'
     && task.estimated_due_at && new Date(task.estimated_due_at) < now).length;
 
@@ -315,7 +323,7 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
           </div>
           <label className="kanban-mobile-picker" htmlFor="kanban-mobile-status">Estado del tablero
             <select id="kanban-mobile-status" value={mobileLane} onChange={(event) => setMobileLane(event.target.value as DisplayStatus)}>
-              {STATUS_LABELS.map((status) => <option key={status} value={status}>{status} ({activeTasks.filter((task) => displayStatus(task.status) === status).length})</option>)}
+              {STATUS_LABELS.map((status) => <option key={status} value={status}>{status} ({tasksByStatus[status].length})</option>)}
             </select>
           </label>
           <div className="kanban orbit-kanban-stacked">
@@ -323,9 +331,9 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
               <section className="lane" data-kanban-target={status} data-touch-target={touchTarget===status} data-mobile-active={mobileLane === status ? 'true' : 'false'} key={status}
                 onDragOver={event => { if (dragTaskId) event.preventDefault(); }}
                 onDrop={event => { event.preventDefault(); const id=event.dataTransfer.getData("text/plain") || dragTaskId; if (id) void moveTask(id,status); }}>
-                <h2><StatusDot status={status} /> <span className="orbit-lane-count">({activeTasks.filter((task) => displayStatus(task.status) === status).length})</span><span className="orbit-lane-chevron" aria-hidden="true">⌃</span></h2>
-                {activeTasks.filter((task) => displayStatus(task.status) === status).length === 0 && <div className="orbit-lane-empty">Sin tareas</div>}
-                {activeTasks.filter((task) => displayStatus(task.status) === status).map(task => taskItem(task, true))}
+                <h2><StatusDot status={status} /> <span className="orbit-lane-count">({tasksByStatus[status].length})</span><span className="orbit-lane-chevron" aria-hidden="true">⌃</span></h2>
+                {tasksByStatus[status].length === 0 && <div className="orbit-lane-empty">Sin tareas</div>}
+                {tasksByStatus[status].map(task => taskItem(task, true))}
               </section>
             ))}
           </div>
