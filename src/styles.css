@@ -1777,8 +1777,7 @@ button:disabled { cursor:not-allowed; }
 @media(max-width:520px){.orbit-board-panel .board-switch{align-items:center!important;gap:5px!important}.orbit-board-panel .board-view-controls{gap:8px!important}.orbit-board-panel .board-view-controls button{padding:9px 5px 11px!important;font-size:13px!important}.orbit-board-panel .board-switch>span{font-size:11px!important;white-space:nowrap}}
 
 /* Board card layout v2: compact rows, stable drag geometry and readable text. */
-.orbit-board-panel .task-list .task-compact-card,
-.orbit-board-panel .kanban .task-compact-card {
+.orbit-board-panel .task-list .task-compact-card {
   display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
   grid-template-rows:minmax(32px,auto) 32px!important;align-items:center!important;
   column-gap:10px!important;row-gap:4px!important;
@@ -1824,18 +1823,6 @@ button:disabled { cursor:not-allowed; }
   padding-left:22px!important;
 }
 .orbit-board-panel .task-compact-card{position:relative!important}
-.orbit-board-panel .kanban .task-compact-card .orbit-drag-handle{
-  position:absolute!important;left:auto!important;top:auto!important;bottom:10px!important;
-  right:86px!important;margin:0!important;width:28px!important;min-width:28px!important;
-  height:30px!important;min-height:30px!important;z-index:4!important;
-}
-.orbit-board-panel .kanban .task-compact-card .orbit-task-card-actions{padding-left:32px!important}
-.orbit-board-panel .kanban .task-compact-card .orbit-inline-status-select-wrap{
-  max-width:110px!important;min-height:29px!important;
-}
-.orbit-board-panel .kanban .task-compact-card .orbit-status-visible{
-  overflow:hidden!important;text-overflow:ellipsis!important;max-width:108px!important;
-}
 .orbit-touch-ghost.task-compact-card{
   border-radius:18px!important;border:1px solid #d6d0eb!important;
   box-sizing:border-box!important;overflow:hidden!important;contain:layout paint!important;
@@ -1844,9 +1831,7 @@ button:disabled { cursor:not-allowed; }
 .orbit-touch-ghost .orbit-drag-handle{visibility:hidden!important}
 .orbit-touch-ghost::before,.orbit-touch-ghost::after{content:none!important}
 @media(max-width:720px){
-  .orbit-board-panel .task-list .task-compact-card,
-  .orbit-board-panel .kanban .task-compact-card{padding:9px 10px!important}
-  .orbit-board-panel .kanban .task-compact-card .orbit-drag-handle{right:76px!important}
+  .orbit-board-panel .task-list .task-compact-card{padding:9px 10px!important}
 }
 
 /* Reference layout: stacked Kanban lanes and genuinely single-row task cards.
