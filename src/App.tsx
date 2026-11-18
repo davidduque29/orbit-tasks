@@ -524,11 +524,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               })}
             </div>
             {projects.length === 0 && <Empty message="Aún no tienes proyectos." />}
-            <nav className="project-utility-links" aria-label="Otras vistas de proyectos">
-              <button type="button" onClick={() => setView('dashboard')}><House size={16} aria-hidden="true" /> Inicio</button>
-              <button type="button" onClick={() => { setSelectedProject(''); setView('board'); }}><LayoutDashboard size={16} aria-hidden="true" /> Tablero general</button>
-              <button type="button" onClick={() => setView('reports')}><ChartNoAxesCombined size={16} aria-hidden="true" /> Reportes</button>
-            </nav>
+
           </>
         )}
 
@@ -695,6 +691,14 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           </>
         )}
       </main>
+      {space === 'projects' && view !== 'account' && (
+        <nav className="project-utility-links project-utility-links-persistent" aria-label="Navegación de proyectos">
+          <button type="button" className={view === 'dashboard' ? 'is-active' : ''} aria-current={view === 'dashboard' ? 'page' : undefined} onClick={() => setView('dashboard')}><House size={16} aria-hidden="true" /> Inicio</button>
+          <button type="button" className={view === 'projects' ? 'is-active' : ''} aria-current={view === 'projects' ? 'page' : undefined} onClick={() => setView('projects')}><FolderKanban size={16} aria-hidden="true" /> Mis proyectos</button>
+          <button type="button" className={view === 'board' ? 'is-active' : ''} aria-current={view === 'board' ? 'page' : undefined} onClick={() => { setSelectedProject(''); setView('board'); }}><LayoutDashboard size={16} aria-hidden="true" /> Tablero general</button>
+          <button type="button" className={view === 'reports' ? 'is-active' : ''} aria-current={view === 'reports' ? 'page' : undefined} onClick={() => setView('reports')}><ChartNoAxesCombined size={16} aria-hidden="true" /> Reportes</button>
+        </nav>
+      )}
 
       {selectedEvent && (
         <div className="modal-backdrop" role="presentation" onMouseDown={(event) => {

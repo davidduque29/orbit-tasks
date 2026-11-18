@@ -2132,3 +2132,21 @@ button:disabled { cursor:not-allowed; }
   height:32px!important;min-height:32px!important;
  }
 }
+
+/* Shared project navigation stays accessible on every project screen. */
+.shell:has(.project-utility-links-persistent) { padding-bottom:76px; }
+.project-utility-links.project-utility-links-persistent {
+ position:sticky;bottom:0;z-index:30;
+ display:flex;justify-content:space-around;align-items:center;flex-wrap:nowrap;
+ gap:4px;margin:18px 0 0;padding:10px 6px max(10px,env(safe-area-inset-bottom));
+ background:var(--surface,#11182e);border-top:1px solid rgba(147,125,202,.35);
+}
+.project-utility-links-persistent button {
+ flex:1;min-width:0;justify-content:center;gap:5px;
+ font-size:12px;white-space:nowrap;padding:9px 3px;
+}
+.project-utility-links-persistent button.is-active { color:#a678ff;font-weight:800; }
+@media(max-width:520px){
+ .project-utility-links-persistent button { flex-direction:column;gap:3px;font-size:10px;line-height:1.1; }
+ .project-utility-links-persistent button svg { width:18px;height:18px; }
+}
