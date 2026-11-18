@@ -493,19 +493,14 @@ button:disabled { cursor:not-allowed; }
 .project-progress-track > div { height:100%; border-radius:6px; background:linear-gradient(90deg,#805ef0,#6240d7); transition:width .6s ease; }
 .project-compact-details { border-top:1px solid #eee9f7; margin-top:14px; padding:16px 0 0; animation:orbit-project-detail .2s ease; }
 .project-compact-details p { color:#465474; font-size:13px; line-height:1.55; }
-.project-compact-totals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:15px 0; }
-.project-compact-totals > span { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:12px 8px; border:0; border-radius:0; font-size:11px; background:transparent; }
-.project-compact-totals svg { color:#7056d0; }
-.project-compact-totals strong { font-size:15px; color:#28334d; }
+
 .project-compact-details .card-actions { gap:10px; }
 .project-compact-details .card-actions button { display:inline-flex; align-items:center; gap:7px; }
 .project-open-board { background:linear-gradient(120deg,#8064e9,#5d37cc); }
 @keyframes orbit-project-detail { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
 @media(max-width:520px) {
  .project-compact-card { padding:12px; }
- .project-compact-totals { gap:5px; }
- .project-compact-totals > span { padding:9px 6px; font-size:10px; }
- .project-compact-totals strong { font-size:13px; }
+
 }
 @media(prefers-reduced-motion:reduce) { .project-compact-details { animation:none; } }
 
@@ -1107,7 +1102,6 @@ button:disabled { cursor:not-allowed; }
  .week-events-list .week-event .week-event-actions { align-self:center; }
 }
 
-
 /* Checklist cards: keep the disclosure below the title and action buttons on mobile. */
 .note-list-item { flex-wrap:wrap; }
 .note-list-item > .note-summary { min-width:0; }
@@ -1138,7 +1132,6 @@ button:disabled { cursor:not-allowed; }
   .pending-checklist-toggle { font-size:12px; }
 }
 
-
 /* Compact pending titles: ellipsis instead of multiline overflow on iPhone. */
 .note-list-item .note-summary { overflow:hidden; }
 .note-list-item .note-title-compact {
@@ -1154,7 +1147,6 @@ button:disabled { cursor:not-allowed; }
   width:34px; height:34px; min-width:34px; padding:6px;
   display:inline-flex; align-items:center; justify-content:center;
 }
-
 
 /* High-visibility quick capture, approved mobile-first Orbit Tasks design. */
 .notes-board .quick-capture.quick-capture-highlight {
@@ -1194,7 +1186,6 @@ button:disabled { cursor:not-allowed; }
   .quick-capture-highlight .quick-capture-main { gap:6px; }
   .quick-capture-highlight .quick-capture-main > button { flex-basis:37px; width:37px; height:39px; }
 }
-
 
 /* Checklist mobile layout: explicit columns prevent iOS flex min-content collapse. */
 .notes-board .note-list-item > .pending-checklist-disclosure {
@@ -1241,7 +1232,6 @@ button:disabled { cursor:not-allowed; }
   .notes-board .pending-checklist-items > li > button { width:32px; height:34px; }
 }
 
-
 /* Strong but restrained distinction for each personal pending card. */
 .notes-board .notes-list > .note-list-item {
   border:1.5px solid #b9a5f5; border-left:4px solid #7b40e9;
@@ -1281,7 +1271,6 @@ button:disabled { cursor:not-allowed; }
   .notes-board .notes-search-body { padding:11px 10px; }
   .notes-board .notes-list > .note-list-item { border-left-width:4px; }
 }
-
 
 /* Unified Pendientes / Buscar layout, November 2026 */
 .notes-board .notes-section-tabs {
@@ -1327,7 +1316,6 @@ button:disabled { cursor:not-allowed; }
   .notes-board .notes-section-tabs > .notes-trash-tab { grid-column:1/-1; }
 }
 
-
 /* Voice entry: consistent Orbit purple outline and high-contrast microphone */
 .quick-capture-main .quick-voice {
   color:#e11d48;
@@ -1367,7 +1355,6 @@ button:disabled { cursor:not-allowed; }
   .quick-capture-main .quick-voice.is-listening { animation:none; }
 }
 
-
 /* Projects redesign: one module selector, compact project cards, accessible overflow menus */
 .project-section-menu { position:relative; margin:8px auto 0; max-width:1100px; padding:0 20px; }
 .project-section-menu > summary { display:inline-flex; align-items:center; gap:8px; cursor:pointer; list-style:none; padding:9px 13px; border-radius:12px; color:#6545bf; font-size:13px; font-weight:700; background:#f4f0ff; }
@@ -1390,7 +1377,7 @@ button:disabled { cursor:not-allowed; }
 .project-card-progress-label { display:flex; justify-content:space-between; margin:14px 0 7px; font-size:12px; color:#6c748b; }
 .project-card-progress-label strong { color:#7045d8; font-size:15px; }
 .project-card-redesign .project-progress-track { margin:0 0 13px; }
-.project-card-redesign .project-compact-totals { margin:0 0 14px; }
+
 .project-card-primary-actions { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
 .project-card-primary-actions button { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-radius:12px; padding:9px 7px; font-size:13px; font-weight:700; white-space:nowrap; }
 .project-card-primary-actions .project-open-board { color:white; background:linear-gradient(110deg,#7650e6,#632bd4); }
@@ -1401,10 +1388,9 @@ button:disabled { cursor:not-allowed; }
  .project-section-menu { padding:0 16px; }
  .project-section-menu > nav { left:16px; }
  .project-card-redesign { padding:13px; }
- .project-card-redesign .project-compact-totals > span { padding:9px 4px; }
+
  .project-card-primary-actions button { font-size:12px; }
 }
-
 
 /* Projects: show list as default; secondary navigation stays discreet in header */
 .project-list-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
@@ -1418,7 +1404,6 @@ button:disabled { cursor:not-allowed; }
  .project-heading-actions { width:100%; justify-content:space-between; }
  .project-heading-actions > button { flex:1; }
 }
-
 
 /* Fix: secondary navigation must never escape the iPhone viewport */
 .project-section-menu-inline { position:relative; flex:none; }
@@ -1440,7 +1425,6 @@ button:disabled { cursor:not-allowed; }
  .project-board-return { align-items:flex-start; flex-direction:column; }
 }
 
-
 /* Remove redundant project navigation from the header; keep utility views secondary */
 .project-list-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .project-heading-actions { width:auto; }
@@ -1455,7 +1439,6 @@ button:disabled { cursor:not-allowed; }
  .project-heading-actions { width:auto; flex:none; }
  .project-heading-actions > button { min-height:44px; padding:9px 11px; font-size:12px; white-space:nowrap; }
 }
-
 
 /* Project-scoped board hierarchy: clear identity, back navigation and task list */
 .project-board-context { display:flex; flex-direction:column; align-items:flex-start; gap:6px; margin:0 0 18px; }
@@ -1573,7 +1556,6 @@ button:disabled { cursor:not-allowed; }
  .orbit-board-panel .task-list .task-compact-card>.orbit-task-card-actions button{width:33px!important;min-width:33px!important;max-width:33px!important;height:33px!important;min-height:33px!important}
 }
 
-
 /* Mobile Kanban: show one full-width status and compact inline task actions. */
 .kanban-mobile-picker{display:none}
 @media(max-width:700px){
@@ -1591,7 +1573,6 @@ button:disabled { cursor:not-allowed; }
  .orbit-board-panel .kanban .orbit-task-card-actions button{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}
  .orbit-board-panel .kanban .task-compact-button .status-indicator{font-size:11px}
 }
-
 
 /* Kanban density: actions beside content, not in a separate tall row. */
 .task-board .kanban .lane {min-height:0;align-content:start;min-width:0}
@@ -2151,70 +2132,19 @@ button:disabled { cursor:not-allowed; }
  .project-utility-links-persistent button svg { width:18px;height:18px; }
 }
 
-/* Project overview: informational statistics, not button-like tiles. */
-.project-card-redesign .project-compact-totals {
- display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
- gap:0;margin:12px 0 14px;padding:12px 0;
- border-bottom:1px solid rgba(156,148,190,.32);
-}
-.project-card-redesign .project-compact-totals > span {
- display:flex;flex-direction:column;align-items:center;justify-content:center;
- gap:5px;min-width:0;padding:4px 5px!important;
- border:0!important;border-radius:0!important;box-shadow:none!important;
- background:transparent!important;color:inherit;
-}
-.project-card-redesign .project-compact-totals > span + span {
- border-left:1px solid rgba(156,148,190,.3)!important;
-}
-.project-card-redesign .project-compact-totals .project-stat-label {
- display:inline-flex;align-items:center;justify-content:center;
- gap:5px;min-width:0;font-size:12px;font-weight:500;white-space:nowrap;
- color:var(--text-muted,#bac2d7);
-}
-.project-card-redesign .project-compact-totals .project-stat-label svg {
- color:#986be9;flex-shrink:0;
-}
-.project-card-redesign .project-compact-totals strong {
- display:block;font-size:22px;line-height:1.1;font-weight:800;
- color:var(--text-primary,#f5f3ff);
-}
+/* Project card action hierarchy. */
 .project-card-redesign .project-card-primary-actions {
  display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px;
 }
 .project-card-redesign .project-card-primary-actions button {min-width:0;}
 @media(max-width:520px){
- .project-card-redesign .project-compact-totals .project-stat-label {font-size:10px;gap:3px;}
- .project-card-redesign .project-compact-totals .project-stat-label svg {width:14px;height:14px;}
- .project-card-redesign .project-compact-totals strong {font-size:20px;}
+
  .project-card-redesign .project-card-primary-actions {gap:7px;}
  .project-card-redesign .project-card-primary-actions button {font-size:11px;padding:9px 4px;}
 }
 
-/* Project statistics are read-only text: no white panel or button styling. */
+/* Preserve the approved project-card outline. */
 .project-card-redesign { border-width:2px!important; }
-.project-card-redesign .project-compact-totals {
- background:transparent!important;background-color:transparent!important;
- border:0!important;box-shadow:none!important;
- padding:8px 0 12px!important;margin:8px 0 14px!important;
-}
-.project-card-redesign .project-compact-totals > span,
-.project-card-redesign .project-compact-totals .project-stat-label {
- background:transparent!important;background-color:transparent!important;
- box-shadow:none!important;outline:0!important;
-}
-.project-card-redesign .project-compact-totals .project-stat-label {
- color:#c9b6fa!important;font-weight:750!important;font-size:13px!important;
-}
-.project-card-redesign .project-compact-totals strong {
- color:#f5f0ff!important;font-weight:850!important;font-size:24px!important;
-}
-.project-card-redesign .project-compact-totals > span + span {
- border-left:1px solid rgba(175,153,230,.28)!important;
-}
-@media(max-width:520px) {
- .project-card-redesign .project-compact-totals .project-stat-label {font-size:11px!important;}
- .project-card-redesign .project-compact-totals strong {font-size:22px!important;}
-}
 
 /* Isolated plain project metrics: intentionally unrelated to legacy tiles. */
 .project-card-redesign .orbit-project-metrics-plain {
