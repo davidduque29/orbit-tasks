@@ -2150,3 +2150,42 @@ button:disabled { cursor:not-allowed; }
  .project-utility-links-persistent button { flex-direction:column;gap:3px;font-size:10px;line-height:1.1; }
  .project-utility-links-persistent button svg { width:18px;height:18px; }
 }
+
+/* Project overview: informational statistics, not button-like tiles. */
+.project-card-redesign .project-compact-totals {
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:0;margin:12px 0 14px;padding:12px 0;
+ border-bottom:1px solid rgba(156,148,190,.32);
+}
+.project-card-redesign .project-compact-totals > span {
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:5px;min-width:0;padding:4px 5px!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important;
+ background:transparent!important;color:inherit;
+}
+.project-card-redesign .project-compact-totals > span + span {
+ border-left:1px solid rgba(156,148,190,.3)!important;
+}
+.project-card-redesign .project-compact-totals .project-stat-label {
+ display:inline-flex;align-items:center;justify-content:center;
+ gap:5px;min-width:0;font-size:12px;font-weight:500;white-space:nowrap;
+ color:var(--text-muted,#bac2d7);
+}
+.project-card-redesign .project-compact-totals .project-stat-label svg {
+ color:#986be9;flex-shrink:0;
+}
+.project-card-redesign .project-compact-totals strong {
+ display:block;font-size:22px;line-height:1.1;font-weight:800;
+ color:var(--text-primary,#f5f3ff);
+}
+.project-card-redesign .project-card-primary-actions {
+ display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px;
+}
+.project-card-redesign .project-card-primary-actions button {min-width:0;}
+@media(max-width:520px){
+ .project-card-redesign .project-compact-totals .project-stat-label {font-size:10px;gap:3px;}
+ .project-card-redesign .project-compact-totals .project-stat-label svg {width:14px;height:14px;}
+ .project-card-redesign .project-compact-totals strong {font-size:20px;}
+ .project-card-redesign .project-card-primary-actions {gap:7px;}
+ .project-card-redesign .project-card-primary-actions button {font-size:11px;padding:9px 4px;}
+}

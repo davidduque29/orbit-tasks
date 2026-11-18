@@ -503,10 +503,10 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                     aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
                     <div style={{ width: `${progress}%` }} />
                   </div>
-                  <div className="project-compact-totals">
-                    <span><ListTodo size={17} aria-hidden="true" />Total <strong>{totalTasks}</strong></span>
-                    <span><ArrowRight size={17} aria-hidden="true" />Pendientes <strong>{pendingTasks}</strong></span>
-                    <span><CheckCircle2 size={17} aria-hidden="true" />Finalizadas <strong>{completedTasks}</strong></span>
+                  <div className="project-compact-totals" aria-label="Resumen de tareas del proyecto">
+                    <span><span className="project-stat-label"><ListTodo size={17} aria-hidden="true" />Total</span><strong>{totalTasks}</strong></span>
+                    <span><span className="project-stat-label"><ArrowRight size={17} aria-hidden="true" />Pendientes</span><strong>{pendingTasks}</strong></span>
+                    <span><span className="project-stat-label"><CheckCircle2 size={17} aria-hidden="true" />Finalizadas</span><strong>{completedTasks}</strong></span>
                   </div>
                   <div className="project-card-primary-actions">
                     <button className="project-open-board" type="button" onClick={() => { setSelectedProject(project.id); setView('board'); }}>
