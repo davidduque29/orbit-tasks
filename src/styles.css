@@ -2189,3 +2189,29 @@ button:disabled { cursor:not-allowed; }
  .project-card-redesign .project-card-primary-actions {gap:7px;}
  .project-card-redesign .project-card-primary-actions button {font-size:11px;padding:9px 4px;}
 }
+
+/* Project statistics are read-only text: no white panel or button styling. */
+.project-card-redesign { border-width:2px!important; }
+.project-card-redesign .project-compact-totals {
+ background:transparent!important;background-color:transparent!important;
+ border:0!important;box-shadow:none!important;
+ padding:8px 0 12px!important;margin:8px 0 14px!important;
+}
+.project-card-redesign .project-compact-totals > span,
+.project-card-redesign .project-compact-totals .project-stat-label {
+ background:transparent!important;background-color:transparent!important;
+ box-shadow:none!important;outline:0!important;
+}
+.project-card-redesign .project-compact-totals .project-stat-label {
+ color:#c9b6fa!important;font-weight:750!important;font-size:13px!important;
+}
+.project-card-redesign .project-compact-totals strong {
+ color:#f5f0ff!important;font-weight:850!important;font-size:24px!important;
+}
+.project-card-redesign .project-compact-totals > span + span {
+ border-left:1px solid rgba(175,153,230,.28)!important;
+}
+@media(max-width:520px) {
+ .project-card-redesign .project-compact-totals .project-stat-label {font-size:11px!important;}
+ .project-card-redesign .project-compact-totals strong {font-size:22px!important;}
+}
