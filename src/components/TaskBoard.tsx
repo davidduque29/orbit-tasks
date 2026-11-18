@@ -318,12 +318,13 @@ export function TaskBoard({ projects, tasks, selectedProject, onSave, onDelete, 
               {STATUS_LABELS.map((status) => <option key={status} value={status}>{status} ({activeTasks.filter((task) => displayStatus(task.status) === status).length})</option>)}
             </select>
           </label>
-          <div className="kanban">
+          <div className="kanban orbit-kanban-stacked">
             {STATUS_LABELS.map((status) => (
               <section className="lane" data-kanban-target={status} data-touch-target={touchTarget===status} data-mobile-active={mobileLane === status ? 'true' : 'false'} key={status}
                 onDragOver={event => { if (dragTaskId) event.preventDefault(); }}
                 onDrop={event => { event.preventDefault(); const id=event.dataTransfer.getData("text/plain") || dragTaskId; if (id) void moveTask(id,status); }}>
-                <h2><StatusDot status={status} /> <span>{activeTasks.filter((task) => displayStatus(task.status) === status).length}</span></h2>
+                <h2><StatusDot status={status} /> <span className="orbit-lane-count">({activeTasks.filter((task) => displayStatus(task.status) === status).length})</span><span className="orbit-lane-chevron" aria-hidden="true">⌃</span></h2>
+                {activeTasks.filter((task) => displayStatus(task.status) === status).length === 0 && <div className="orbit-lane-empty">Sin tareas</div>}
                 {activeTasks.filter((task) => displayStatus(task.status) === status).map(task => taskItem(task, true))}
               </section>
             ))}
