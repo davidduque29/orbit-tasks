@@ -754,11 +754,10 @@ export function NotesBoard({ userId }: { userId: string }) {
       </div>
 
     </div>
-    {error && <p className="error" role="alert">{error}</p>}
-    {message && message !== "Pendiente creado." && <p className="feedback" role="status">{message}</p>}
+
     {loading && <p className="muted">Cargando tus pendientes…</p>}
     {!loading && <>
-    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> <span>Listado de pendientes ({filtered.length})</span>{(createdNotice || orderNotice) && <span className="orbit-order-inline-notice" role="status">{createdNotice ? "Pendiente creado" : "Orden guardado"}</span>}</h2>
+    <h2 className="notes-list-heading"><ListTodo size={19} aria-hidden="true"/> <span>Listado de pendientes ({filtered.length})</span>{(error || (message && message !== 'Pendiente creado.') || createdNotice || orderNotice) && <span className={`orbit-order-inline-notice${error ? ' orbit-inline-error' : ''}`} role={error ? 'alert' : 'status'} title={error || message || ''}>{error || (createdNotice ? 'Pendiente creado' : orderNotice ? 'Orden guardado' : message)}</span>}</h2>
     <div className="notes-list">
       {pagedNotes.map(note => <div className="orbit-swipe-shell" key={note.id}>
         {section==="pending" && statusTab==="active" && <div className="orbit-swipe-underlay" aria-hidden="true">
@@ -768,17 +767,16 @@ export function NotesBoard({ userId }: { userId: string }) {
         <article className={`card note-list-item orbit-reorder-note ${swipeNoteId===note.id?(swipeDirection==="right"?"orbit-swiped-right":"orbit-swiped-left"):""}`}
           data-note-drop={note.id} draggable={false}
           onTouchStart={event=>beginCardHold(event,note.id)}
+          onPointerDown={event=>{if(event.pointerType==='mouse' && event.button===0 && !(event.target as HTMLElement).closest('button,input,select,textarea,a,label')){setDragNoteId(note.id);startNoteVisual(event);}}}
+          onPointerMove={event=>{if(event.pointerType==='mouse')moveNoteVisual(event);}}
+          onPointerUp={event=>{if(event.pointerType==='mouse' && dragNoteId)releaseNote(event,note.id);}}
+          onPointerCancel={event=>{if(event.pointerType==='mouse'){stopNoteVisual();setDragNoteId(null);}}}
           onClickCapture={event=>{if(Date.now()<suppressCardClickUntil.current){event.preventDefault();event.stopPropagation();}}}
           onDragStart={event=>{event.dataTransfer.setData("text/plain",note.id);setDragNoteId(note.id);}}
           onDragEnd={()=>setDragNoteId(null)}
           onDragOver={event=>{if(dragNoteId)event.preventDefault();}}
           onDrop={event=>{event.preventDefault();const id=event.dataTransfer.getData("text/plain")||dragNoteId;if(id)void reorderNotes(id,note.id);}}
 >
-        {section==="pending" && statusTab==="active" && <button type="button" className="orbit-note-grip" aria-label={`Arrastrar ${note.title} para ordenar`}
-          onPointerDown={event=>{event.stopPropagation();if(event.pointerType==="mouse"){setDragNoteId(note.id);startNoteVisual(event);}}}
-          onPointerMove={event=>{event.stopPropagation();if(event.pointerType==="mouse")moveNoteVisual(event);}}
-          onPointerCancel={event=>{if(event.pointerType==="mouse"){stopNoteVisual();setDragNoteId(null);}}}
-          onPointerUp={event=>{event.stopPropagation();if(event.pointerType==="mouse")releaseNote(event,note.id);}}><GripVertical size={18}/></button>}
         {note.is_pinned && <Pin size={15} className="orbit-note-pin" aria-label="Fijado"/>}
         <div className="note-check">
           {note.kind === 'pending'
