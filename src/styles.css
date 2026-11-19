@@ -2278,3 +2278,26 @@ html[data-theme="dark"] .project-progress-report .project-progress-title > stron
 [data-theme="dark"] .notes-board .notes-notebook .orbit-pagination span {
   color:#d1d8e9 !important;
 }
+
+/* Compact avatar-only account entry; profile details remain in the dropdown. */
+.orbit-header-actions .profile-trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  padding: 3px;
+  gap: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid #a78bfa;
+}
+.orbit-header-actions .profile-trigger .profile-avatar {
+  width: 34px;
+  height: 34px;
+}
+.orbit-header-actions .profile-trigger:focus-visible {
+  outline: 3px solid #22c7f3;
+  outline-offset: 3px;
+}
