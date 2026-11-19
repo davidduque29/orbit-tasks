@@ -8,7 +8,7 @@ import { TaskBoard } from './components/TaskBoard';
 import { UserProfile } from './components/UserProfile';
 import { DeviceAccountSection } from './components/DeviceAccountSection';
 import { MetricCard, type StatKind } from './components/DashboardVisuals';
-import { CalendarDays, ChartNoAxesCombined, TrendingUp, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, MoreVertical, ArrowLeft, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save, Sun, Moon } from 'lucide-react';
+import { CalendarDays, ChartNoAxesCombined, TrendingUp, ListChecks, FolderKanban, House, LayoutDashboard, Bell, CalendarClock, Pencil, Trash2, ArrowRight, ClipboardList, MoreVertical, ArrowLeft, X, Sparkles, AlertTriangle, Settings, UserRound, Smartphone, ChevronDown, ChevronUp, Search, CheckCircle2, ListTodo, Type, AlignLeft, Clock3, Flag, Plus, Save } from 'lucide-react';
 import { NotificationCenter } from './components/NotificationCenter';
 import { ReminderModal } from './components/ReminderModal';
 import { reminderSummary, validateReminder, type ReminderSchedule } from './domain/reminders';
@@ -376,8 +376,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       <header className="header">
         <div className="wordmark"><img className="brand-logo" src={orbitLogo} alt="" /><span className="orbit-brand-stack"><span>Orbit <b>Tasks</b></span><small className="orbit-header-clock">{clockNow.toLocaleString("es-CO", { weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })}</small></span></div>
         <div className="orbit-header-actions">
-          <UserProfile userId={userId} email={email} onAccountClick={() => openAccount() } />
-          <button type="button" className="orbit-theme-toggle" onClick={() => setTheme(current => current === 'dark' ? 'light' : 'dark')} aria-label={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'} title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'} aria-pressed={theme === 'dark'}>{theme === 'dark' ? <Sun size={19} aria-hidden="true" /> : <Moon size={19} aria-hidden="true" />}</button>
+          <UserProfile userId={userId} email={email} onAccountClick={() => openAccount()} theme={theme} onThemeChange={setTheme} />
         </div>
       </header>
       {space !== 'pick' && view !== 'account' && <nav className="workspace-navigation" aria-label="Cambiar módulo">
