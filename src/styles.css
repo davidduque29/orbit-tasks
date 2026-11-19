@@ -1746,7 +1746,7 @@ button:disabled { cursor:not-allowed; }
 .orbit-board-panel .orbit-new-task-button{display:inline-flex!important;align-items:center!important;gap:7px!important;background:linear-gradient(110deg,#6553e8,#8717f4)!important;color:#fff!important;border:1px solid #a782ff!important;box-shadow:0 2px 9px #6023cb40!important;font-weight:800!important;opacity:1!important}
 .orbit-board-panel .orbit-board-more{position:relative;flex:none}
 .orbit-board-panel .orbit-board-more-trigger{width:42px;height:42px;padding:0!important;border:1px solid #9876e9!important;background:transparent!important;color:inherit!important;font-size:27px!important;line-height:1!important}
-.orbit-board-panel .orbit-board-more-menu{position:absolute;z-index:60;right:0;top:calc(100% + 6px);min-width:220px;padding:6px;background:var(--surface,#fff);color:var(--text,#18223c);border:1px solid #8e7abb;border-radius:12px;box-shadow:0 12px 28px #0005}
+.orbit-board-panel .orbit-board-more-menu{position:absolute;z-index:60;right:0;top:calc(100% + 6px);min-width:220px;padding:6px;background:#fff;color:var(--text,#18223c);border:1px solid #8e7abb;border-radius:12px;box-shadow:0 12px 28px #0005}
 .orbit-board-panel .orbit-board-more-menu button{display:block;width:100%;text-align:left;background:transparent!important;color:inherit!important;border-radius:7px;padding:11px;font-size:13px}
 .orbit-board-panel .orbit-board-more-menu button:hover{background:#8465e329!important}
 .orbit-board-panel .orbit-board-more-menu .orbit-menu-danger{color:#d94b6c!important}
@@ -2261,4 +2261,20 @@ html[data-theme="dark"] .project-progress-report .project-progress-title > stron
   }
   .notes-board .notes-notebook{padding:9px}
   .notes-board .notes-notebook .notes-list-heading .orbit-order-inline-notice{max-width:43%!important}
+}
+
+/* Match the unified pending notebook to the active dark theme. */
+[data-theme="dark"] .notes-board .notes-notebook {
+  background:#19223a;
+  color:#f1f5ff;
+  border-color:#8b35ef;
+}
+[data-theme="dark"] .notes-board .notes-notebook .notes-list-heading,
+[data-theme="dark"] .notes-board .notes-notebook .notes-list-heading > span:not(.orbit-order-inline-notice) {
+  color:#f1f5ff !important;
+}
+[data-theme="dark"] .notes-board .notes-notebook .orbit-pagination,
+[data-theme="dark"] .notes-board .notes-notebook .orbit-pagination p,
+[data-theme="dark"] .notes-board .notes-notebook .orbit-pagination span {
+  color:#d1d8e9 !important;
 }
