@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Camera, UploadCloud, MoreVertical } from 'lucide-react';
+import { Camera, UploadCloud, MoreVertical, Sun, Moon } from 'lucide-react';
 import { supabase } from '../infrastructure/supabaseClient';
 import { DeviceManager } from './DeviceManager';
 
@@ -8,6 +8,8 @@ interface UserProfileProps {
   email: string;
   embedded?: boolean;
   onAccountClick?: () => void;
+  theme?: 'light' | 'dark';
+  onThemeChange?: (theme: 'light' | 'dark') => void;
 }
 
 function initials(name: string): string {
@@ -15,7 +17,7 @@ function initials(name: string): string {
   return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0]?.slice(0, 2) || 'U').toLocaleUpperCase();
 }
 
-export function UserProfile({ userId, email, embedded = false, onAccountClick }: UserProfileProps) {
+export function UserProfile({ userId, email, embedded = false, onAccountClick, theme, onThemeChange }: UserProfileProps) {
   const fallback = email.split('@')[0] || 'Usuario';
   const [displayName, setDisplayName] = useState(fallback);
   const [draftName, setDraftName] = useState('');
@@ -188,6 +190,21 @@ export function UserProfile({ userId, email, embedded = false, onAccountClick }:
           <button type="button" className="outline profile-action" onClick={() => { setMenuOpen(false); setDevicesOpen(true); }}>📱 Mis dispositivos</button>
           </>}
           {!embedded && onAccountClick && <button type="button" className="outline profile-action" onClick={() => {setMenuOpen(false); onAccountClick();}}>⚙️ Mi cuenta</button> }
+          {!embedded && theme && onThemeChange && (
+            <div className="profile-appearance" role="group" aria-label="Apariencia" style={{ padding: '12px 8px', borderTop: '1px solid var(--border, #62557c)' }}>
+              <strong style={{ display: 'block', marginBottom: 9, fontSize: 14 }}>Apariencia</strong>
+              <div style={{ display: 'flex', gap: 6, padding: 4, borderRadius: 14, background: 'var(--surface, rgba(125, 105, 190, .13))' }}>
+                {(['light', 'dark'] as const).map((option) => (
+                  <button key={option} type="button" aria-pressed={theme === option}
+                    onClick={() => onThemeChange(option)}
+                    style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5, padding: '9px 6px', borderRadius: 11, border: theme === option ? '1px solid #8b45fa' : '1px solid transparent', background: theme === option ? '#7024dd' : 'transparent', color: theme === option ? '#fff' : 'inherit', fontWeight: theme === option ? 700 : 500, cursor: 'pointer' }}>
+                    {option === 'light' ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}
+                    {option === 'light' ? 'Claro' : 'Oscuro'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {feedback && <p className="profile-feedback" role="status">{feedback}</p>}
           <button type="button" className="profile-logout" onClick={() => void supabase.auth.signOut()}>
             Cerrar sesión
