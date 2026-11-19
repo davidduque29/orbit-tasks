@@ -690,7 +690,7 @@ export function NotesBoard({ userId }: { userId: string }) {
   const categoryName = (id: string | null) => categories.find(category => category.id === id);
 
   return <section className="notes-board">
-    <div className="heading notes-heading"><div><h1>Pendientes</h1><p>Captura rápidamente tus actividades personales.</p></div>
+    <div className="heading notes-heading"><div><h1>Pendientes</h1></div>
       <button type="button" className="note-sound-toggle" aria-label={soundEnabled ? 'Silenciar sonido al completar' : 'Activar sonido al completar'}
         aria-pressed={soundEnabled} onClick={toggleSound}>
         {soundEnabled ? <Volume2 size={17}/> : <VolumeX size={17}/>}
