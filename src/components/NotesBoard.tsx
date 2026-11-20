@@ -697,7 +697,8 @@ export function NotesBoard({ userId }: { userId: string }) {
         <span>{soundEnabled ? 'Sonido activado' : 'Sin sonido'}</span>
       </button>
     </div>
-    {trashOpen && <section className="card notes-trash"><h2>Papelera</h2><p>Recupera tus pendientes o elimínalos definitivamente.</p>{pagedTrash.map(note => <div key={note.id} className="notes-trash-item"><strong>{note.title}</strong><button type="button" className="outline" disabled={busy} onClick={() => void restoreNote(note)}>Restaurar</button><button type="button" disabled={busy} onClick={() => void permanentlyDelete(note)}>Eliminar definitivamente</button></div>)}{!trashedNotes.length && <p>No hay pendientes eliminados.</p>}{pagination(currentTrashPage, trashPages, trashedNotes.length, setTrashPage)}</section>}
+    {trashOpen && <section className="card notes-trash"><button type="button" className="outline" onClick={() => setTrashOpen(false)} aria-label="Volver a pendientes">← Volver a pendientes</button><h2>Papelera</h2><p>Recupera tus pendientes o elimínalos definitivamente.</p>{pagedTrash.map(note => <div key={note.id} className="notes-trash-item"><strong>{note.title}</strong><button type="button" className="outline" disabled={busy} onClick={() => void restoreNote(note)}>Restaurar</button><button type="button" disabled={busy} onClick={() => void permanentlyDelete(note)}>Eliminar definitivamente</button></div>)}{!trashedNotes.length && <p>No hay pendientes eliminados.</p>}{pagination(currentTrashPage, trashPages, trashedNotes.length, setTrashPage)}</section>}
+    {!trashOpen && <>
     <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
       <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17}/> Pendientes</button>
       <button type="button" className={section === 'search' ? 'selected' : ''} aria-current={section === 'search' ? 'page' : undefined} onClick={() => setSection('search')}><Search size={17}/> Buscar</button>
@@ -913,6 +914,7 @@ export function NotesBoard({ userId }: { userId: string }) {
       </div>)}
       {!categories.length && <p className="muted">Aún no hay categorías.</p>}
     </div>}
+    </>}
     {deleteTarget && <div className="modal-backdrop" role="presentation"
       onMouseDown={event => { if (event.target === event.currentTarget && !busy) setDeleteTarget(null); }}>
       <section className="modal orbit-detail-modal note-modal notes-delete-modal" role="dialog"
