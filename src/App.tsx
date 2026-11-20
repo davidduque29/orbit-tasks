@@ -375,7 +375,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
       setEditor('project');
       return;
     }
-    setTaskProjectId(selectedProject || projects[0]?.id || '');
+    setTaskProjectId(activeProjects.some((project) => project.id === selectedProject) ? selectedProject : activeProjects[0]?.id || '');
     setEditor(type);
   }
 
@@ -542,8 +542,8 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <p>Tablero del proyecto · {visibleTasks.length} tareas registradas</p>
           </div>
           <TaskBoard
-            projects={projects}
-            tasks={tasks}
+            projects={activeProjects}
+            tasks={tasks.filter((task) => activeProjects.some((project) => project.id === task.project_id))}
             selectedProject={selectedProject}
             onProjectChange={setSelectedProject}
             onNewTask={() => openEditor('task')}
