@@ -19,6 +19,7 @@ export interface Project {
   description: string;
   color: string;
   status: 'Activo' | 'Pausado' | 'Archivado';
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -54,6 +55,7 @@ export interface OrbitEvent {
   recurrence_rule: RecurrenceRule | null;
   reminder_at: string | null;
   status: 'Programado' | 'Completado' | 'Cancelado';
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
