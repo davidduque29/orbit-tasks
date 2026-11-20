@@ -126,12 +126,15 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
   const [eventListFilter, setEventListFilter] = useState<'upcoming' | 'past' | 'all'>('upcoming');
   const [eventListNow, setEventListNow] = useState(() => Date.now());
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
-  const selectedEvent = events.find((item) => item.id === selectedEventId);
+  const selectedEvent = events.find((item) => item.id === selectedEventId && !item.deleted_at);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [selectedProject, setSelectedProject] = useState('');
   const [expandedProjects, setExpandedProjects] = useState<string[]>([]);
   const [projectSearch, setProjectSearch] = useState('');
+  const [projectTrashOpen, setProjectTrashOpen] = useState(false);
+  const [eventTrashOpen, setEventTrashOpen] = useState(false);
+  const [trashPage, setTrashPage] = useState(1);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -177,17 +180,21 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
     return () => { window.clearInterval(interval); window.removeEventListener('focus', updateNow); };
   }, []);
 
-  const sortedEvents = useMemo(() => [...events].sort((left, right) => left.starts_at.localeCompare(right.starts_at)), [events]);
+  const activeProjects = useMemo(() => projects.filter((project) => !project.deleted_at), [projects]);
+  const trashedProjects = useMemo(() => projects.filter((project) => !!project.deleted_at), [projects]);
+  const activeEvents = useMemo(() => events.filter((item) => !item.deleted_at && (!item.project_id || activeProjects.some((project) => project.id === item.project_id))), [events, activeProjects]);
+  const trashedEvents = useMemo(() => events.filter((item) => !!item.deleted_at), [events]);
+  const sortedEvents = useMemo(() => [...activeEvents].sort((left, right) => left.starts_at.localeCompare(right.starts_at)), [activeEvents]);
   const upcomingEvents = sortedEvents.filter((item) => item.status !== 'Cancelado' && new Date(item.starts_at).getTime() >= eventListNow);
   const previousEvents = sortedEvents.filter((item) => new Date(item.starts_at).getTime() < eventListNow).reverse();
   const displayedEvents = eventListFilter === 'upcoming' ? upcomingEvents : eventListFilter === 'past' ? previousEvents : sortedEvents;
 
   const visibleTasks = useMemo(
-    () => tasks.filter((task) => !selectedProject || task.project_id === selectedProject),
-    [selectedProject, tasks],
+    () => tasks.filter((task) => !task.deleted_at && activeProjects.some((project) => project.id === task.project_id) && (!selectedProject || task.project_id === selectedProject)),
+    [selectedProject, tasks, activeProjects],
   );
 
-  const completed = tasks.filter((task) => task.status === 'Finalizado');
+  const completed = visibleTasks.filter((task) => task.status === 'Finalizado');
   const cycle = calculateAverageCycleDays(visibleTasks.filter((task) => task.status === 'Finalizado'));
   const weekStart = new Date();
   weekStart.setUTCHours(0, 0, 0, 0);
@@ -458,10 +465,12 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <input type="search" aria-label="Buscar proyectos" placeholder="Buscar proyectos..."
                 value={projectSearch} onChange={(event) => setProjectSearch(event.target.value)} />
             </div>
-            <div className="project-grid compact-project-grid">
-              {projects.filter((project) => [project.name, project.description].join(' ').toLocaleLowerCase()
+<div className="orbit-trash-controls"><button type="button" className="notes-trash-back" onClick={() => { setProjectTrashOpen(!projectTrashOpen); setTrashPage(1); }}><projectTrashOpen ? ArrowLeft : Trash2 size={16} aria-hidden="true" />{projectTrashOpen ? 'Volver a proyectos' : 'Papelera (' + trashedProjects.length + ')'}</button></div>
+            {projectTrashOpen && <section className="card notes-trash" aria-label="Papelera de proyectos"><h2><Trash2 size={19} aria-hidden="true"/> Papelera de proyectos</h2><p>Puede restaurar o eliminar definitivamente cada registro.</p>{trashedProjects.slice((trashPage - 1) * 5, trashPage * 5).map((item) => <div className="orbit-trash-entry" key={item.id}><strong>{item.name}</strong><span>{item.deleted_at ? formatDate(item.deleted_at) : ''}</span><div className="orbit-trash-actions"><button type="button" onClick={() => { void execute(() => orbitRepository.restoreProject(item.id)); }}>Restaurar</button><button type="button" className="project-option-danger" onClick={() => askConfirmation('Eliminar definitivamente', 'Esta acción eliminará el proyecto y sus tareas, y desvinculará sus eventos. No se puede deshacer.', () => { void execute(() => orbitRepository.deleteProjectPermanently(item.id)); })}>Eliminar definitivamente</button></div></div>)}{trashedProjects.length === 0 && <p>La papelera está vacía.</p>}<nav className="orbit-pagination" aria-label="Paginación de papelera"><button type="button" disabled={trashPage === 1} onClick={() => setTrashPage((p) => p - 1)}>Anterior</button><span>{trashPage} / {Math.max(1, Math.ceil(trashedProjects.length / 5))}</span><button type="button" disabled={trashPage >= Math.ceil(trashedProjects.length / 5)} onClick={() => setTrashPage((p) => p + 1)}>Siguiente</button></nav></section>}
+            {!projectTrashOpen && <div className="project-grid compact-project-grid">
+              {activeProjects.filter((project) => [project.name, project.description].join(' ').toLocaleLowerCase()
                 .includes(projectSearch.trim().toLocaleLowerCase())).map((project) => {
-                const projectTasks = tasks.filter((task) => task.project_id === project.id);
+                const projectTasks = tasks.filter((task) => task.project_id === project.id && !task.deleted_at);
                 const totalTasks = projectTasks.length;
                 const completedTasks = projectTasks.filter((task) => task.status === 'Finalizado').length;
                 const pendingTasks = totalTasks - completedTasks;
@@ -489,7 +498,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                         }}><Pencil size={16} aria-hidden="true" /> Ver detalles</button>
                         <button className="project-option-danger" type="button" onClick={(event) => {
                           event.currentTarget.closest('details')?.removeAttribute('open');
-                          askConfirmation('Eliminar proyecto', '¿Eliminar el proyecto y todas sus tareas? Esta acción no se puede deshacer.', () => { void execute(() => orbitRepository.deleteProject(project.id)); });
+                          askConfirmation('Eliminar proyecto', '¿Mover el proyecto a la papelera? Sus tareas quedarán conservadas y ocultas hasta restaurarlo.', () => { void execute(() => orbitRepository.deleteProject(project.id)); });
                         }}><Trash2 size={16} aria-hidden="true" /> Eliminar proyecto</button>
                       </div>
                     </details>
@@ -518,7 +527,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                   </div>}
                 </article>;
               })}
-            </div>
+            </div>}
             {projects.length === 0 && <Empty message="Aún no tienes proyectos." />}
 
           </>
@@ -561,17 +570,19 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <span>Los recordatorios se gestionan automáticamente. Revisa tus permisos en <button type="button"
                 onClick={() => openAccount('notifications')}>Mi cuenta → Avisos</button>.</span>
             </div>
-            <WeeklyAgenda events={events} onEdit={editEvent} onDelete={(item) => {
-              askConfirmation('Eliminar evento', `¿Eliminar el evento "${item.title}"? Esta acción no se puede deshacer.`, () => { void execute(() => orbitRepository.deleteEvent(item.id)); });
+<div className="orbit-trash-controls"><button type="button" className="notes-trash-back" onClick={() => { setEventTrashOpen(!eventTrashOpen); setTrashPage(1); }}><eventTrashOpen ? ArrowLeft : Trash2 size={16} aria-hidden="true" />{eventTrashOpen ? 'Volver a eventos' : 'Papelera (' + trashedEvents.length + ')'}</button></div>
+            {eventTrashOpen && <section className="card notes-trash" aria-label="Papelera de eventos"><h2><Trash2 size={19} aria-hidden="true"/> Papelera de eventos</h2><p>Puede restaurar o eliminar definitivamente cada registro.</p>{trashedEvents.slice((trashPage - 1) * 5, trashPage * 5).map((item) => <div className="orbit-trash-entry" key={item.id}><strong>{item.title}</strong><span>{item.deleted_at ? formatDate(item.deleted_at) : ''}</span><div className="orbit-trash-actions"><button type="button" onClick={() => { void execute(() => orbitRepository.restoreEvent(item.id)); }}>Restaurar</button><button type="button" className="project-option-danger" onClick={() => askConfirmation('Eliminar definitivamente', 'Esta acción eliminará el evento definitivamente. No se puede deshacer.', () => { void execute(() => orbitRepository.deleteEventPermanently(item.id)); })}>Eliminar definitivamente</button></div></div>)}{trashedEvents.length === 0 && <p>La papelera está vacía.</p>}<nav className="orbit-pagination" aria-label="Paginación de papelera"><button type="button" disabled={trashPage === 1} onClick={() => setTrashPage((p) => p - 1)}>Anterior</button><span>{trashPage} / {Math.max(1, Math.ceil(trashedEvents.length / 5))}</span><button type="button" disabled={trashPage >= Math.ceil(trashedEvents.length / 5)} onClick={() => setTrashPage((p) => p + 1)}>Siguiente</button></nav></section>}
+            {!eventTrashOpen && <><WeeklyAgenda events={activeEvents} onEdit={editEvent} onDelete={(item) => {
+              askConfirmation('Eliminar evento', `¿Eliminar el evento "${item.title}"? Podrás recuperarlo desde la papelera.`, () => { void execute(() => orbitRepository.deleteEvent(item.id)); });
             }} />
             <section className="event-list-section" aria-labelledby="event-list-title">
               <div className="event-list-heading">
-                <h2 id="event-list-title"><ListChecks size={20} aria-hidden="true"/> Mis eventos <span>{events.length}</span></h2>
+                <h2 id="event-list-title"><ListChecks size={20} aria-hidden="true"/> Mis eventos <span>{activeEvents.length}</span></h2>
                 <div className="event-list-filters" role="group" aria-label="Filtrar eventos por fecha">
                   {([
                     ['upcoming', 'Próximos', upcomingEvents.length],
                     ['past', 'Anteriores', previousEvents.length],
-                    ['all', 'Todos', events.length],
+                    ['all', 'Todos', activeEvents.length],
                   ] as const).map(([key, label, count]) => (
                     <button type="button" key={key} className={eventListFilter === key ? 'selected' : ''}
                       aria-pressed={eventListFilter === key} onClick={() => setEventListFilter(key)}>
@@ -595,7 +606,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                     <span className="orbit-action-pair event-list-actions">
                       <button type="button" className="orbit-action-edit" aria-label={`Editar ${item.title}`} title="Editar evento" onClick={() => editEvent(item)}><Pencil size={17} aria-hidden="true"/></button>
                       <button type="button" className="orbit-action-delete" aria-label={`Eliminar ${item.title}`} title="Eliminar evento" onClick={() => {
-                        askConfirmation('Eliminar evento', `¿Eliminar el evento "${item.title}"? Esta acción no se puede deshacer.`, () => { void execute(() => orbitRepository.deleteEvent(item.id)); });
+                        askConfirmation('Eliminar evento', `¿Eliminar el evento "${item.title}"? Podrás recuperarlo desde la papelera.`, () => { void execute(() => orbitRepository.deleteEvent(item.id)); });
                       }}><Trash2 size={17} aria-hidden="true"/></button>
                     </span>
                   </div>;
@@ -605,7 +616,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                   <p>{eventListFilter === 'upcoming' ? 'No tienes eventos próximos.' : eventListFilter === 'past' ? 'No tienes eventos anteriores.' : 'Tu agenda está vacía.'}</p>
                 </div>}
               </div>
-            </section>
+            </section></>}
           </>
         )}
 
@@ -661,7 +672,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <select aria-label="Proyecto del reporte" className="filter" value={selectedProject}
               onChange={(event) => setSelectedProject(event.target.value)}>
               <option value="">Todos los proyectos</option>
-              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+              {activeProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
             </select>
             <div className="stats">
               <Stat label="Tareas" value={String(visibleTasks.length)} kind="tasks" />
@@ -723,7 +734,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                     <Pencil size={16} aria-hidden="true" /> Editar
                   </button>
                   <button type="button" className="orbit-action-delete" onClick={() => {
-                    askConfirmation('Eliminar evento', `¿Eliminar el evento "${selectedEvent.title}"? Esta acción no se puede deshacer.`, () => { void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null)); });
+                    askConfirmation('Eliminar evento', `¿Eliminar el evento "${selectedEvent.title}"? Podrás recuperarlo desde la papelera.`, () => { void execute(() => orbitRepository.deleteEvent(selectedEvent.id)).then(() => setSelectedEventId(null)); });
                   }}><Trash2 size={16} aria-hidden="true" /> Eliminar</button>
                 </div>
               </div>
@@ -798,7 +809,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
                 <CharacterCounter value={taskDescription} max={FIELD_LIMITS.taskDescription} /></label>
               <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto <small>*</small></span>
                 <select required value={taskProjectId} onChange={(event) => setTaskProjectId(event.target.value)}>
-                  {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                  {activeProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                 </select></label>
               <label><span className="form-label-icon"><Flag size={16} aria-hidden="true"/>Prioridad</span>
                 <select value={taskPriority} onChange={(event) => setTaskPriority(event.target.value as typeof taskPriority)}>
@@ -854,7 +865,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <label><span className="form-label-icon"><FolderKanban size={16} aria-hidden="true"/>Proyecto opcional</span>
                 <select value={eventProjectId} onChange={(event) => setEventProjectId(event.target.value)}>
                   <option value="">Sin proyecto</option>
-                  {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                  {activeProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
                 </select></label>
               <div className="orbit-event-save-footer"><button type="submit" disabled={saving}><Save size={18} aria-hidden="true"/>{saving ? 'Guardando…' : editingEventId ? 'Guardar cambios' : 'Guardar evento'}</button></div>
             </form>}
