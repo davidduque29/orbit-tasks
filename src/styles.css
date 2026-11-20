@@ -2374,3 +2374,14 @@ html[data-theme="dark"] .project-progress-report .project-progress-title > stron
 .orbit-trash-actions .project-option-danger:hover{background:#b32c4d}
 .notes-trash>.orbit-pagination{flex-direction:row;justify-content:center;flex-wrap:wrap}
 @media(max-width:540px){.orbit-trash-entry{align-items:flex-start;flex-direction:column}.orbit-trash-actions{width:100%}.orbit-trash-controls{justify-content:flex-start}}
+
+/* Compact trash navigation aligned with the module heading actions. */
+.orbit-heading-trash{font-size:12px;min-height:36px;padding:7px 10px;border-radius:10px;flex-shrink:0}
+.orbit-event-heading-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.orbit-event-heading-actions>button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+@media(max-width:520px){
+ .project-heading-actions{gap:8px}
+ .project-heading-actions>button{flex:1 1 auto;min-width:0;font-size:12px;padding:8px}
+ .orbit-event-heading-actions{width:100%;justify-content:flex-start}
+ .orbit-event-heading-actions>button{font-size:12px;min-height:38px;padding:8px 11px}
+}
