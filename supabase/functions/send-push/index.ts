@@ -161,8 +161,8 @@ Deno.serve(async (request) => {
   const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
   const now = new Date();
   const [tasksResult, eventsResult, notesResult, settingsResult, deviceResult] = await Promise.all([
-    db.from('tasks').select('id,owner_id,title,status,estimated_due_at,reminder_override_minutes').neq('status','Finalizado').not('estimated_due_at','is',null),
-    db.from('events').select('id,owner_id,title,status,starts_at,reminder_at,reminder_override_minutes,recurrence_rule').eq('status','Programado'),
+    db.from('tasks').select('id,owner_id,title,status,estimated_due_at,reminder_override_minutes,project_id,projects!inner(deleted_at)').neq('status','Finalizado').not('estimated_due_at','is',null).is('deleted_at',null).is('projects.deleted_at',null),
+    db.from('events').select('id,owner_id,title,status,starts_at,reminder_at,reminder_override_minutes,recurrence_rule').eq('status','Programado').is('deleted_at',null),
     db.from('notes').select('id,owner_id,title,kind,completed,reminder_at').not('reminder_at','is',null).is('deleted_at',null),
     db.from('notification_preferences').select('*'),
     db.from('device_subscriptions').select('id,owner_id,subscription_data').eq('enabled',true),
