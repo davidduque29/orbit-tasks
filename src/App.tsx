@@ -668,7 +668,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <button type="button" className={reportTab === 'progress' ? 'active' : ''} aria-pressed={reportTab === 'progress'}
                 onClick={() => setReportTab('progress')}><TrendingUp size={17} aria-hidden="true" />Progreso</button>
             </div>
-            {reportTab === 'progress' && <ProjectProgressReport projects={projects} tasks={tasks} />}
+            {reportTab === 'progress' && <ProjectProgressReport projects={activeProjects} tasks={tasks.filter((task) => !task.deleted_at && activeProjects.some((project) => project.id === task.project_id))} />}
             {reportTab === 'indicators' && <>
             <select aria-label="Proyecto del reporte" className="filter" value={selectedProject}
               onChange={(event) => setSelectedProject(event.target.value)}>
