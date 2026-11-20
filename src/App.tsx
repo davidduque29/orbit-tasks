@@ -445,7 +445,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
               <Stat label="Finalizadas" value={String(completed.length)} kind="finished" />
             </div>
             <section className="card"><h2>Próximas entregas</h2>
-              {tasks.filter((task) => task.status !== 'Finalizado').sort((a, b) =>
+              {visibleTasks.filter((task) => task.status !== 'Finalizado').sort((a, b) =>
                 (a.estimated_due_at ?? '9999').localeCompare(b.estimated_due_at ?? '9999'))
                 .slice(0, 6).map((task) => (
                   <div className="list-row" key={task.id}><strong>{task.title}</strong>
@@ -539,7 +539,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           <div className="project-board-context">
             <button className="project-board-back" type="button" onClick={() => setView('projects')}><ArrowLeft size={17} aria-hidden="true" /> Mis proyectos</button>
             <h1>{selectedProject ? (projects.find((item) => item.id === selectedProject)?.name ?? 'Proyecto') : 'Todos los proyectos'}</h1>
-            <p>Tablero del proyecto · {tasks.filter((task) => !selectedProject || task.project_id === selectedProject).length} tareas registradas</p>
+            <p>Tablero del proyecto · {visibleTasks.length} tareas registradas</p>
           </div>
           <TaskBoard
             projects={projects}
