@@ -1482,20 +1482,22 @@ button:disabled { cursor:not-allowed; }
 .orbit-pagination button{padding:8px 12px;font-size:12px;min-width:75px}
 .orbit-pagination button:disabled{opacity:.4;cursor:not-allowed}
 
-/* Papelera de Pendientes: mobile-safe card layout */
+/* Compact trash view: shared five-item pagination and accessible icon actions */
 .notes-trash{min-width:0;overflow:hidden}
-.notes-trash-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;min-width:0;padding:12px 0;border-bottom:1px solid #eee8fa}
-.notes-trash-item>strong{min-width:0;overflow-wrap:anywhere;word-break:normal}
-.notes-trash-item>button{min-width:0;width:auto;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.25;padding:9px 11px;font-size:12px}
-@media(max-width:600px){
- .notes-trash-item{grid-template-columns:minmax(0,1fr) auto auto;gap:6px}
- .notes-trash-item>button{padding:9px 7px;font-size:11px}
-}
-@media(max-width:430px){
- .notes-trash-item{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
- .notes-trash-item>strong{grid-column:1/-1;font-size:14px}
- .notes-trash-item>button{width:100%;font-size:12px;padding:10px 7px}
-}
+.notes-trash-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.notes-trash-header h2{display:flex;align-items:center;gap:8px;margin:0}
+.notes-trash-back{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:8px 14px;border-radius:11px;background:#6332bf;color:#fff;border:1px solid #9b71ed;font-weight:700;white-space:nowrap}
+.notes-trash-back:hover{background:#7545d1}
+.notes-trash-list{margin-top:16px}
+.notes-trash-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #8175a655;min-width:0}
+.notes-trash-item>strong{min-width:0;overflow-wrap:anywhere;font-size:14px;flex:1}
+.notes-trash-actions{display:flex;gap:8px;flex-shrink:0}
+.notes-trash-actions button{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-width:38px;padding:0;border-radius:10px}
+.notes-trash-restore{background:#46306e;color:#fff;border:1px solid #9973d4}
+.notes-trash-delete{background:#6d2443;color:#fff;border:1px solid #e45a78}
+.notes-trash-actions button:disabled{opacity:.5;cursor:not-allowed}
+.notes-trash .orbit-pagination{margin-top:18px;padding-top:14px;border-top:1px solid #8175a655}
+@media(max-width:380px){.notes-trash-header{gap:8px}.notes-trash-back{padding:7px 10px}.notes-trash-actions button{width:35px;height:35px;min-width:35px}}
 
 /* Project bulk-delete is secondary, compact and non-dominant */
 .orbit-board-primary-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
