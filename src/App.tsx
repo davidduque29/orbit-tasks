@@ -370,7 +370,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
           setAllowWeekendEvent(false);
     }
     if (type === 'task') { setEditingTaskId(null); setTaskTitle(''); setTaskDescription(''); setTaskDue(''); }
-    if (type === 'task' && projects.length === 0) {
+    if (type === 'task' && activeProjects.length === 0) {
       setFeedback('Crea primero un proyecto para registrar tareas.');
       setEditor('project');
       return;
@@ -440,7 +440,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
             <div className="heading"><div><h1>Tu productividad</h1><p>Proyectos y tareas sincronizados en Supabase.</p></div>
               <button onClick={() => { setView('projects'); openEditor('project'); }}><FolderKanban size={17} aria-hidden="true" /> Nuevo proyecto</button></div>
             <div className="stats">
-              <Stat label="Proyectos" value={String(projects.length)} kind="projects" />
+              <Stat label="Proyectos" value={String(activeProjects.length)} kind="projects" />
               <Stat label="Pendientes" value={String(tasks.length - completed.length)} kind="pending" />
               <Stat label="Finalizadas" value={String(completed.length)} kind="finished" />
             </div>
@@ -458,7 +458,7 @@ function Workspace({ userId, email }: { userId: string; email: string }) {
 
         {space === 'projects' && view === 'projects' && (
           <>
-            <div className="heading project-list-heading"><div><h1>Mis proyectos</h1><p>{projects.length} {projects.length === 1 ? "proyecto registrado" : "proyectos registrados"}</p></div>
+            <div className="heading project-list-heading"><div><h1>Mis proyectos</h1><p>{activeProjects.length} {activeProjects.length === 1 ? "proyecto registrado" : "proyectos registrados"}</p></div>
               <div className="project-heading-actions">
                 <button onClick={() => openEditor('project')}><Plus size={17} aria-hidden="true" /> Nuevo proyecto</button>
               </div></div>
