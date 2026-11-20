@@ -2362,3 +2362,15 @@ html[data-theme="dark"] .project-progress-report .project-progress-title > stron
   object-fit: cover;
   object-position: center;
 }
+
+/* Shared recycle-bin presentation for Projects and Events */
+.orbit-trash-controls{display:flex;justify-content:flex-end;align-items:center;margin:12px 0}
+.orbit-trash-entry{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--border,rgba(128,128,128,.25))}
+.orbit-trash-entry>strong{flex:1 1 180px;min-width:0;overflow-wrap:anywhere}
+.orbit-trash-entry>span{color:var(--muted,#777);font-size:12px}
+.orbit-trash-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.orbit-trash-actions button{min-height:36px;padding:7px 11px;border-radius:10px;font-size:12px}
+.orbit-trash-actions .project-option-danger{color:#fff;background:#9c2441;border:1px solid #bd4b65}
+.orbit-trash-actions .project-option-danger:hover{background:#b32c4d}
+.notes-trash>.orbit-pagination{flex-direction:row;justify-content:center;flex-wrap:wrap}
+@media(max-width:540px){.orbit-trash-entry{align-items:flex-start;flex-direction:column}.orbit-trash-actions{width:100%}.orbit-trash-controls{justify-content:flex-start}}

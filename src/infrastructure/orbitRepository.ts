@@ -31,6 +31,8 @@ export interface OrbitRepository {
   listProjects(): Promise<Project[]>;
   createProject(userId: string, input: NewProject): Promise<Project>;
   deleteProject(projectId: string): Promise<void>;
+  restoreProject(projectId: string): Promise<void>;
+  deleteProjectPermanently(projectId: string): Promise<void>;
   listTasks(): Promise<Task[]>;
   createTask(userId: string, input: NewTask): Promise<Task>;
   updateTaskStatus(taskId: string, status: TaskStatus, resolution: string): Promise<void>;
@@ -43,6 +45,8 @@ export interface OrbitRepository {
   createEvent(userId: string, input: NewEvent): Promise<OrbitEvent>;
   updateEvent(eventId: string, userId: string, input: NewEvent): Promise<OrbitEvent>;
   deleteEvent(eventId: string): Promise<void>;
+  restoreEvent(eventId: string): Promise<void>;
+  deleteEventPermanently(eventId: string): Promise<void>;
 }
 
 function throwOnError(error: { message: string } | null): void {
@@ -67,7 +71,17 @@ export const orbitRepository: OrbitRepository = {
   },
 
   async deleteProject(projectId) {
-    const { error } = await supabase.from('projects').delete().eq('id', projectId);
+    const { error } = await supabase.from('projects').update({ deleted_at: new Date().toISOString() }).eq('id', projectId).is('deleted_at', null);
+    throwOnError(error);
+  },
+
+  async restoreProject(projectId) {
+    const { error } = await supabase.from('projects').update({ deleted_at: null }).eq('id', projectId).not('deleted_at', 'is', null);
+    throwOnError(error);
+  },
+
+  async deleteProjectPermanently(projectId) {
+    const { error } = await supabase.from('projects').delete().eq('id', projectId).not('deleted_at', 'is', null);
     throwOnError(error);
   },
 
@@ -153,7 +167,17 @@ export const orbitRepository: OrbitRepository = {
   },
 
   async deleteEvent(eventId) {
-    const { error } = await supabase.from('events').delete().eq('id', eventId);
+    const { error } = await supabase.from('events').update({ deleted_at: new Date().toISOString() }).eq('id', eventId).is('deleted_at', null);
+    throwOnError(error);
+  },
+
+  async restoreEvent(eventId) {
+    const { error } = await supabase.from('events').update({ deleted_at: null }).eq('id', eventId).not('deleted_at', 'is', null);
+    throwOnError(error);
+  },
+
+  async deleteEventPermanently(eventId) {
+    const { error } = await supabase.from('events').delete().eq('id', eventId).not('deleted_at', 'is', null);
     throwOnError(error);
   },
 };

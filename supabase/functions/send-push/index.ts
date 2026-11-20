@@ -160,17 +160,21 @@ Deno.serve(async (request) => {
   }
   const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
   const now = new Date();
-  const [tasksResult, eventsResult, notesResult, settingsResult, deviceResult] = await Promise.all([
-    db.from('tasks').select('id,owner_id,title,status,estimated_due_at,reminder_override_minutes').neq('status','Finalizado').not('estimated_due_at','is',null),
-    db.from('events').select('id,owner_id,title,status,starts_at,reminder_at,reminder_override_minutes,recurrence_rule').eq('status','Programado'),
+  const [tasksResult, eventsResult, notesResult, settingsResult, deviceResult, projectsResult] = await Promise.all([
+    db.from('tasks').select('id,owner_id,title,status,estimated_due_at,reminder_override_minutes,project_id').neq('status','Finalizado').not('estimated_due_at','is',null).is('deleted_at',null),
+    db.from('events').select('id,owner_id,project_id,title,status,starts_at,reminder_at,reminder_override_minutes,recurrence_rule').eq('status','Programado').is('deleted_at',null),
     db.from('notes').select('id,owner_id,title,kind,completed,reminder_at').not('reminder_at','is',null).is('deleted_at',null),
     db.from('notification_preferences').select('*'),
     db.from('device_subscriptions').select('id,owner_id,subscription_data').eq('enabled',true),
+    db.from('projects').select('id').is('deleted_at',null),
   ]);
-  const error = [tasksResult, eventsResult, notesResult, settingsResult, deviceResult].find((r) => r.error)?.error;
+  const error = [tasksResult, eventsResult, notesResult, settingsResult, deviceResult, projectsResult].find((r) => r.error)?.error;
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   const settings = new Map((settingsResult.data as Settings[]).map((s) => [s.user_id,s]));
-  const candidates = dueNotifications(now, tasksResult.data as Task[], eventsResult.data as Event[],notesResult.data as PersonalNote[],settings);
+  const activeProjectIds = new Set((projectsResult.data ?? []).map((project) => project.id));
+  const activeTasks = (tasksResult.data as (Task & { project_id: string })[]).filter((task) => activeProjectIds.has(task.project_id));
+  const activeEvents = (eventsResult.data as (Event & { project_id?: string | null })[]).filter((event) => !event.project_id || activeProjectIds.has(event.project_id));
+  const candidates = dueNotifications(now, activeTasks, activeEvents,notesResult.data as PersonalNote[],settings);
   // Authorized diagnostics: one push to a specific account, no user-data disclosure.
   let diagnosticOwnerId: string | null = null;
   try {
