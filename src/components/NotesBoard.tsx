@@ -697,7 +697,24 @@ export function NotesBoard({ userId }: { userId: string }) {
         <span>{soundEnabled ? 'Sonido activado' : 'Sin sonido'}</span>
       </button>
     </div>
-    {trashOpen && <section className="card notes-trash"><button type="button" className="outline" onClick={() => setTrashOpen(false)} aria-label="Volver a pendientes">← Volver a pendientes</button><h2>Papelera</h2><p>Recupera tus pendientes o elimínalos definitivamente.</p>{pagedTrash.map(note => <div key={note.id} className="notes-trash-item"><strong>{note.title}</strong><button type="button" className="outline" disabled={busy} onClick={() => void restoreNote(note)}>Restaurar</button><button type="button" disabled={busy} onClick={() => void permanentlyDelete(note)}>Eliminar definitivamente</button></div>)}{!trashedNotes.length && <p>No hay pendientes eliminados.</p>}{pagination(currentTrashPage, trashPages, trashedNotes.length, setTrashPage)}</section>}
+    {trashOpen && <section className="card notes-trash">
+      <header className="notes-trash-header">
+        <h2><Trash2 size={21} aria-hidden="true"/> Papelera</h2>
+        <button type="button" className="notes-trash-back" onClick={() => setTrashOpen(false)}><ArrowLeft size={17} aria-hidden="true"/> Volver</button>
+      </header>
+      <p>Recupera tus pendientes o elimínalos definitivamente.</p>
+      <div className="notes-trash-list">
+        {pagedTrash.map(note => <div key={note.id} className="notes-trash-item">
+          <strong>{note.title}</strong>
+          <div className="notes-trash-actions">
+            <button type="button" className="notes-trash-restore" aria-label={`Restaurar ${note.title}`} title="Restaurar" disabled={busy} onClick={() => void restoreNote(note)}><RotateCcw size={18} aria-hidden="true"/></button>
+            <button type="button" className="notes-trash-delete" aria-label={`Eliminar definitivamente ${note.title}`} title="Eliminar definitivamente" disabled={busy} onClick={() => void permanentlyDelete(note)}><Trash2 size={18} aria-hidden="true"/></button>
+          </div>
+        </div>)}
+        {!trashedNotes.length && <p>No hay pendientes eliminados.</p>}
+      </div>
+      {pagination(currentTrashPage, trashPages, trashedNotes.length, setTrashPage)}
+    </section>}
     {!trashOpen && <>
     <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
       <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17}/> Pendientes</button>
