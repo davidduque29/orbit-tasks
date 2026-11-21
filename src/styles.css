@@ -2395,3 +2395,68 @@ html[data-theme="dark"] .project-progress-report .project-progress-title > stron
 .notes-trash .orbit-trash-actions button{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-width:38px;min-height:38px;padding:0;border-radius:11px;background:#46306e;color:#fff;border:1px solid #9973d4}
 .notes-trash .orbit-trash-actions button.project-option-danger{background:#6d2443;color:#fff;border:1px solid #e45a78}
 @media(max-width:380px){.notes-trash .orbit-trash-actions button{width:35px;height:35px;min-width:35px;min-height:35px}.notes-trash .orbit-trash-entry{gap:8px}}
+
+
+/* Secondary navigation: cyan editorial selection, distinct from module underline. */
+.notes-board .notes-section-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.notes-board .notes-section-tabs > button,
+.notes-board .notes-section-tabs > .notes-trash-tab {
+  position: relative;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 9px 7px 9px 11px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--orbit-secondary-nav-idle, #77849a);
+  font-size: clamp(11px, 2.9vw, 14px);
+  font-weight: 650;
+  white-space: nowrap;
+  transition: color 200ms ease;
+}
+.notes-board .notes-section-tabs > button::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: 25%;
+  height: 50%;
+  width: 3px;
+  border-radius: 3px;
+  background: transparent;
+  transition: background-color 200ms ease;
+}
+.notes-board .notes-section-tabs > button.selected,
+.notes-board .notes-section-tabs > .notes-trash-tab.selected {
+  color: #55c9f5;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.notes-board .notes-section-tabs > button.selected::before { background: #55c9f5; }
+.notes-board .notes-section-tabs > button > svg,
+.notes-board .notes-section-tabs > button > span {
+  transition: transform 200ms ease;
+}
+.notes-board .notes-section-tabs > button.selected > svg,
+.notes-board .notes-section-tabs > button.selected > span {
+  transform: scale(1.06);
+}
+.notes-board .notes-section-tabs > button:focus-visible {
+  outline: 2px solid #55c9f5;
+  outline-offset: -2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .notes-board .notes-section-tabs > button,
+  .notes-board .notes-section-tabs > button::before,
+  .notes-board .notes-section-tabs > button > svg,
+  .notes-board .notes-section-tabs > button > span { transition: none; }
+}
