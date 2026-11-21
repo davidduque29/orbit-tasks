@@ -2385,3 +2385,13 @@ html[data-theme="dark"] .project-progress-report .project-progress-title > stron
  .orbit-event-heading-actions{width:100%;justify-content:flex-start}
  .orbit-event-heading-actions>button{font-size:12px;min-height:38px;padding:8px 11px}
 }
+
+/* Unified compact trash rows across all Orbit modules */
+.notes-trash .orbit-trash-entry{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap;min-height:0;padding:11px 0}
+.notes-trash .orbit-trash-details{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.notes-trash .orbit-trash-details strong{font-size:14px;overflow-wrap:anywhere}
+.notes-trash .orbit-trash-details span{font-size:11px;color:var(--muted,#a9a9b8)}
+.notes-trash .orbit-trash-actions{display:flex;flex:0 0 auto;gap:8px;width:auto;flex-wrap:nowrap}
+.notes-trash .orbit-trash-actions button{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;min-width:38px;min-height:38px;padding:0;border-radius:11px;background:#46306e;color:#fff;border:1px solid #9973d4}
+.notes-trash .orbit-trash-actions button.project-option-danger{background:#6d2443;color:#fff;border:1px solid #e45a78}
+@media(max-width:380px){.notes-trash .orbit-trash-actions button{width:35px;height:35px;min-width:35px;min-height:35px}.notes-trash .orbit-trash-entry{gap:8px}}
