@@ -717,9 +717,9 @@ export function NotesBoard({ userId }: { userId: string }) {
     </section>}
     {!trashOpen && <>
     <nav className="notes-section-tabs" aria-label="Secciones de pendientes">
-      <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17}/> Pendientes</button>
-      <button type="button" className={section === 'search' ? 'selected' : ''} aria-current={section === 'search' ? 'page' : undefined} onClick={() => setSection('search')}><Search size={17}/> Buscar</button>
-      <button type="button" className={trashOpen ? 'selected notes-trash-tab' : 'notes-trash-tab'} aria-expanded={trashOpen} onClick={() => setTrashOpen(v => !v)}><Trash2 size={17}/> {trashOpen ? 'Cerrar papelera' : `Papelera (${trashedNotes.length})`}</button>
+      <button type="button" className={section === 'pending' ? 'selected' : ''} aria-current={section === 'pending' ? 'page' : undefined} onClick={() => setSection('pending')}><ListTodo size={17} aria-hidden="true"/><span>Listado</span></button>
+      <button type="button" className={section === 'search' ? 'selected' : ''} aria-current={section === 'search' ? 'page' : undefined} onClick={() => setSection('search')}><Search size={17} aria-hidden="true"/><span>Buscar</span></button>
+      <button type="button" className={trashOpen ? 'selected notes-trash-tab' : 'notes-trash-tab'} aria-expanded={trashOpen} onClick={() => setTrashOpen(v => !v)}><Trash2 size={17} aria-hidden="true"/><span>{trashOpen ? 'Cerrar papelera' : `Papelera (${trashedNotes.length})`}</span></button>
     </nav>
     {section === 'pending' && <>
     <form className="card quick-capture quick-capture-highlight" onSubmit={(event) => void quickAdd(event)}>
